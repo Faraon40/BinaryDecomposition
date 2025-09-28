@@ -183,3 +183,5 @@ cython_debug/
 
 /docs/figures/leafs/
 /docs/figures/leafs_binary/npy/
+/docs/figures/objects_binary/npy/
+/docs/figures/objects_gifs/
