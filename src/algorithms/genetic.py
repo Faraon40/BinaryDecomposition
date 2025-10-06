@@ -67,13 +67,10 @@ def repair(rects: List[Rectangle], img: np.ndarray, integral: np.ndarray) -> Lis
         if covered[y, x] == 1:
             continue
 
-        # Try to expand to a bigger rectangle
-        max_w, max_h = 1, 1
-
         # Expand width
         w = 1
-        while x + w < img.shape[1] and np.all((img[y:y+1, x:x+w+1] == 1) & (covered[y:y+1, x:x+w+1] == 0)):
-            if is_valid_rectangle_integral(integral, (x, y, w+1, 1)):
+        while x + w < img.shape[1] and np.all((img[y:y + 1, x:x + w + 1] == 1) & (covered[y:y + 1, x:x + w + 1] == 0)):
+            if is_valid_rectangle_integral(integral, (x, y, w + 1, 1)):
                 w += 1
             else:
                 break
@@ -81,8 +78,8 @@ def repair(rects: List[Rectangle], img: np.ndarray, integral: np.ndarray) -> Lis
 
         # Expand height with chosen width
         h = 1
-        while y + h < img.shape[0] and np.all((img[y:y+h+1, x:x+max_w] == 1) & (covered[y:y+h+1, x:x+max_w] == 0)):
-            if is_valid_rectangle_integral(integral, (x, y, max_w, h+1)):
+        while y + h < img.shape[0] and np.all((img[y:y + h + 1, x:x + max_w] == 1) & (covered[y:y + h + 1, x:x + max_w] == 0)):
+            if is_valid_rectangle_integral(integral, (x, y, max_w, h + 1)):
                 h += 1
             else:
                 break
@@ -91,7 +88,7 @@ def repair(rects: List[Rectangle], img: np.ndarray, integral: np.ndarray) -> Lis
         # Place the biggest rectangle found
         new_rect = (x, y, max_w, max_h)
         repaired.append(new_rect)
-        covered[y:y+max_h, x:x+max_w] = 1
+        covered[y:y + max_h, x:x + max_w] = 1
 
     return repaired
 
@@ -106,11 +103,11 @@ def rect_sum(integral: np.ndarray, x: int, y: int, w: int, h: int) -> int:
     x2, y2 = x + w - 1, y + h - 1
     total = integral[y2, x2]
     if x > 0:
-        total -= integral[y2, x-1]
+        total -= integral[y2, x - 1]
     if y > 0:
-        total -= integral[y-1, x2]
+        total -= integral[y - 1, x2]
     if x > 0 and y > 0:
-        total += integral[y-1, x-1]
+        total += integral[y - 1, x - 1]
     return total
 
 
@@ -184,7 +181,6 @@ def init_population_random(img: np.ndarray, pop_size: int, max_attempts: int = 1
         # Repair remaining uncovered 1s with 1x1 rectangles
         rects = repair(rects, img, integral)
         population.append(Chromosome(rects))
-
     return population
 
 
@@ -204,13 +200,13 @@ def mutate(chrom: Chromosome, img: np.ndarray, integral: np.ndarray,
 
         new_rect = (x, y, w, h)  # fallback
 
-        H, W = img.shape  # height, width
+        height, width = img.shape  # height, width
 
         if choice == "expand_w":
-            new_w = min(w + step, W - x)
+            new_w = min(w + step, width - x)
             new_rect = (x, y, new_w, h)
         elif choice == "expand_h":
-            new_h = min(h + step, H - y)
+            new_h = min(h + step, height - y)
             new_rect = (x, y, w, new_h)
         elif choice == "shrink_w" and w > step:
             new_rect = (x, y, w - step, h)
@@ -339,9 +335,11 @@ def run_ga(img: np.ndarray, pop_size=20, generations=50, elite_size=2):
         best = population[0]
         print(f"Gen {g}: Best fitness={best.fitness}, Rects={len(best.rectangles)}")
 
+        # Best rects are automatically in new_pop
         new_pop = population[:elite_size]
         while len(new_pop) < pop_size:
-            p1, p2 = random.sample(population[:10], 2)
+            top_candidates = population[:len(population) // 10]
+            p1, p2 = random.sample(top_candidates, 2)
             child = crossover(p1, p2, img, integral)
             child = mutate(child, img, integral)
             new_pop.append(child)
@@ -387,7 +385,7 @@ def main():
 
     # Load the .npy file
     # Make sure it's 0s and 1s
-    img = np.load("../../docs/figures/objects_binary/npy/device3-6_binary.npy")
+    img = np.load("../../docs/figures/objects_binary/npy/crown-6_binary.npy")
     img = (img > 0).astype(int)
     # img = 1 - img  # if image is loaded we have to invert 0s and 1s
 
