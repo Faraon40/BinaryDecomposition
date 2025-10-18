@@ -1,7 +1,7 @@
 import cv2
 import numpy as np
 from pathlib import Path
-from utils.preprocessing import image_to_binary  # import your earlier function
+from src.preprocess.preprocessing import image_to_binary  # import your earlier function
 
 
 def bulk_convert_to_binary(input_dir: str, output_dir: str,
@@ -48,6 +48,6 @@ def bulk_convert_to_binary(input_dir: str, output_dir: str,
 
 
 if __name__ == "__main__":
-    bulk_convert_to_binary("../docs/figures/leafs",
-                           "../docs/figures/leafs_binary")
+    bulk_convert_to_binary("../../res/figures",
+                           "../../res/figures/binary")
     print("Bulk conversion completed.")
