@@ -181,8 +181,10 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
-/docs/figures/leafs/
-/docs/figures/leafs_binary/npy/
-/docs/figures/objects_binary/npy/
-/docs/figures/objects_gifs/
-/docs/figures/objects/
+/res/figures/leafs/
+/res/figures/leafs_binary/npy/
+/res/figures/objects_binary/npy/
+/res/figures/objects_gifs/
+/res/figures/objects/
+/docs/auxil/
+/docs/out/
