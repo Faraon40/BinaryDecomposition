@@ -423,7 +423,7 @@ def main():
     # Load the .npy file
     # Make sure it's 0s and 1s
     # img = np.load("../../docs/figures/objects_binary/npy/crown-6_binary.npy")
-    img = np.load("../../res/figures/binary/npy/Vitis_riparia_5_binary.npy")
+    img = np.load("../../res/figures/leafs_binary/npy/Vitis_riparia_5_binary.npy")
     # img = np.load("../../docs/figures/leafs_binary/npy/Vitis_riparia_binary.npy")
     img = (img > 0).astype(int)
     img = 1 - img  # if image is loaded we have to invert 0s and 1s
