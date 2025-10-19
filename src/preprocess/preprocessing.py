@@ -49,4 +49,4 @@ def image_to_binary(path: str, save_path: str = None) -> np.ndarray:
 
     return binary
 
-image_to_binary("../../res/figures/Vitis_riparia_5.png", save_path="../../res/figures/Vitis_riparia_5_binary.png")
+image_to_binary("../../res/figures/original/Vitis_riparia_5.png", save_path="../../res/figures/Vitis_riparia_5_binary.png")

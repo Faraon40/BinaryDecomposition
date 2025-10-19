@@ -21,6 +21,6 @@ def convert_gifs_to_png(input_dir: str, output_dir: str):
 
 
 if __name__ == "__main__":
-    input_dir = "../../docs/figures/objects_gifs"  # folder with GIFs
-    output_dir = "../../docs/figures/objects"  # folder for PNGs
+    input_dir = "../../res/figures/objects_gifs"  # folder with GIFs
+    output_dir = "../../res/figures/objects"  # folder for PNGs
     convert_gifs_to_png(input_dir, output_dir)
