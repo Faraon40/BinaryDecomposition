@@ -1,9 +1,12 @@
-import numpy as np
+"""Genetic algorithm for binary image rectangle decomposition."""
+
 import random
 from typing import List
-import matplotlib.pyplot as plt
 
-from src.utils.types import Rectangle, Chromosome
+import matplotlib.pyplot as plt
+import numpy as np
+
+from src.utils.types import Chromosome, Rectangle
 from src.utils.utils import draw_solution
 
 
@@ -26,20 +29,47 @@ def rect_sum(integral: np.ndarray, x: int, y: int, w: int, h: int) -> int:
 
 
 def is_valid_rectangle_integral(integral: np.ndarray, rect: Rectangle) -> bool:
+    """Check if rectangle is valid within bounds and fully covered.
+
+    Args:
+        integral: Integral image array.
+        rect: Rectangle tuple (x, y, width, height).
+
+    Returns:
+        True if rectangle is within bounds and fully covered.
+
+    """
     x, y, w, h = rect
     # Boundary check
-    if x < 0 or y < 0 or x + w > integral.shape[1] or y + h > integral.shape[0]:
+    if (
+        x < 0
+        or y < 0
+        or x + w > integral.shape[1]
+        or y + h > integral.shape[0]
+    ):
         return False
     return rect_sum(integral, x, y, w, h) == w * h
 
 
 def fitness(chrom: Chromosome, img: np.ndarray, penalty: float) -> float:
-    """"""
+    """Calculate fitness of chromosome solution.
+
+    Balances rectangle count, coverage errors, and total area.
+
+    Args:
+        chrom: Chromosome with rectangles.
+        img: Binary image to decompose.
+        penalty: Penalty factor for extra coverage.
+
+    Returns:
+        Fitness score (higher is better).
+
+    """
     covered = np.zeros_like(img)
     total_area = 0
 
-    for (x, y, w, h) in chrom.rectangles:
-        covered[y:y + h, x:x + w] = 1
+    for x, y, w, h in chrom.rectangles:
+        covered[y : y + h, x : x + w] = 1
         total_area += w * h
 
     missing = np.sum((img == 1) & (covered == 0))
@@ -48,19 +78,34 @@ def fitness(chrom: Chromosome, img: np.ndarray, penalty: float) -> float:
     if missing > 0:
         return -1e6  # invalid: not all 1s covered
 
-    # balance between fewer rectangles, fewer extras, and larger rectangles
+    # Balance: fewer rectangles, fewer extras, larger rectangles
     return -len(chrom.rectangles) - penalty - extra + 0.01 * total_area
 
 
-def repair(rects: List[Rectangle], img: np.ndarray, integral: np.ndarray) -> List[Rectangle]:
+def repair(
+    rects: List[Rectangle], img: np.ndarray, integral: np.ndarray
+) -> List[Rectangle]:
+    """Repair solution by removing overlaps and covering missing pixels.
+
+    Args:
+        rects: List of rectangles to repair.
+        img: Binary image.
+        integral: Integral image.
+
+    Returns:
+        Repaired list of valid non-overlapping rectangles.
+
+    """
     covered = np.zeros_like(img, dtype=np.uint8)
     repaired = []
 
     # Keep valid non-overlapping rects
     for x, y, w, h in rects:
-        if np.all(covered[y:y+h, x:x+w] == 0) and is_valid_rectangle_integral(integral, (x, y, w, h)):
+        if np.all(covered[y : y + h, x : x + w] == 0) and (
+            is_valid_rectangle_integral(integral, (x, y, w, h))
+        ):
             repaired.append((x, y, w, h))
-            covered[y:y+h, x:x+w] = 1
+            covered[y : y + h, x : x + w] = 1
 
     # Cover remaining uncovered pixels (where img == 1)
     ys, xs = np.where((img == 1) & (covered == 0))
@@ -69,7 +114,10 @@ def repair(rects: List[Rectangle], img: np.ndarray, integral: np.ndarray) -> Lis
             continue
         # Expand width
         w = 1
-        while x + w < img.shape[1] and np.all((img[y:y + 1, x:x + w + 1] == 1) & (covered[y:y + 1, x:x + w + 1] == 0)):
+        while x + w < img.shape[1] and np.all(
+            (img[y : y + 1, x : x + w + 1] == 1)
+            & (covered[y : y + 1, x : x + w + 1] == 0)
+        ):
             if is_valid_rectangle_integral(integral, (x, y, w + 1, 1)):
                 w += 1
             else:
@@ -77,7 +125,10 @@ def repair(rects: List[Rectangle], img: np.ndarray, integral: np.ndarray) -> Lis
         max_w = w
         # Expand height with chosen width
         h = 1
-        while y + h < img.shape[0] and np.all((img[y:y + h + 1, x:x + max_w] == 1) & (covered[y:y + h + 1, x:x + max_w] == 0)):
+        while y + h < img.shape[0] and np.all(
+            (img[y : y + h + 1, x : x + max_w] == 1)
+            & (covered[y : y + h + 1, x : x + max_w] == 0)
+        ):
             if is_valid_rectangle_integral(integral, (x, y, max_w, h + 1)):
                 h += 1
             else:
@@ -86,16 +137,25 @@ def repair(rects: List[Rectangle], img: np.ndarray, integral: np.ndarray) -> Lis
         # Place the biggest rectangle found
         new_rect = (x, y, max_w, max_h)
         repaired.append(new_rect)
-        covered[y:y + max_h, x:x + max_w] = 1
+        covered[y : y + max_h, x : x + max_w] = 1
     return repaired
 
 
-def init_population_rle(img: np.ndarray, integral: np.ndarray, pop_size: int) -> List[Chromosome]:
-    """
-    Initialize the GA population using a simple run-length decomposition.
-    Decomposes either by rows or by columns depending on:
-      - random choice (for diversity)
-      - or image shape (whichever side is smaller)
+def init_population_rle(
+    img: np.ndarray, integral: np.ndarray, pop_size: int
+) -> List[Chromosome]:
+    """Initialize GA population using run-length decomposition.
+
+    Decomposes by rows or columns depending on image shape.
+
+    Args:
+        img: Binary image.
+        integral: Integral image.
+        pop_size: Population size.
+
+    Returns:
+        List of initialized chromosomes.
+
     """
     height, width = img.shape
     population = []
@@ -144,8 +204,24 @@ def init_population_rle(img: np.ndarray, integral: np.ndarray, pop_size: int) ->
     return population
 
 
+def init_population_random(
+    img: np.ndarray,
+    integral: np.ndarray,
+    pop_size: int,
+    max_attempts: int = 100,
+) -> List[Chromosome]:
+    """Initialize population with random rectangles.
 
-def init_population_random(img: np.ndarray, integral: np.ndarray, pop_size: int, max_attempts: int = 100) -> List[Chromosome]:
+    Args:
+        img: Binary image.
+        integral: Integral image.
+        pop_size: Population size.
+        max_attempts: Max attempts per individual.
+
+    Returns:
+        List of initialized chromosomes.
+
+    """
     height, width = img.shape
     population = []
     ones_count = np.sum(img)
@@ -156,14 +232,14 @@ def init_population_random(img: np.ndarray, integral: np.ndarray, pop_size: int,
         attempts = 0
 
         while np.sum(covered) < ones_count and attempts < max_attempts:
-            # Randomly select a top-left corner on a 1 that is not covered
+            # Randomly select top-left on uncovered 1
             ys, xs = np.where((img == 1) & (covered == 0))
             if len(xs) == 0:
                 break
             idx = random.randrange(len(xs))
             x0, y0 = xs[idx], ys[idx]
 
-            # Randomly select width and height biased toward bigger rectangles
+            # Randomly select width and height
             max_w = width - x0
             max_h = height - y0
             w = random.randint(1, max_w)
@@ -172,25 +248,52 @@ def init_population_random(img: np.ndarray, integral: np.ndarray, pop_size: int,
             rect = (x0, y0, w, h)
             if is_valid_rectangle_integral(integral, rect):
                 rects.append(rect)
-                covered[y0:y0 + h, x0:x0 + w] = 1
+                covered[y0 : y0 + h, x0 : x0 + w] = 1
 
             attempts += 1
 
-        # Repair remaining uncovered 1s with 1x1 rectangles
+        # Repair remaining uncovered 1s
         rects = repair(rects, img, integral)
         population.append(Chromosome(rects))
     return population
 
 
 def overlap(r1: Rectangle, r2: Rectangle) -> bool:
-    """"""
+    """Check if two rectangles overlap.
+
+    Args:
+        r1: First rectangle.
+        r2: Second rectangle.
+
+    Returns:
+        True if rectangles overlap.
+
+    """
     x1, y1, w1, h1 = r1
     x2, y2, w2, h2 = r2
-    return not (x1 + w1 <= x2 or x2 + w2 <= x1 or y1 + h1 <= y2 or y2 + h2 <= y1)
+    return not (
+        x1 + w1 <= x2 or x2 + w2 <= x1 or y1 + h1 <= y2 or y2 + h2 <= y1
+    )
 
 
-def crossover(p1: Chromosome, p2: Chromosome, img: np.ndarray, integral: np.ndarray) -> Chromosome:
-    """Merge random compatible genes from both parents into one new child."""
+def crossover(
+    p1: Chromosome,
+    p2: Chromosome,
+    img: np.ndarray,
+    integral: np.ndarray,
+) -> Chromosome:
+    """Merge compatible genes from both parents into child.
+
+    Args:
+        p1: First parent chromosome.
+        p2: Second parent chromosome.
+        img: Binary image.
+        integral: Integral image.
+
+    Returns:
+        New child chromosome.
+
+    """
     rects = []
     if not p1.rectangles or not p2.rectangles:
         return Chromosome(p1.rectangles or p2.rectangles)
@@ -209,9 +312,26 @@ def crossover(p1: Chromosome, p2: Chromosome, img: np.ndarray, integral: np.ndar
     return Chromosome(rects)
 
 
-def mutate_geometry(rects: List[Rectangle], img: np.ndarray, integral: np.ndarray,
-                    max_step: int = 5, p: float = 0.2) -> List[Rectangle]:
-    """Randomly expand or shrink one rectangle slightly."""
+def mutate_geometry(
+    rects: List[Rectangle],
+    img: np.ndarray,
+    integral: np.ndarray,
+    max_step: int = 5,
+    p: float = 0.2,
+) -> List[Rectangle]:
+    """Expand or shrink one rectangle randomly.
+
+    Args:
+        rects: List of rectangles.
+        img: Binary image.
+        integral: Integral image.
+        max_step: Maximum step size.
+        p: Probability of mutation.
+
+    Returns:
+        Mutated rectangle list.
+
+    """
     if not rects or random.random() >= p:
         return rects
 
@@ -240,9 +360,22 @@ def mutate_geometry(rects: List[Rectangle], img: np.ndarray, integral: np.ndarra
     return rects
 
 
-def mutate_merge(rects: List[Rectangle], integral: np.ndarray,
-                 p_merge: float = 0.05) -> List[Rectangle]:
-    """Probabilistically merge adjacent rectangles (horizontal or vertical)."""
+def mutate_merge(
+    rects: List[Rectangle],
+    integral: np.ndarray,
+    p_merge: float = 0.05,
+) -> List[Rectangle]:
+    """Merge adjacent rectangles probabilistically.
+
+    Args:
+        rects: List of rectangles.
+        integral: Integral image.
+        p_merge: Probability of merging.
+
+    Returns:
+        Rectangle list with merged adjacents.
+
+    """
     rects = rects.copy()
     i = 0
     while i < len(rects):
@@ -250,10 +383,16 @@ def mutate_merge(rects: List[Rectangle], integral: np.ndarray,
         j = i + 1
         while j < len(rects):
             r2 = rects[j]
-            horiz_adj = (r1[1] == r2[1] and r1[3] == r2[3] and
-                         (r1[0] + r1[2] == r2[0] or r2[0] + r2[2] == r1[0]))
-            vert_adj = (r1[0] == r2[0] and r1[2] == r2[2] and
-                        (r1[1] + r1[3] == r2[1] or r2[1] + r2[3] == r1[1]))
+            horiz_adj = (
+                r1[1] == r2[1]
+                and r1[3] == r2[3]
+                and (r1[0] + r1[2] == r2[0] or r2[0] + r2[2] == r1[0])
+            )
+            vert_adj = (
+                r1[0] == r2[0]
+                and r1[2] == r2[2]
+                and (r1[1] + r1[3] == r2[1] or r2[1] + r2[3] == r1[1])
+            )
 
             if (horiz_adj or vert_adj) and random.random() < p_merge:
                 # merge attempt
@@ -273,28 +412,65 @@ def mutate_merge(rects: List[Rectangle], integral: np.ndarray,
     return rects
 
 
-def local_decomposition(sub_img: np.ndarray, sub_integral: np.ndarray, offset_x: int, offset_y: int):
-    """
-    Very simple heuristic decomposition of a local binary patch.
-    (Replace this with your RLE or greedy rectangle finder.)
+def local_decomposition(
+    sub_img: np.ndarray,
+    sub_integral: np.ndarray,
+    offset_x: int,
+    offset_y: int,
+):
+    """Decompose local binary patch heuristically.
+
+    Simple bounding box approach for local region.
+
+    Args:
+        sub_img: Sub-image patch.
+        sub_integral: Sub-integral image.
+        offset_x: X offset in full image.
+        offset_y: Y offset in full image.
+
+    Returns:
+        List of rectangles for this patch.
+
     """
     rects = []
     ys, xs = np.where(sub_img == 1)
     if len(xs) == 0:
         return rects
-    # naive rectangular cover: bounding box
+    # Naive rectangular cover: bounding box
     x_min, x_max = xs.min(), xs.max()
     y_min, y_max = ys.min(), ys.max()
-    rects.append((offset_x + x_min, offset_y + y_min, x_max - x_min + 1, y_max - y_min + 1))
+    rects.append(
+        (
+            offset_x + x_min,
+            offset_y + y_min,
+            x_max - x_min + 1,
+            y_max - y_min + 1,
+        )
+    )
     return rects
 
 
-def mutate_local_repartition(rects: List[Rectangle], img: np.ndarray,
-                             integral: np.ndarray, p_local: float = 0.1,
-                             max_area: int = 200) -> List[Rectangle]:
-    """
-    Pick a local area, remove a few rectangles inside it,
-    and re-decompose that region using simple scan (split + merge idea).
+def mutate_local_repartition(
+    rects: List[Rectangle],
+    img: np.ndarray,
+    integral: np.ndarray,
+    p_local: float = 0.1,
+    max_area: int = 200,
+) -> List[Rectangle]:
+    """Re-decompose a local area.
+
+    Removes rectangles in region and re-decomposes.
+
+    Args:
+        rects: List of rectangles.
+        img: Binary image.
+        integral: Integral image.
+        p_local: Probability of local repartition.
+        max_area: Maximum area (unused).
+
+    Returns:
+        Modified rectangle list.
+
     """
     if not rects or random.random() >= p_local:
         return rects
@@ -306,8 +482,14 @@ def mutate_local_repartition(rects: List[Rectangle], img: np.ndarray,
     cx = random.randint(0, width - 1)
     cy = random.randint(0, height - 1)
     region_size = random.randint(10, 30)
-    x1, y1 = max(0, cx - region_size), max(0, cy - region_size)
-    x2, y2 = min(width, cx + region_size), min(height, cy + region_size)
+    x1, y1 = (
+        max(0, cx - region_size),
+        max(0, cy - region_size),
+    )
+    x2, y2 = (
+        min(width, cx + region_size),
+        min(height, cy + region_size),
+    )
 
     # Remove rectangles fully inside region
     remaining = []
@@ -323,12 +505,32 @@ def mutate_local_repartition(rects: List[Rectangle], img: np.ndarray,
     return remaining + new_rects
 
 
-def mutation(chrom: Chromosome, img: np.ndarray, integral: np.ndarray,
-             p_geo: float = 0.05,
-             p_merge: float = 0.05,
-             p_local: float = 0.05,
-             max_step: int = 5) -> "Chromosome":
-    """Main mutation: geometry -> merge -> local re-partition -> repair."""
+def mutation(
+    chrom: Chromosome,
+    img: np.ndarray,
+    integral: np.ndarray,
+    p_geo: float = 0.05,
+    p_merge: float = 0.05,
+    p_local: float = 0.05,
+    max_step: int = 5,
+) -> "Chromosome":
+    """Apply mutation operators to chromosome.
+
+    Applies geometry, merge, and local repartition mutations.
+
+    Args:
+        chrom: Chromosome to mutate.
+        img: Binary image.
+        integral: Integral image.
+        p_geo: Probability of geometry mutation.
+        p_merge: Probability of merge mutation.
+        p_local: Probability of local repartition.
+        max_step: Maximum step for geometry mutation.
+
+    Returns:
+        Mutated chromosome.
+
+    """
     rects = chrom.rectangles
     if not rects:
         return chrom
@@ -348,11 +550,29 @@ def mutation(chrom: Chromosome, img: np.ndarray, integral: np.ndarray,
     return Chromosome(rects)
 
 
-def run_ga(img: np.ndarray, pop_size=100, generations=10, elite_size=2, penalty=1, patience=5):
+def run_ga(
+    img: np.ndarray,
+    pop_size=100,
+    generations=10,
+    elite_size=2,
+    penalty=1,
+    patience=5,
+):
     """Run the Genetic Algorithm.
 
-    With early stopping when the best fitness
-    does not improve for 'patience' consecutive generations.
+    Includes early stopping when best fitness stagnates.
+
+    Args:
+        img: Binary image to decompose.
+        pop_size: Population size.
+        generations: Maximum generations.
+        elite_size: Number of elites to keep.
+        penalty: Penalty for extra coverage.
+        patience: Generations without improvement before stop.
+
+    Returns:
+        Best chromosome found.
+
     """
     integral = build_integral(img)
     print("Init population...")
@@ -372,7 +592,10 @@ def run_ga(img: np.ndarray, pop_size=100, generations=10, elite_size=2, penalty=
         # Sort population by fitness descending
         population.sort(key=lambda c: c.fitness, reverse=True)
         best = population[0]
-        print(f"Gen {g}: Best fitness={best.fitness:.6f}, Rects={len(best.rectangles)}")
+        print(
+            f"Gen {g}: Best fitness={best.fitness:.6f}, "
+            f"Rects={len(best.rectangles)}"
+        )
 
         # Track improvement
         if best.fitness > best_fitness:
@@ -384,7 +607,9 @@ def run_ga(img: np.ndarray, pop_size=100, generations=10, elite_size=2, penalty=
 
         # Early stopping check
         if stagnant_generations >= patience:
-            print(f"\nEarly stopping: No improvement in {patience} generations.")
+            print(
+                f"\nEarly stopping: No improvement in {patience} generations."
+            )
             break
 
         # Elitism: keep the best few chromosomes
@@ -392,7 +617,7 @@ def run_ga(img: np.ndarray, pop_size=100, generations=10, elite_size=2, penalty=
 
         # Generate offspring
         while len(new_pop) < pop_size:
-            top_candidates = population[:len(population) // 10]
+            top_candidates = population[: len(population) // 10]
             p1, p2 = random.sample(top_candidates, 2)
             child = crossover(p1, p2, img, integral)
             child = mutation(child, img, integral)
@@ -405,26 +630,34 @@ def run_ga(img: np.ndarray, pop_size=100, generations=10, elite_size=2, penalty=
 
 
 def main():
-    """"""
-    img = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 1, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 1, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ])
+    """Run GA demo on sample binary image."""
+    img = np.array(
+        [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 1, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 1, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
+            [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
+            [0, 0, 0, 0, 1, 1, 0, 1, 0, 0],
+            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        ]
+    )
 
     # Load the .npy file
     # Make sure it's 0s and 1s
-    # img = np.load("../../docs/figures/objects_binary/npy/crown-6_binary.npy")
-    img = np.load("../../res/figures/leafs_binary/npy/Vitis_riparia_5_binary.npy")
-    # img = np.load("../../docs/figures/leafs_binary/npy/Vitis_riparia_binary.npy")
+    # img = np.load(
+    #     "../../docs/figures/objects_binary/npy/crown-6_binary.npy"
+    # )
+    img = np.load(
+        "../../res/figures/leafs_binary/npy/Vitis_riparia_5_binary.npy"
+    )
+    # img = np.load(
+    #     "../../docs/figures/leafs_binary/npy/Vitis_riparia_binary.npy"
+    # )
     img = (img > 0).astype(int)
     img = 1 - img  # if image is loaded we have to invert 0s and 1s
 

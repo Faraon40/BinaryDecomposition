@@ -1,4 +1,7 @@
+"""Convert GIF images to PNG format."""
+
 import os
+
 from PIL import Image
 
 
@@ -10,9 +13,10 @@ def convert_gifs_to_png(input_dir: str, output_dir: str):
         if filename.lower().endswith(".gif"):
             gif_path = os.path.join(input_dir, filename)
 
-            # Some GIFs have multiple frames; take only the first frame
+            # Take only first frame from GIFs
             with Image.open(gif_path) as img:
-                img = img.convert("RGBA")  # ensure correct transparency handling
+                # Ensure correct transparency handling
+                img = img.convert("RGBA")
                 png_filename = os.path.splitext(filename)[0] + ".png"
                 png_path = os.path.join(output_dir, png_filename)
                 img.save(png_path, "PNG")

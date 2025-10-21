@@ -10,20 +10,21 @@ def load_and_copy_one_image_per_leaf(
     root_dir: str,
     dest_dir: str,
     random_choice: bool = False,
-    extensions=(".png", ".jpg", ".jpeg")
+    extensions=(".png", ".jpg", ".jpeg"),
 ) -> List[Path]:
-    """
-    Collect one image from each leaf subfolder and copy it into dest_dir.
+    """Collect one image from each leaf subfolder.
+
+    Copies one image per subfolder into destination directory.
 
     Args:
-        root_dir (str): Path to main dataset directory (e.g. 'trees_directories')
-        dest_dir (str): Destination folder inside project (e.g. '../docs/figures/leafs')
-        random_choice (bool): If True, pick a random image per folder.
-                              If False, pick the first sorted image.
-        extensions (tuple): Allowed image file extensions.
+        root_dir: Path to main dataset directory.
+        dest_dir: Destination folder inside project.
+        random_choice: If True, pick random image per folder.
+        extensions: Allowed image file extensions.
 
     Returns:
-        List[Path]: List of copied image paths (inside dest_dir)
+        List of copied image paths (inside dest_dir).
+
     """
     root = Path(root_dir)
     dest = Path(dest_dir)
@@ -38,7 +39,9 @@ def load_and_copy_one_image_per_leaf(
     for leaf_dir in sorted(root.iterdir()):
         if leaf_dir.is_dir():
             # Collect all image files in this folder
-            imgs = [p for p in leaf_dir.iterdir() if p.suffix.lower() in extensions]
+            imgs = [
+                p for p in leaf_dir.iterdir() if p.suffix.lower() in extensions
+            ]
             if not imgs:
                 continue  # skip empty folders
 
@@ -48,7 +51,7 @@ def load_and_copy_one_image_per_leaf(
             else:
                 chosen = sorted(imgs)[0]
 
-            # Copy to destination, keeping folder name in filename
+            # Copy to dest, keeping folder name in filename
             dest_file = dest / f"{leaf_dir.name}{chosen.suffix.lower()}"
             shutil.copy(chosen, dest_file)
             copied_paths.append(dest_file)
@@ -60,6 +63,8 @@ if __name__ == "__main__":
     dataset_dir = "trees_directories"
     output_dir = "../../res/figures/leafs"
 
-    images = load_and_copy_one_image_per_leaf(dataset_dir, output_dir, random_choice=False)
+    images = load_and_copy_one_image_per_leaf(
+        dataset_dir, output_dir, random_choice=False
+    )
 
     print(f"Copied {len(images)} images into {output_dir}")

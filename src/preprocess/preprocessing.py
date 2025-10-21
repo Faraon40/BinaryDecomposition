@@ -1,9 +1,12 @@
-"""Convert image into binary image."""
+"""Convert image into binary image.
+
+References:
+    https://docs.opencv.org/4.x/d9/d61/tutorial_py_morphological_ops.html
+
+"""
 
 import cv2
 import numpy as np
-
-"""References: https://docs.opencv.org/4.x/d9/d61/tutorial_py_morphological_ops.html"""
 
 
 def image_to_binary(path: str, save_path: str = None) -> np.ndarray:
@@ -49,4 +52,8 @@ def image_to_binary(path: str, save_path: str = None) -> np.ndarray:
 
     return binary
 
-image_to_binary("../../res/figures/original/Vitis_riparia_5.png", save_path="../../res/figures/Vitis_riparia_5_binary.png")
+
+image_to_binary(
+    "../../res/figures/original/Vitis_riparia_5.png",
+    save_path="../../res/figures/Vitis_riparia_5_binary.png",
+)

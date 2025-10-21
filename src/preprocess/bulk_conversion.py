@@ -1,20 +1,25 @@
+"""Bulk conversion of images to binary format."""
+
 import cv2
 import numpy as np
 from pathlib import Path
-from src.preprocess.preprocessing import image_to_binary  # import your earlier function
+
+# Import earlier preprocessing function
+from src.preprocess.preprocessing import image_to_binary
 
 
-def bulk_convert_to_binary(input_dir: str, output_dir: str,
-                           save_numpy: bool = True):
-    """
-    Convert all images in input_dir to binary masks.
+def bulk_convert_to_binary(
+    input_dir: str, output_dir: str, save_numpy: bool = True
+):
+    """Convert all images in input_dir to binary masks.
 
-    Save PNGs and optionally NumPy arrays in separate folders.
+    Saves PNGs and optionally NumPy arrays in separate folders.
 
     Args:
-        input_dir (str): Directory with input images
-        output_dir (str): Base output directory
-        save_numpy (bool): If True, save .npy arrays in a subfolder
+        input_dir: Directory with input images.
+        output_dir: Base output directory.
+        save_numpy: If True, save .npy arrays in subfolder.
+
     """
     input_path = Path(input_dir)
     output_path = Path(output_dir)
@@ -48,6 +53,5 @@ def bulk_convert_to_binary(input_dir: str, output_dir: str,
 
 
 if __name__ == "__main__":
-    bulk_convert_to_binary("../../res/figures",
-                           "../../res/figures/binary")
+    bulk_convert_to_binary("../../res/figures", "../../res/figures/binary")
     print("Bulk conversion completed.")
