@@ -188,3 +188,5 @@ cython_debug/
 /res/figures/objects/
 /docs/auxil/
 /docs/out/
+/res/figures/synthetic/json/
+/res/figures/synthetic/npy/
