@@ -252,11 +252,13 @@ def trim_rectangles_to_ones(
 
             # Find maximal rectangle of 1s starting at (x0, y0)
             max_w = 1
-            while x0 + max_w < region_copy.shape[1] and np.all(region_copy[y0, x0:x0 + max_w + 1] == 1):
+            while (x0 + max_w < region_copy.shape[1]
+                   and np.all(region_copy[y0, x0:x0 + max_w + 1] == 1)):
                 max_w += 1
 
             max_h = 1
-            while y0 + max_h < region_copy.shape[0] and np.all(region_copy[y0 + max_h, x0:x0 + max_w] == 1):
+            while (y0 + max_h < region_copy.shape[0]
+                   and np.all(region_copy[y0 + max_h, x0:x0 + max_w] == 1)):
                 max_h += 1
 
             # Record rectangle in absolute coordinates
