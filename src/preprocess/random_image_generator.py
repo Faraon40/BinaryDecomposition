@@ -168,7 +168,7 @@ def generate_dataset(
             )
         seed_offset += 100
 
-    print("\n✅ Dataset generation complete!")
+    print("\n Dataset generation complete!")
     print("Total images generated: 40")
     print(f"Sizes: 3 small + 3 medium + 2 large")
     print(f"Densities: {densities}")
