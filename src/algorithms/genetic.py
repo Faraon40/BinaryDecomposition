@@ -560,6 +560,9 @@ def run_ga(
     seed=None,
     init_method="rle",
     verbose=True,
+    mutation_geometry=True,
+    mutation_merge=True,
+    mutation_local=True,
 ):
     """Run the Genetic Algorithm for binary image decomposition.
 
@@ -576,6 +579,10 @@ def run_ga(
         init_method: Population initialization method:
             "rle" (default), "random", or "quadtree".
         verbose: Print progress information (default: True).
+        mutation_geometry: Enable geometry mutation (G) (default: True).
+        mutation_merge: Enable merge mutation (M) (default: True).
+        mutation_local: Enable local repartition mutation (L)
+            (default: True).
 
     Returns:
         Tuple of (best_chromosome, generation_history).
@@ -664,7 +671,13 @@ def run_ga(
             top_candidates = population[: len(population) // 10]
             p1, p2 = random.sample(top_candidates, 2)
             child = crossover(p1, p2, img, integral)
-            child = mutation(child, img, integral)
+            # Apply mutations based on config
+            p_geo = 0.05 if mutation_geometry else 0.0
+            p_merge = 0.05 if mutation_merge else 0.0
+            p_local = 0.05 if mutation_local else 0.0
+            child = mutation(
+                child, img, integral, p_geo, p_merge, p_local
+            )
             new_pop.append(child)
 
         population = new_pop
@@ -720,7 +733,14 @@ def main():
     plt.axis("off")
     plt.show()
 
-    best, history = run_ga(img, pop_size=100, generations=100, seed=42)
+    best, history = run_ga(
+        img,
+        init_method="quadtree",
+        pop_size=100,
+        generations=100,
+        seed=1,
+        patience=5
+    )
 
     draw_solution(img, best.rectangles)
 
