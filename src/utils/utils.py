@@ -6,10 +6,10 @@ from typing import List
 import numpy as np
 from matplotlib import pyplot as plt
 
-from src.utils.types import Chromosome
+from src.utils.types import Rectangle
 
 
-def draw_solution(img: np.ndarray, chromosomes: List[Chromosome]):
+def draw_solution(img: np.ndarray, chromosomes: List[Rectangle]):
     """Draw binary image with colored rectangle overlay.
 
     Args:
