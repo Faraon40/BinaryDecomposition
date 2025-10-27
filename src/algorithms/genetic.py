@@ -79,7 +79,7 @@ def fitness(chrom: Chromosome, img: np.ndarray, penalty: float) -> float:
         return -1e6  # invalid: not all 1s covered
 
     # Balance: fewer rectangles, fewer extras, larger rectangles
-    return -len(chrom.rectangles) - penalty - extra + 0.01 * total_area
+    return -len(chrom.rectangles) - penalty * extra + 0.01 * total_area
 
 
 def repair(
@@ -144,7 +144,7 @@ def repair(
 def init_population_rle(
     img: np.ndarray, integral: np.ndarray, pop_size: int
 ) -> List[Chromosome]:
-    """Initialize GA population using run-length decomposition.
+    """Initialize GA rectangles using run-length decomposition.
 
     Decomposes by rows or columns depending on image shape.
 
@@ -210,7 +210,7 @@ def init_population_random(
     pop_size: int,
     max_attempts: int = 100,
 ) -> List[Chromosome]:
-    """Initialize population with random rectangles.
+    """Initialize rectangles with random rectangles.
 
     Args:
         img: Binary image.
@@ -554,48 +554,90 @@ def run_ga(
     img: np.ndarray,
     pop_size=100,
     generations=10,
-    elite_size=2,
-    penalty=1,
-    patience=5,
+    elite_size=3,
+    penalty=1.5,
+    patience=10,
+    seed=None,
+    init_method="rle",
+    verbose=True,
 ):
-    """Run the Genetic Algorithm.
+    """Run the Genetic Algorithm for binary image decomposition.
 
     Includes early stopping when best fitness stagnates.
 
     Args:
-        img: Binary image to decompose.
+        img: Binary image to decompose (0s and 1s).
         pop_size: Population size.
         generations: Maximum generations.
         elite_size: Number of elites to keep.
         penalty: Penalty for extra coverage.
-        patience: Generations without improvement before stop.
+        patience: Generations without improvement before stopping.
+        seed: Random seed for reproducibility (default: None).
+        init_method: Population initialization method:
+            "rle" (default), "random", or "quadtree".
+        verbose: Print progress information (default: True).
 
     Returns:
-        Best chromosome found.
+        Tuple of (best_chromosome, generation_history).
+        generation_history: List of best rectangle counts per generation.
 
     """
-    integral = build_integral(img)
-    print("Init population...")
-    population = init_population_rle(img, integral, pop_size)
-    print(f"Rectangle count: {len(population[0].rectangles)}")
-    draw_solution(img, population[0].rectangles)
-    print("Generations stage...")
+    import time
 
-    best_fitness = float('-inf')
+    start_time = time.time()
+
+    # Set random seeds for reproducibility
+    if seed is not None:
+        random.seed(seed)
+        np.random.seed(seed)
+
+    integral = build_integral(img)
+
+    # Initialize population based on method
+    if verbose:
+        print(f"Initializing population (method: {init_method})...")
+
+    if init_method == "rle":
+        population = init_population_rle(img, integral, pop_size)
+    elif init_method == "random":
+        population = init_population_random(img, integral, pop_size)
+    elif init_method == "quadtree":
+        from src.algorithms.quadtree import init_population_quadtree
+
+        population = init_population_quadtree(img, integral, pop_size)
+    else:
+        raise ValueError(
+            f"Unknown init_method: {init_method}. "
+            f"Use 'rle', 'random', or 'quadtree'."
+        )
+
+    if verbose:
+        print(
+            f"Initial population: {len(population[0].rectangles)} rectangles"
+        )
+
+    best_fitness = float("-inf")
     stagnant_generations = 0
     best_chrom = None
+    generation_history = []  # Track rectangle counts per generation
 
     for g in range(generations):
+        # Evaluate fitness
         for chrom in population:
             chrom.fitness = fitness(chrom, img, penalty)
 
-        # Sort population by fitness descending
+        # Sort by fitness descending
         population.sort(key=lambda c: c.fitness, reverse=True)
         best = population[0]
-        print(
-            f"Gen {g}: Best fitness={best.fitness:.6f}, "
-            f"Rects={len(best.rectangles)}"
-        )
+
+        # Track history
+        generation_history.append(len(best.rectangles))
+
+        if verbose:
+            print(
+                f"Gen {g:3d}: Fitness={best.fitness:7.2f}, "
+                f"Rects={len(best.rectangles):3d}"
+            )
 
         # Track improvement
         if best.fitness > best_fitness:
@@ -607,9 +649,11 @@ def run_ga(
 
         # Early stopping check
         if stagnant_generations >= patience:
-            print(
-                f"\nEarly stopping: No improvement in {patience} generations."
-            )
+            if verbose:
+                print(
+                    f"Early stopping at generation {g}: "
+                    f"No improvement for {patience} generations."
+                )
             break
 
         # Elitism: keep the best few chromosomes
@@ -625,8 +669,17 @@ def run_ga(
 
         population = new_pop
 
-    # Return best found (not just last generation) ---
-    return best_chrom if best_chrom else population[0]
+    execution_time = time.time() - start_time
+
+    if verbose:
+        print(f"\nCompleted in {execution_time:.2f} seconds")
+        print(
+            f"Best solution: {len(best_chrom.rectangles)} rectangles, "
+            f"fitness={best_chrom.fitness:.2f}"
+        )
+
+    # Return best found (not just last generation)
+    return best_chrom if best_chrom else population[0], generation_history
 
 
 def main():
@@ -649,17 +702,17 @@ def main():
 
     # Load the .npy file
     # Make sure it's 0s and 1s
-    # img = np.load(
-    #     "../../docs/figures/objects_binary/npy/crown-6_binary.npy"
-    # )
     img = np.load(
-        "../../res/figures/leafs_binary/npy/Vitis_riparia_5_binary.npy"
+        "../../res/figures/objects_binary/npy/crown-6_binary.npy"
     )
+    # img = np.load(
+    #     "../../res/figures/leafs_binary/npy/Vitis_riparia_5_binary.npy"
+    # )
     # img = np.load(
     #     "../../docs/figures/leafs_binary/npy/Vitis_riparia_binary.npy"
     # )
     img = (img > 0).astype(int)
-    img = 1 - img  # if image is loaded we have to invert 0s and 1s
+    # img = 1 - img  # if image is loaded we have to invert 0s and 1s
 
     # Display the image
     plt.imshow(img, cmap="gray")
@@ -667,8 +720,7 @@ def main():
     plt.axis("off")
     plt.show()
 
-    best = run_ga(img, pop_size=100, generations=50, elite_size=4)
-    # print("Best solution:", best.rectangles)
+    best, history = run_ga(img, pop_size=100, generations=100, seed=42)
 
     draw_solution(img, best.rectangles)
 
