@@ -1,0 +1,11 @@
+MUTATION PROBABILITY OPTIMIZATION SUMMARY (TOP-N)
+======================================================================
+
+Best validated combination:
+  p_geometry: 0.20
+  p_merge: 0.20
+  p_local: 0.30
+
+Baseline average: 253.0 rectangles
+Best average: 149.1 rectangles
+Improvement: +41.07%
