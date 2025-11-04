@@ -560,9 +560,9 @@ def run_ga(
     seed=None,
     init_method="rle",
     verbose=True,
-    mutation_geometry=True,
-    mutation_merge=True,
-    mutation_local=True,
+    mutation_geometry=0.05,
+    mutation_merge=0.05,
+    mutation_local=0.05,
 ):
     """Run the Genetic Algorithm for binary image decomposition.
 
@@ -579,10 +579,12 @@ def run_ga(
         init_method: Population initialization method:
             "rle" (default), "random", or "quadtree".
         verbose: Print progress information (default: True).
-        mutation_geometry: Enable geometry mutation (G) (default: True).
-        mutation_merge: Enable merge mutation (M) (default: True).
-        mutation_local: Enable local repartition mutation (L)
-            (default: True).
+        mutation_geometry: Probability of geometry mutation (G)
+            (default: 0.05). Set to 0.0 to disable.
+        mutation_merge: Probability of merge mutation (M)
+            (default: 0.05). Set to 0.0 to disable.
+        mutation_local: Probability of local repartition mutation (L)
+            (default: 0.05). Set to 0.0 to disable.
 
     Returns:
         Tuple of (best_chromosome, generation_history).
@@ -671,12 +673,14 @@ def run_ga(
             top_candidates = population[: len(population) // 10]
             p1, p2 = random.sample(top_candidates, 2)
             child = crossover(p1, p2, img, integral)
-            # Apply mutations based on config
-            p_geo = 0.05 if mutation_geometry else 0.0
-            p_merge = 0.05 if mutation_merge else 0.0
-            p_local = 0.05 if mutation_local else 0.0
+            # Apply mutations with configured probabilities
             child = mutation(
-                child, img, integral, p_geo, p_merge, p_local
+                child,
+                img,
+                integral,
+                mutation_geometry,
+                mutation_merge,
+                mutation_local
             )
             new_pop.append(child)
 
