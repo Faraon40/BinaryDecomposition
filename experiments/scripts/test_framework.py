@@ -34,8 +34,9 @@ def main():
         name="test_ga_rle_GML",
         seed=42,
         algorithm="ga_rle",
-        pop_size=50,  # Smaller for testing
-        generations=20,  # Fewer generations for testing
+        pop_size=20,  # Smaller for testing
+        generations=100,  # Fewer generations for testing
+        patience=5,
         mutation_geometry=True,
         mutation_merge=True,
         mutation_local=True,
