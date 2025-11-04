@@ -81,9 +81,9 @@ def run_single_experiment(
             seed=config.seed,
             init_method=init_method,
             verbose=False,
-            mutation_geometry=config.mutation_geometry,
-            mutation_merge=config.mutation_merge,
-            mutation_local=config.mutation_local
+            mutation_geometry=config.p_geometry,
+            mutation_merge=config.p_merge,
+            mutation_local=config.p_local
         )
         generations_used = len(generation_history)
 

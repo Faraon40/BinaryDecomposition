@@ -32,13 +32,16 @@ class ExperimentConfig:
         Penalty multiplier for invalid solutions (default: 1.5).
     patience : int, optional
         Generations without improvement before early stopping
-        (default: 10).
-    mutation_geometry : bool, optional
-        Enable geometry mutation (G) (default: True).
-    mutation_merge : bool, optional
-        Enable merge mutation (M) (default: True).
-    mutation_local : bool, optional
-        Enable local repartition mutation (L) (default: True).
+        (default: 5).
+    p_geometry : float, optional
+        Probability of geometry mutation (G) (default: 0.05).
+        Set to 0.0 to disable.
+    p_merge : float, optional
+        Probability of merge mutation (M) (default: 0.05).
+        Set to 0.0 to disable.
+    p_local : float, optional
+        Probability of local repartition mutation (L) (default: 0.05).
+        Set to 0.0 to disable.
     quadtree_min_size : int, optional
         Minimum quadrant size for quadtree algorithm (default: 4).
     quadtree_trim : bool, optional
@@ -51,16 +54,17 @@ class ExperimentConfig:
     algorithm: str
 
     # GA parameters
-    pop_size: int = 100
+    pop_size: int = 20
     generations: int = 100
     elite_size: int = 3
     penalty: float = 1.5
-    patience: int = 10
+    patience: int = 5
 
-    # Mutation flags (GML naming scheme)
-    mutation_geometry: bool = True
-    mutation_merge: bool = True
-    mutation_local: bool = True
+    # Mutation probabilities (GML naming scheme)
+    # Set to 0.0 to disable a mutation
+    p_geometry: float = 0.20
+    p_merge: float = 0.20
+    p_local: float = 0.30
 
     # Quadtree parameters
     quadtree_min_size: int = 4
@@ -76,18 +80,18 @@ class ExperimentConfig:
 
         """
         if not any([
-            self.mutation_geometry,
-            self.mutation_merge,
-            self.mutation_local
+            self.p_geometry > 0,
+            self.p_merge > 0,
+            self.p_local > 0
         ]):
             return "NONE"
 
         code = ""
-        if self.mutation_geometry:
+        if self.p_geometry > 0:
             code += "G"
-        if self.mutation_merge:
+        if self.p_merge > 0:
             code += "M"
-        if self.mutation_local:
+        if self.p_local > 0:
             code += "L"
 
         return code

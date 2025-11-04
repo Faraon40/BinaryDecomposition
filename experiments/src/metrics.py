@@ -40,14 +40,19 @@ def calculate_metrics(
     # Handle both Chromosome objects and plain lists
     if hasattr(solution, 'rectangles'):
         # GA solution (Chromosome object)
-        metrics['rectangle_count'] = len(solution.rectangles)
+        rect_count = len(solution.rectangles)
+        metrics['rectangles'] = rect_count
+        metrics['rectangle_count'] = rect_count  # Backward compatibility
         metrics['final_fitness'] = solution.fitness
     else:
         # Quadtree solution (list of rectangles)
-        metrics['rectangle_count'] = len(solution)
+        rect_count = len(solution)
+        metrics['rectangles'] = rect_count
+        metrics['rectangle_count'] = rect_count  # Backward compatibility
         metrics['final_fitness'] = None
 
-    metrics['execution_time_sec'] = round(execution_time, 2)
+    metrics['execution_time'] = round(execution_time, 2)
+    metrics['execution_time_sec'] = round(execution_time, 2)  # Compat
     metrics['generations_used'] = generations_used
 
     return metrics
