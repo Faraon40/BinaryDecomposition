@@ -190,3 +190,5 @@ cython_debug/
 /docs/out/
 /res/figures/synthetic/json/
 /res/figures/synthetic/npy/
+/res/figures/research_leafs/
+/res/figures/research_leafs_binary/npy/
