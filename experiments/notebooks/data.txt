@@ -1,0 +1,174 @@
+acer_campestre_1 1 792 1 826 1 937 1 649
+acer_campestre_2 1 652 1 607 1 799 1 520
+acer_campestre_3 2 274 2 097 2 401 2 079
+acer_ginnala_1 1 500 1 346 1 544 1 382
+acer_ginnala_2 1 562 1 408 1 611 1 406
+acer_ginnala_3 956 834 937 848
+acer_ginnala_4 1 452 1 292 1 502 1 295
+acer_ginnala_5 1 513 1 286 1 528 1 319
+acer_ginnala_6 1 402 1 170 1 339 1 183
+acer_ginnala_7 1 524 1 415 1 560 1 449
+acer_negundo_1 861 694 829 694
+acer_negundo_2 882 605 809 605
+acer_negundo_3 851 637 758 637
+acer_negundo_4 1 531 1 306 1 583 1 305
+acer_platanoides_1 2 528 2 573 2 878 2 434
+acer_platanoides_2 3 309 3 306 3 714 3 088
+acer_platanoides_3 2 968 2 922 3 367 2 862
+acer_pseudoplatanus_1 2 638 2 506 2 802 2 531
+acer_pseudoplatanus_2 2 032 1 913 1 993 1 917
+acer_pseudoplatanus_3 2 472 2 419 2 867 2 342
+acer_pseudoplatanus_4 2 605 2 603 2 931 2 601
+acer_pseudoplatanus_5 1 904 1 921 2 125 1 739
+acer_pseudoplatanus_6 2 971 2 674 3 342 2 868
+acer_pseudoplatanus_7 2 823 2 871 3 143 2 686
+acer_saccharinum_1 971 816 956 816
+acer_saccharinum_2 2 691 2 411 2 958 2 649
+acer_saccharinum_3 2 674 2 499 3 015 2 582
+acer_saccharinum_4 2 740 2 594 3 116 2 631
+acer_saccharinum_5 2 447 2 209 2 629 2 376
+acer_saccharinum_6 3 355 3 234 3 717 3 162
+acer_saccharinum_7 2 369 2 272 2 674 2 267
+acer_tataricum_1 1 556 1 501 1 745 1 499
+acer_tataricum_2 1 116 950 1 087 949
+acer_tataricum_3 1 244 1 052 1 225 1 051
+acer_tataricum_4 1 497 1 383 1 620 1 385
+acer_tataricum_5 1 547 1 393 1 636 1 391
+acer_tataricum_6 1 208 1 025 1 192 1 026
+acer_tataricum_7 1 727 1 445 1 762 1 445
+acer_tataricum_8 996 858 956 855
+aesculus_carnea_1 4 246 3 832 4 438 3 826
+aesculus_carnea_2 2 655 2 702 2 974 2 612
+aesculus_carnea_3 1 331 1 146 1 420 1 146
+aesculus_carnea_4 3 447 3 387 3 756 3 397
+aesculus_carnea_5 3 113 3 051 3 394 3 062
+aesculus_carnea_6 4 032 3 793 4 175 3 713
+aesculus_carnea_7 3 886 3 603 3 952 3 543
+aesculus_carnea_8 3 376 3 148 3 457 3 093
+aesculus_carnea_9 3 371 3 150 3 546 3 158
+aesculus_carnea_10 3 497 3 256 3 538 3 235
+aesculus_carnea_11 5 044 4 493 4 941 4 442
+aesculus_carnea_12 4 921 4 517 5 113 4 528
+aesculus_carnea_13 2 713 2 655 2 946 2 689
+aesculus_hippocastanum_1 1 326 1 172 1 286 1 172
+aesculus_hippocastanum_2 1 694 1 439 1 645 1 439
+aesculus_hippocastanum_3 1 536 1 365 1 576 1 513
+aesculus_hippocastanum_4 1 366 1 330 1 428 1 347
+aesculus_hippocastanum_5 2 254 2 187 2 214 2 222
+aesculus_hippocastanum_6 3 130 2 836 3 457 2 836
+aesculus_hippocastanum_7 2 361 2 129 2 513 2 129
+aesculus_hippocastanum_8 1 751 1 552 1 906 1 551
+aesculus_hippocastanum_9 2 839 2 528 3 162 2 528
+aesculus_hippocastanum_10 1 600 1 338 1 774 1 342
+aesculus_hippocastanum_11 1 480 1 262 1 576 1 262
+aesculus_hippocastanum_12 1 705 1 429 1 816 1 429
+ailanthus_altissima_1 1 516 1 122 1 265 1 122
+ailanthus_altissima_2 1 594 1 174 1 331 1 174
+
+ailanthus_altissima_3 1 599 1 221 1 250 1 221
+ailanthus_altissima_4 1 634 1 208 1 365 1 208
+ailanthus_altissima_5 1 518 1 132 1 193 1 132
+alnus_glutinosa_1 347 256 340 253
+alnus_glutinosa_2 1 233 1 115 1 282 1 215
+alnus_glutinosa_3 1 273 1 163 1 247
+1 231
+alnus_orientalis_1 900 787 922 787
+alnus_orientalis_2 786 666 760 665
+alnus_orientalis_3 580 436 502 436
+alnus_orientalis_4 702 565 678 565
+alnus_orientalis_5 861 731 881 730
+alnus_orientalis_6 800 649 814 648
+alnus_orientalis_7 732 540 774 539
+alnus_orientalis_8 786 638 777 638
+alnus_orientalis_9 852 699 886 699
+alnus_orientalis_10 740 626 712 626
+alnus_orientalis_11 683 565 640 564
+alnus_orientalis_12 771 618 731 617
+alnus_orientalis_13 688 547 646 547
+alnus_orientalis_14 849 672 866 672
+alnus_orientalis_15 817 700 868 699
+alnus_orientalis_16 636 541 583 541
+alnus_orientalis_17 529 425 486 425
+amorpha_fruticosa_1 347 253 340 253
+amorpha_fruticosa_2 308 225 300 225
+amorpha_fruticosa_3 139 102 135 102
+amorpha_fruticosa_4 160 109 154 109
+amorpha_fruticosa_5 391 286 379 286
+amorpha_fruticosa_6 154 110 135 110
+amorpha_fruticosa_7 238 165 203 165
+aronia_melanocarpa_1 883 745 853 745
+aronia_melanocarpa_2 1 143 1 021 1 118 1 019
+aronia_melanocarpa_3 1 199 988 1 135 988
+aronia_melanocarpa_4 1 019 900 983 899
+aronia_melanocarpa_5 979 887 962 887
+aronia_melanocarpa_6 867 759 856 758
+berberis_vulgaris_1 510 404 452 404
+berberis_vulgaris_2 336 261 322 261
+berberis_vulgaris_3 373 281 361 281
+berberis_vulgaris_4 281 219 233 219
+berberis_vulgaris_5 351 269 311 269
+berberis_vulgaris_6 395 294 380 249
+berberis_vulgaris_7 389 291 380 291
+betula_pendula_1 566 463 536 463
+betula_pendula_2 736 604 726 604
+betula_pendula_3 678 563 662 563
+castanea_sativa_2 3 234 3 052 3 601 3 048
+catalpa_bignonioides_1 2 198 2 174 2 329 2 167
+colutea_arborescens_1 314 289 319 289
+corylus_avellana_1 2 341 2 453 2 502 2 309
+cotinus_coggygria_2 1 136 1 029 1 106 1 028
+fallopia_aubertii_4 514 419 466 419
+forsythia_intermedia_6 527 397 515 397
+ginkgo_biloba_3 1 390 1 147 1 265 1 146
+ginkgo_biloba_4 1 391 1 348 1 460 1 334
+hamamelis_japonica_8 949 844 911 843
+
+hedera_helix_7 2 569 2 720 2 877 2 542
+hedera_helix_2 1 278 1 300 1 396 1 263
+ilex_aquifolium_3 1 252 1 215 1 381 1 239
+koelreuteria_paniculata_1 882 911 994 868
+liquidambar_styraciflua_1 4 737 4 606 5 199 4 581
+liquidambar_styraciflua_8 4 311 3 969 4 435 3 780
+liriodendron_tulipifera_4 1 500 1 609 1 710 1 477
+liriodendron_tulipifera_5 1 170 1 216 1 322 1 160
+magnolia_soulangeana_1 1 887 1 606 1 894 1 607
+mahonia_aquifolium_1 652 600 632 600
+morus_alba_1 1 037 963 1 056 962
+parthenocissus_tricuspidata_1 1 407 1 273 1 489 1 308
+paulownia_tomentosa_8 4 746 4 524 5 040 4 534
+paulownia_tomentosa_16 5 365 4 909 5 315 4 801
+platanus_hybrida_3 3 405 3 535 3 884 3 297
+populus_nigra_2 1 488 1 337 1 484 1 337
+populus_tremula_5 1 389 1 255 1 374 1 251
+pyracantha_coccinea_18 439 294 383 294
+quercus_cerris_5 1 613 1 397 1 652 1 397
+quercus_frainetto_1 2 417 2 467 2 837 2 412
+quercus_petraea_1 1 463 1 364 1 452 1 364
+quercus_robur_2 923 873 953 904
+quercus_rubra_3 3 679 3 843 4 441 3 519
+ribes_alpinum_3 441 432 455 434
+robinia_pseudacacia_3 326 268 317 268
+salix_alba_pendula_2 717 480 639 479
+sophora_japonica_5 482 368 392 368
+sorbus_aria_1 1 571 1 378 1 543 1 380
+sorbus_domestica_8 511 361 505 361
+sorbus_intermedia_3 1 555 1 493 1 735 1 516
+tilia_platyphyllos_1 2 061 2 141 2 285 2 021
+tilia_platyphyllos_2 2 132 1 986 2 159 1 979
+tilia_platyphyllos_3 1 949 1 826 2 056 1 863
+tilia_platyphyllos_4 2 176 2 092 2 253 2 084
+tilia_platyphyllos_5 2 206 2 074 2 215 2 097
+tilia_platyphyllos_6 1 913 1 799 1 959 1 828
+ulmus_glabra_4 2 564 2 357 2 776 2 354
+ulmus_laevis_1 1 697 1 581 1 726 1 641
+ulmus_laevis_2 1 577 1 385 1 589 1 381
+ulmus_laevis_3 1 372 1 215 1 332 1 215
+ulmus_laevis_4 1 412 1 263 1 408 1 260
+ulmus_laevis_5 1 532 1 383 1 570 1 382
+ulmus_laevis_6 1 500 1 362 1 455 1 362
+ulmus_laevis_7 1 484 1 368 1 496 1 370
+ulmus_laevis_8 1 605 1 434 1 647 1 574
+ulmus_laevis_9 1 974 1 863 1 995 1 862
+vinca_minor_6 388 283 387 283
+vitis_vinifera_2 4 024 3 947 4 500 3 972
+vitis_vinifera_3 3 141 3 050 3 198 3 067
