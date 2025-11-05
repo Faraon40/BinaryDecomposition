@@ -13,20 +13,33 @@ from typing import Dict, List, Set
 class CSVLogger:
     """Logger for experiment results with CSV output.
 
-    Creates two CSV files per algorithm:
-    1. {algorithm}_results.csv - Main results (one row per image)
-    2. {algorithm}_generations.csv - Generation history for plotting
+    Creates two CSV files per algorithm and dataset:
+    1. results.csv - Main results (one row per image)
+    2. generations.csv - Generation history for plotting
+
+    Files are saved in hierarchical structure:
+    csv/algorithm_mutationcombo/dataset_name/results.csv
 
     Parameters
     ----------
     algorithm_name : str
-        Name of the algorithm (used for CSV filename).
+        Name of the algorithm (e.g., "ga_rle").
     output_dir : str or Path
-        Directory to save CSV files.
+        Base directory to save CSV files.
+    dataset_name : str
+        Name of dataset directory (e.g., "objects_binary").
+    mutation_combo : str
+        Mutation combination code (e.g., "GML").
 
     """
 
-    def __init__(self, algorithm_name: str, output_dir: str):
+    def __init__(
+        self,
+        algorithm_name: str,
+        output_dir: str,
+        dataset_name: str,
+        mutation_combo: str
+    ):
         """Initialize CSV logger.
 
         Parameters
@@ -34,19 +47,25 @@ class CSVLogger:
         algorithm_name : str
             Name of the algorithm.
         output_dir : str
-            Directory path for output CSVs.
+            Base directory path for output CSVs.
+        dataset_name : str
+            Name of dataset directory.
+        mutation_combo : str
+            Mutation combination code.
 
         """
         self.algorithm_name = algorithm_name
-        self.output_dir = Path(output_dir)
+        self.dataset_name = dataset_name
+        self.mutation_combo = mutation_combo
+
+        # Create hierarchical directory:
+        # csv/algorithm_mutationcombo/dataset_name/
+        algo_dir = f"{algorithm_name}_{mutation_combo}"
+        self.output_dir = Path(output_dir) / algo_dir / dataset_name
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        self.results_csv = (
-            self.output_dir / f"{algorithm_name}_results.csv"
-        )
-        self.generations_csv = (
-            self.output_dir / f"{algorithm_name}_generations.csv"
-        )
+        self.results_csv = self.output_dir / "results.csv"
+        self.generations_csv = self.output_dir / "generations.csv"
 
         # Create CSVs with headers if they don't exist
         self._initialize_csv_files()
@@ -173,6 +192,6 @@ class CSVLogger:
             Error message.
 
         """
-        error_log = self.output_dir / f"{self.algorithm_name}_errors.log"
+        error_log = self.output_dir / "errors.log"
         with open(error_log, 'a') as f:
             f.write(f"{image_name}: {error_msg}\n")
