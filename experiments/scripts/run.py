@@ -337,8 +337,9 @@ def main():
         pop_size=20,
         generations=100,
         patience=5,
-        algorithm="ga_quadtree", # Algorithms: "ga_rle", "ga_random", "ga_quadtree"
+        algorithm="ga_rle",
     )
+    # Algorithms: "ga_rle", "ga_random", "ga_quadtree"
 
     # PRODUCTION MODE: Uncomment to run on all images
     # run_experiments(
