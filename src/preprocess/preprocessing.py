@@ -13,7 +13,7 @@ def image_to_binary(path: str, save_path: str = None) -> np.ndarray:
     """
     Convert a leaf image with white background into a binary image.
 
-    Leaf -> black (0), background -> white (255).
+    Object (leaf) -> white (255), background -> black (0).
 
     Args:
         path (str): Path to input image
@@ -36,8 +36,8 @@ def image_to_binary(path: str, save_path: str = None) -> np.ndarray:
     # Mask white regions
     mask_white = cv2.inRange(hsv, lower_white, upper_white)
 
-    # Background = white (255), leaf = black (0)
-    binary = mask_white.copy()
+    # Invert: object (leaf) = 255 (1), background = 0
+    binary = cv2.bitwise_not(mask_white)
 
     # Morphological cleaning
     kernel = np.ones((5, 5), np.uint8)
