@@ -329,7 +329,7 @@ def main():
     # TEST MODE: Quick test on 5 images
     run_experiments(
         image_dir_name="validation",
-        max_images=3,  # Limit to 5 images for testing
+        max_images=5,  # Limit to 5 images for testing
         p_geometry=0.2,
         p_merge=0.2,
         p_local=0.3,

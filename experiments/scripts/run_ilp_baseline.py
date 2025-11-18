@@ -250,12 +250,12 @@ if __name__ == "__main__":
     if len(sys.argv) > 2:
         max_imgs = int(sys.argv[2])
     else:
-        max_imgs = 3
+        max_imgs = 5
 
     if len(sys.argv) > 3:
         max_cands = int(sys.argv[3])
     else:
-        max_cands = 100_000  # 5M candidates = safer RAM usage (~25-30GB)
+        max_cands = 350_000  # 5M candidates = safer RAM usage (~25-30GB)
 
     print(f"\nUsage: python run_ilp_baseline.py "
           f"[directory] [max_images] [max_candidates]")
