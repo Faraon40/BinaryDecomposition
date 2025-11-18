@@ -32,7 +32,7 @@ def run_ilp_baseline(
     Parameters
     ----------
     image_dir_name : str
-        Directory name under res/figures/ (e.g., "small", "synthetic").
+        Directory name under res/figures/ (e.g., "validation", "synthetic").
     max_images : int, optional
         Maximum number of images to process. If None, processes all.
     timeout : int, optional
@@ -74,8 +74,8 @@ def run_ilp_baseline(
     print(f"Max candidates: {max_candidates:,}")
     print("=" * 70)
 
-    # Create output directories in separate baseline structure
-    base_dir = project_root / "experiments/results/ilp_baseline"
+    # Create output directories in solver_results
+    base_dir = project_root / "experiments/solver_results"
 
     rect_dir = base_dir / "rectangles" / image_dir_name
     rect_dir.mkdir(parents=True, exist_ok=True)
@@ -86,8 +86,9 @@ def run_ilp_baseline(
     csv_dir = base_dir / "csv"
     csv_dir.mkdir(parents=True, exist_ok=True)
 
-    # CSV file for results
-    csv_path = csv_dir / f"{image_dir_name}_results.csv"
+    # CSV file for results (replace slashes for subdirectories)
+    csv_filename = image_dir_name.replace('/', '_').replace('\\', '_') + "_results.csv"
+    csv_path = csv_dir / csv_filename
 
     total_start = time.time()
     results = []
@@ -244,7 +245,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 1:
         image_dir = sys.argv[1]
     else:
-        image_dir = "small"
+        image_dir = "validation"
 
     if len(sys.argv) > 2:
         max_imgs = int(sys.argv[2])

@@ -332,19 +332,19 @@ def run_ilp(
     # Use maximal rectangles for efficiency (small trade-off in optimality)
     if verbose:
         print(f"Using maximal rectangle enumeration...")
-    candidates = enumerate_maximal_rects(
-        img,
-        max_candidates=max_candidates,
-        verbose=verbose
-    )
-
-    # Full enumeration (for small images only - requires
-    # millions of candidates for crown-6)
-    # candidates = enumerate_full_rects(
+    # candidates = enumerate_maximal_rects(
     #     img,
     #     max_candidates=max_candidates,
     #     verbose=verbose
     # )
+
+    # Full enumeration (for validation images only - requires
+    # millions of candidates for crown-6)
+    candidates = enumerate_full_rects(
+        img,
+        max_candidates=max_candidates,
+        verbose=verbose
+    )
 
     enum_time = time.time() - start_time
 
@@ -466,8 +466,8 @@ if __name__ == "__main__":
     from pathlib import Path
 
     # Default configuration
-    DEFAULT_DIR = "small"  # Can be: objects_binary, synthetic, etc.
-    DEFAULT_MAX_IMAGES = 1
+    DEFAULT_DIR = "synthetic"  # Can be: objects_binary, synthetic, etc.
+    DEFAULT_MAX_IMAGES = 5
     DEFAULT_MAX_CANDIDATES = 200000
 
     # Parse command-line arguments
