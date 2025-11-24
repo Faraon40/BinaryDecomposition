@@ -1,4 +1,51 @@
-\section{Kapitola}
+\section{Teoretický základ}\label{sec:teoreticky-zaklad}
 
-\parencite{treeleavesmew2019}
+\subsection{Binárne obrázky a ich reprezentácia}\label{subsec:binarne-obrazky-a-ich-reprezentacia}
+
+\subsubsection{Definícia binárnych obrázkov}
+
+\hspace{0.5cm}
+Binárny obrázok je sekvencia dat v binárnej podobe, kde pixely nadobúdajú iba dve možné hodnoty 0 alebo 1.
+Zvyčajne čiernou farbou je interpretované pozadie a je reprezentované nulami a popredie alebo objekt zaujmú je biele,
+reprezentované jednotkami.
+
+\subsubsection{Problém dekompozície na obdĺžniky}
+
+\hspace{0.5cm}
+Problém dekompozície na obdĺžniky je postup, pri ktorom sa popredie obrázka (pixely s hodnotou 1) rozloží na
+množinu navzájom neprekrývajúcich sa ortogonálnych obdĺžnikov tak, aby ich zjednotenie presne prekrývalo všetky
+pixely popredia a žiadne iné.
+
+Formálne: Nech $B$ je binárny objekt (binárnym objektom rozumieme množinu všetkých pixelov binárneho obrázka,
+ktorých hodnota je rovná~1).
+Rozložíme ho na $K \geq 1$ blokov $B_1, B_2, \ldots, B_K$ takých,
+že $B_i \cap B_j = \emptyset$ pre každé $i \neq j$ a $B = \bigcup_{k=1}^{K} B_k$. \parencite{SUK20124279}
+
+Existuje viacero metód, ako sa dá rozložiť binárny objekt na obdĺžniky, ich algoritmy sa trocha líšia a sú zamerané nie len
+na samotný rozklad, ale aj dosiahnuť rozklad s čo menším počtom blokov alebo dosiahnuť najlepšiu kompresiu obrázka v rozumnom čase.
+Tento problém je NP-ťažký, čo bolo dokázané viacerými autormi \parencite{hanauer2024covering,masek1978np,najman2014covering}
+
+Pre všeobecné binárne obrazy neexistuje známy polynomiálny algoritmus na nájdenie optimálneho riešenia.
+Napriek tomu je možné získať optimálne riešenia tohto problému použitím lineárneho celočíselného programovania (ILP),
+ktoré poskytuje presné výsledky.
+
+
+\subsection{Genetické algoritmy}
+\label{subsec:geneticke-algoritmy}
+
+\subsubsection{Princípy evolučných algoritmov}
+
+\hspace{0.5cm}
+Genetický algoritmus, (ďalej GA) je vyhľadávacia heuristika inšpirovaná prirodzeným výberom a evolúciou,
+ktorá sa používa na nájdenie optimálnych riešení zložitých problémov.
+
+\subsubsection{Reprezentácia chromozómov}
+
+\subsubsection{Fitness funkcia}
+
+\subsubsection{Genetické operátory}
+
+\subsubsection{Stratégie selekcie}
+
+
 
