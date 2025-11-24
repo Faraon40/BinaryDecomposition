@@ -1,5 +1,5 @@
 """
-Run ILP solver to establish baseline/ground truth for small test images.
+Run ILP solvers to establish baseline/ground truth for small test images.
 
 Saves results in separate directory structure to avoid mixing with GA results:
 - experiments/results/ilp_baseline/rectangles/
@@ -12,7 +12,7 @@ import sys
 import time
 from pathlib import Path
 import numpy as np
-from src.solver.ilp_solver import run_ilp, validate_solution
+from src.solvers.ilp_solver_cbc import run_ilp, validate_solution
 from src.utils.utils import draw_solution
 
 # Add project root to path
@@ -27,7 +27,7 @@ def run_ilp_baseline(
     timeout: int = 300,
     max_candidates: int = 100000
 ):
-    """Run ILP solver on small test images to establish ground truth.
+    """Run ILP solvers on small test images to establish ground truth.
 
     Parameters
     ----------
@@ -75,7 +75,7 @@ def run_ilp_baseline(
     print("=" * 70)
 
     # Create output directories in solver_results
-    base_dir = project_root / "experiments/solver_results"
+    base_dir = project_root / "experiments/solver_results/cbc"
 
     rect_dir = base_dir / "rectangles" / image_dir_name
     rect_dir.mkdir(parents=True, exist_ok=True)
@@ -105,7 +105,7 @@ def run_ilp_baseline(
 
             print(f"Image size: {w}×{h}, Pixels to cover: {pixel_count:,}")
 
-            # Run ILP solver
+            # Run ILP solvers
             rectangles, stats = run_ilp(
                 img,
                 timeout=timeout,
@@ -255,7 +255,7 @@ if __name__ == "__main__":
     if len(sys.argv) > 3:
         max_cands = int(sys.argv[3])
     else:
-        max_cands = 350_000  # 5M candidates = safer RAM usage (~25-30GB)
+        max_cands = 600_000
 
     print(f"\nUsage: python run_ilp_baseline.py "
           f"[directory] [max_images] [max_candidates]")
@@ -266,6 +266,6 @@ if __name__ == "__main__":
     run_ilp_baseline(
         image_dir_name=image_dir,
         max_images=max_imgs,
-        timeout=300,
+        timeout=3600,
         max_candidates=max_cands
     )

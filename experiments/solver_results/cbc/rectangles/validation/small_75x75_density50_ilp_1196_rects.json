@@ -7185,9 +7185,9 @@
     "status": "optimal",
     "rectangle_count": 1196,
     "candidates": 8842,
-    "solve_time": 0.5384299755096436,
-    "enum_time": 0.07724285125732422,
-    "ilp_time": 0.36356377601623535
+    "solve_time": 0.48158931732177734,
+    "enum_time": 0.08663654327392578,
+    "ilp_time": 0.3533751964569092
   },
   "validation": {
     "valid": true,

@@ -1,0 +1,81 @@
+{
+  "image_name": "hat-5_binary.npy",
+  "algorithm": "ilp_gurobi",
+  "optimal": true,
+  "rectangle_count": 10,
+  "rectangles": [
+    [
+      9,
+      0,
+      32,
+      24
+    ],
+    [
+      8,
+      3,
+      1,
+      9
+    ],
+    [
+      8,
+      24,
+      35,
+      1
+    ],
+    [
+      6,
+      25,
+      40,
+      1
+    ],
+    [
+      4,
+      26,
+      30,
+      6
+    ],
+    [
+      34,
+      26,
+      16,
+      7
+    ],
+    [
+      0,
+      27,
+      4,
+      6
+    ],
+    [
+      4,
+      32,
+      12,
+      1
+    ],
+    [
+      0,
+      33,
+      11,
+      1
+    ],
+    [
+      42,
+      33,
+      5,
+      1
+    ]
+  ],
+  "stats": {
+    "status": "optimal",
+    "solve_time": 179.20747303962708,
+    "enum_time": 0.21401643753051758,
+    "ilp_time": 161.46328592300415,
+    "candidates": 301770,
+    "mip_gap": 0.0,
+    "objective": 10.0
+  },
+  "validation": {
+    "valid": true,
+    "message": "Valid solution"
+  }
+}

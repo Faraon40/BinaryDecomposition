@@ -1,0 +1,80 @@
+{
+  "image_name": "hat-5_binary.npy",
+  "algorithm": "ilp_baseline",
+  "optimal": true,
+  "rectangle_count": 10,
+  "rectangles": [
+    [
+      9,
+      0,
+      32,
+      24
+    ],
+    [
+      8,
+      3,
+      1,
+      9
+    ],
+    [
+      8,
+      24,
+      35,
+      1
+    ],
+    [
+      6,
+      25,
+      40,
+      1
+    ],
+    [
+      4,
+      26,
+      30,
+      6
+    ],
+    [
+      34,
+      26,
+      16,
+      7
+    ],
+    [
+      0,
+      27,
+      4,
+      5
+    ],
+    [
+      0,
+      32,
+      11,
+      2
+    ],
+    [
+      11,
+      32,
+      5,
+      1
+    ],
+    [
+      42,
+      33,
+      5,
+      1
+    ]
+  ],
+  "stats": {
+    "status": "optimal",
+    "rectangle_count": 10,
+    "candidates": 301770,
+    "solve_time": 420.52201628685,
+    "enum_time": 0.22510337829589844,
+    "ilp_time": 394.2584710121155
+  },
+  "validation": {
+    "valid": true,
+    "message": "Valid solution"
+  }
+}
