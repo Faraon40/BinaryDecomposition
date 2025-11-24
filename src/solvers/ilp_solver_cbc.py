@@ -1,6 +1,6 @@
-"""Integer Linear Programming solver for exact rectangle decomposition.
+"""Integer Linear Programming solvers for exact rectangle decomposition.
 
-This module provides an exact solver for the minimum rectangle covering
+This module provides an exact solvers for the minimum rectangle covering
 problem using Integer Linear Programming (ILP). It finds the provably
 optimal solution (minimum number of rectangles) for binary images.
 
@@ -461,7 +461,7 @@ def run_ilp(
 
 
 if __name__ == "__main__":
-    """Demo: run ILP solver on images from a directory."""
+    """Demo: run ILP solvers on images from a directory."""
     import sys
     from pathlib import Path
 
@@ -541,7 +541,7 @@ if __name__ == "__main__":
 
             print(f"Image size: {w}×{h}, Pixels to cover: {pixel_count:,}")
 
-            # Run ILP solver
+            # Run ILP solvers
             rectangles, stats = run_ilp(
                 img, timeout=300, max_candidates=max_candidates, verbose=True
             )
