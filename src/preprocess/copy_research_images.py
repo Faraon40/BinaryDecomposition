@@ -47,8 +47,7 @@ def main():
         "Datasets/trees_directories/trees_directories"
     )
     output_dir = Path(
-        "D:/Projects/PycharmProjects/BinaryDecomposition/"
-        "res/figures/research_leafs"
+        "/res/figures/research_leafs"
     )
 
     # Create output directory if it doesn't exist
