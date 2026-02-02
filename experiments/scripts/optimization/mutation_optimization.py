@@ -447,7 +447,7 @@ def main(
 
     Args:
         image_name: Name of the test image
-        image_dir: Directory under res/figures/
+        image_dir: Directory under data/datasets/
         prob_values: Probability values to test in Phase 1
     """
     if prob_values is None:
@@ -457,7 +457,7 @@ def main(
     script_dir = Path(__file__).parent
     project_root = script_dir.parent.parent
     image_path = (
-        project_root / "res/figures" / image_dir / "npy" / image_name
+        project_root / "data/datasets" / image_dir / "npy" / image_name
     )
     output_dir = project_root / "experiments/results/csv/optimization"
 

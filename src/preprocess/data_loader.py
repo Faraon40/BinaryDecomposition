@@ -61,7 +61,7 @@ def load_and_copy_one_image_per_leaf(
 
 if __name__ == "__main__":
     dataset_dir = "trees_directories"
-    output_dir = "../../res/figures/leafs"
+    output_dir = "../../data/datasets/leafs"
 
     images = load_and_copy_one_image_per_leaf(
         dataset_dir, output_dir, random_choice=False

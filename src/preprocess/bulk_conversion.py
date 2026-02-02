@@ -53,6 +53,6 @@ def bulk_convert_to_binary(
 
 
 if __name__ == "__main__":
-    bulk_convert_to_binary("../../res/figures/research_leafs",
-                           "../../res/figures/research_leafs_binary")
+    bulk_convert_to_binary("../../data/datasets/research_leafs",
+                           "../../data/datasets/research_leafs_binary")
     print("Bulk conversion completed.")

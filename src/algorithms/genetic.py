@@ -720,19 +720,19 @@ def main():
     # Load the .npy file
     # Make sure it's 0s and 1s
     # img = np.load(
-    #     "../../res/figures/research_leafs_binary/npy/Quercus_robur_2_binary.npy"
+    #     "../../data/datasets/research_leafs_binary/npy/Quercus_robur_2_binary.npy"
     # )
     # img = np.load(
-    #     "../../res/figures/leafs_binary/npy/Vitis_riparia_5_binary.npy"
+    #     "../../data/datasets/leafs_binary/npy/Vitis_riparia_5_binary.npy"
     # )
     # img = np.load(
-    #     "../../docs/figures/leafs_binary/npy/Vitis_riparia_binary.npy"
+    #     "../../docs/datasets/leafs_binary/npy/Vitis_riparia_binary.npy"
     # )
     # Use absolute path from project root
     from pathlib import Path
     project_root = Path(__file__).parent.parent.parent
     img = np.load(
-        project_root / "res/figures/validation/npy/crown-6_binary.npy"
+        project_root / "data/datasets/validation/npy/crown-6_binary.npy"
     )
     img = (img > 0).astype(int)
     # img = 1 - img  # if image is loaded we have to invert 0s and 1s

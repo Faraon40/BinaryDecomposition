@@ -95,7 +95,7 @@ def save_generated_image(
 
 
 def generate_dataset(
-    output_dir: str = "../../res/figures/synthetic",
+    output_dir: str = "../../data/datasets/synthetic",
 ):
     """Generate synthetic dataset of pure random noise images.
 

@@ -386,7 +386,7 @@ if __name__ == "__main__":
 
     # Load test image
     img = np.load(
-        "../../res/figures/objects_binary/npy/crown-3_binary.npy"
+        "../../data/datasets/objects_binary/npy/crown-3_binary.npy"
     )
     img = (img > 0).astype(int)
 

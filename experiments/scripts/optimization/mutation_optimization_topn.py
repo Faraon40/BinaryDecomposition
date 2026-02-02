@@ -585,7 +585,7 @@ def main(
 
     Args:
         image_name: Name of the test image
-        image_dir: Directory under res/figures/
+        image_dir: Directory under data/datasets/
         prob_values: Probability values to test in Phase 1
         top_n: Number of top combinations to validate in Phase 2
         base_seed: Seed for phase1 runs
@@ -597,7 +597,7 @@ def main(
     script_dir = Path(__file__).parent
     project_root = script_dir.parent.parent
     image_path = (
-        project_root / "res/figures" / image_dir / "npy" / image_name
+        project_root / "data/datasets" / image_dir / "npy" / image_name
     )
 
     # Create output directory: results/optimization/image_name/

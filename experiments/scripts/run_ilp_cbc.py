@@ -32,7 +32,7 @@ def run_ilp_baseline(
     Parameters
     ----------
     image_dir_name : str
-        Directory name under res/figures/ (e.g., "validation", "synthetic").
+        Directory name under data/datasets/ (e.g., "validation", "synthetic").
     max_images : int, optional
         Maximum number of images to process. If None, processes all.
     timeout : int, optional
@@ -44,13 +44,13 @@ def run_ilp_baseline(
     # Setup paths
     script_dir = Path(__file__).parent
     project_root = script_dir.parent.parent
-    image_dir = project_root / "res/figures" / image_dir_name / "npy"
+    image_dir = project_root / "data/datasets" / image_dir_name / "npy"
 
     if not image_dir.exists():
         raise FileNotFoundError(
             f"Image directory not found: {image_dir}\n"
-            f"Available directories in res/figures/: "
-            f"{[d.name for d in (project_root / 'res/figures').iterdir() if d.is_dir()]}"
+            f"Available directories in data/datasets/: "
+            f"{[d.name for d in (project_root / 'data/datasets').iterdir() if d.is_dir()]}"
         )
 
     # Get image paths

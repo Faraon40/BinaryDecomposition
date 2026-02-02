@@ -27,7 +27,7 @@ def main(image_dir="leafs_binary", num_images=30, seed=42):
     """Run grid search experiment.
 
     Args:
-        image_dir: Directory name under res/figures/ (default: leafs_binary)
+        image_dir: Directory name under data/datasets/ (default: leafs_binary)
         num_images: Number of random images to use (default: 30)
         seed: Random seed for image selection (default: 42)
     """
@@ -40,7 +40,7 @@ def main(image_dir="leafs_binary", num_images=30, seed=42):
     project_root = script_dir.parent.parent
 
     # Get all .npy files from specified directory
-    npy_dir = project_root / "res/figures" / image_dir / "npy"
+    npy_dir = project_root / "data/datasets" / image_dir / "npy"
 
     if not npy_dir.exists():
         raise FileNotFoundError(f"Directory not found: {npy_dir}")

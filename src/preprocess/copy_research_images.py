@@ -2,7 +2,7 @@
 Copy leaf images from the dataset to the research_leafs directory.
 
 This script reads rectangles_fixed.csv and copies all corresponding images
-from the trees_directories dataset to res/figures/research_leafs.
+from the trees_directories dataset to data/datasets/research_leafs.
 """
 
 import csv
@@ -47,7 +47,7 @@ def main():
         "Datasets/trees_directories/trees_directories"
     )
     output_dir = Path(
-        "/res/figures/research_leafs"
+        "/data/datasets/research_leafs"
     )
 
     # Create output directory if it doesn't exist

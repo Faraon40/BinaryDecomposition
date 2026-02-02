@@ -489,12 +489,12 @@ if __name__ == "__main__":
     # Setup paths
     script_dir = Path(__file__).parent
     project_root = script_dir.parent.parent
-    image_dir = project_root / "res/figures" / image_dir_name / "npy"
+    image_dir = project_root / "data/datasets" / image_dir_name / "npy"
 
     if not image_dir.exists():
         available = [
             d.name
-            for d in (project_root / "res/figures").iterdir()
+            for d in (project_root / "data/datasets").iterdir()
             if d.is_dir()
         ]
         print(f" Image directory not found: {image_dir}")
