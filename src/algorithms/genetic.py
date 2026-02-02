@@ -2,6 +2,7 @@
 
 import random
 from typing import List
+from scipy import ndimage
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -138,6 +139,126 @@ def repair(
         new_rect = (x, y, max_w, max_h)
         repaired.append(new_rect)
         covered[y : y + max_h, x : x + max_w] = 1
+    return repaired
+
+
+def repair_optimized(
+        rects: List[Rectangle], img: np.ndarray, integral: np.ndarray
+) -> List[Rectangle]:
+    """Optimized repair with reduced redundant checks.
+    Args:
+        rects: List of rectangles to repair.
+        img: Binary image.
+        integral: Integral image.
+
+    Returns:
+        Repaired list of valid non-overlapping rectangles.
+
+    """
+    covered = np.zeros_like(img, dtype=np.uint8)
+    repaired = []
+
+    # Phase 1: Keep valid non-overlapping rects (unchanged)
+    for x, y, w, h in rects:
+        if np.all(covered[y: y + h, x: x + w] == 0) and (
+                is_valid_rectangle_integral(integral, (x, y, w, h))
+        ):
+            repaired.append((x, y, w, h))
+            covered[y: y + h, x: x + w] = 1
+
+    # Phase 2: Cover remaining pixels - optimized
+    ys, xs = np.where((img == 1) & (covered == 0))
+    uncovered = set(zip(xs, ys))
+
+    while uncovered:
+        # Vezmi prvý nepokrytý pixel
+        x, y = uncovered.pop()
+
+        # Skip ak medzičasom bol pokrytý
+        if covered[y, x] == 1:
+            continue
+
+        # Expanduj šírku
+        w = 1
+        while (x + w < img.shape[1] and
+               img[y, x + w] == 1 and
+               covered[y, x + w] == 0 and
+               is_valid_rectangle_integral(integral, (x, y, w + 1, 1))):
+            w += 1
+
+        # Expanduj výšku
+        h = 1
+        while y + h < img.shape[0]:
+            # Check celý nový riadok naraz
+            if not (np.all(img[y + h, x:x + w] == 1) and
+                    np.all(covered[y + h, x:x + w] == 0) and
+                    is_valid_rectangle_integral(integral, (x, y, w, h + 1))):
+                break
+            h += 1
+
+        # Umiestni obdĺžnik
+        repaired.append((x, y, w, h))
+        covered[y:y + h, x:x + w] = 1
+
+        # Odstráň pokryté pixely zo setu
+        for py in range(y, y + h):
+            for px in range(x, x + w):
+                uncovered.discard((px, py))
+
+    return repaired
+
+
+def repair_with_regions(
+        rects: List[Rectangle], img: np.ndarray, integral: np.ndarray
+) -> List[Rectangle]:
+    """Use connected components for faster processing.
+
+    Args:
+        rects: List of rectangles to repair.
+        img: Binary image.
+        integral: Integral image.
+
+    Returns:
+        Repaired list of valid non-overlapping rectangles.
+
+    """
+    covered = np.zeros_like(img, dtype=np.uint8)
+    repaired = []
+
+    # Phase 1: unchanged
+    for x, y, w, h in rects:
+        if np.all(covered[y: y + h, x: x + w] == 0) and (
+                is_valid_rectangle_integral(integral, (x, y, w, h))
+        ):
+            repaired.append((x, y, w, h))
+            covered[y: y + h, x: x + w] = 1
+
+    # Phase 2: Nájdi súvislé komponenty nepokrytých pixelov
+    uncovered_mask = (img == 1) & (covered == 0)
+    labeled, num_features = ndimage.label(uncovered_mask)
+
+    # Pre každú komponentu vytvor obdĺžniky
+    for region_id in range(1, num_features + 1):
+        region_mask = (labeled == region_id)
+        ys, xs = np.where(region_mask)
+
+        # Jednoduchá heuristika: bounding box komponenty
+        min_x, max_x = xs.min(), xs.max()
+        min_y, max_y = ys.min(), ys.max()
+
+        # Skús najprv celý bounding box
+        w, h = max_x - min_x + 1, max_y - min_y + 1
+        if (is_valid_rectangle_integral(integral, (min_x, min_y, w, h)) and
+                np.all(img[min_y:min_y + h, min_x:min_x + w] == 1)):
+            repaired.append((min_x, min_y, w, h))
+            covered[min_y:min_y + h, min_x:min_x + w] = 1
+        else:
+            # Fallback na pôvodnú greedy expanziu pre túto oblasť
+            for x, y in zip(xs, ys):
+                if covered[y, x] == 1:
+                    continue
+                # ... greedy expand ...
+
     return repaired
 
 
@@ -308,7 +429,7 @@ def crossover(
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
 
-    rects = repair(rects, img, integral)
+    rects = repair_optimized(rects, img, integral)
     return Chromosome(rects)
 
 
