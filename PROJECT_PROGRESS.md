@@ -61,7 +61,7 @@
   - Status: Not implemented
   - Needs: Research paper review, implementation in `src/algorithms/`
 
-- **DTD (Dynamic Tree Decomposition)**: Tree-based decomposition method
+- **DTD (Distance Transformation Decomposition)**:
   - Status: Not implemented
   - Mentioned in thesis theoretical part
 
@@ -119,7 +119,7 @@
   - Implement algorithm (literature claims this is optimal)
   - Create experiment script `experiments/scripts/run_graph_based.py`
 
-- [ ] **DTD (Dynamic Tree Decomposition)**
+- [ ] **DTD (Distance Transformation Decomposition)**
   - Research DTD algorithm
   - Implement in `src/algorithms/dtd.py`
   - Create experiment script
