@@ -732,7 +732,7 @@ def main():
     from pathlib import Path
     project_root = Path(__file__).parent.parent.parent
     img = np.load(
-        project_root / "data/datasets/validation/npy/crown-6_binary.npy"
+        project_root / "data/datasets/objects_binary/npy/crown-6_binary.npy"
     )
     img = (img > 0).astype(int)
     # img = 1 - img  # if image is loaded we have to invert 0s and 1s
