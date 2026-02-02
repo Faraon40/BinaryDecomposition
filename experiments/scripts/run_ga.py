@@ -135,7 +135,7 @@ def run_experiments(
     p_geometry: float = 0.2,
     p_merge: float = 0.2,
     p_local: float = 0.3,
-    seed: int = 42,
+    seed: int = None,
     pop_size: int = 20,
     generations: int = 100,
     patience: int = 5,
@@ -328,12 +328,12 @@ def main():
     """Main entry point - configure experiments here."""
     # TEST MODE: Quick test on 5 images
     run_experiments(
-        image_dir_name="validation",
-        max_images=7,  # Limit to 5 images for testing
+        image_dir_name="research_leafs_binary",
+        max_images=1,  # Limit to 5 images for testing
         p_geometry=0.2,
         p_merge=0.2,
         p_local=0.3,
-        seed=24323,
+        seed=None,
         pop_size=20,
         generations=100,
         patience=5,

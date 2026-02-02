@@ -54,17 +54,17 @@ class ExperimentConfig:
     algorithm: str
 
     # GA parameters
-    pop_size: int = 20
+    pop_size: int = 30
     generations: int = 100
     elite_size: int = 3
-    penalty: float = 1.5
+    penalty: float = 2
     patience: int = 5
 
     # Mutation probabilities (GML naming scheme)
     # Set to 0.0 to disable a mutation
     p_geometry: float = 0.20
     p_merge: float = 0.20
-    p_local: float = 0.30
+    p_local: float = 0.20
 
     # Quadtree parameters
     quadtree_min_size: int = 4

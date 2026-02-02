@@ -429,7 +429,7 @@ def crossover(
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
 
-    rects = repair_optimized(rects, img, integral)
+    rects = repair(rects, img, integral)
     return Chromosome(rects)
 
 
@@ -680,7 +680,7 @@ def run_ga(
     patience=10,
     seed=None,
     init_method="rle",
-    verbose=True,
+    verbose=False,
     mutation_geometry=0.05,
     mutation_merge=0.05,
     mutation_local=0.05,
@@ -867,10 +867,14 @@ def main():
     best, history = run_ga(
         img,
         init_method="rle",
-        pop_size=20,
+        pop_size=30,
         generations=100,
-        seed=865,
-        patience=10
+        seed=None,
+        mutation_geometry=0.2,
+        mutation_merge=0.2,
+        mutation_local=0.2,
+        patience = 10,
+        verbose=True,
     )
 
     draw_solution(img, best.rectangles, show=True)
