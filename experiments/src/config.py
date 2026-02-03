@@ -42,6 +42,10 @@ class ExperimentConfig:
     p_local : float, optional
         Probability of local repartition mutation (L) (default: 0.05).
         Set to 0.0 to disable.
+    crossover_method : str, optional
+        Crossover method to use (default: "subset_greedy").
+        Options: "subset_greedy" (Subset Crossover with Greedy
+        Non-overlapping Extension), "single_point", "two_point", "uniform".
     quadtree_min_size : int, optional
         Minimum quadrant size for quadtree algorithm (default: 4).
     quadtree_trim : bool, optional
@@ -65,6 +69,9 @@ class ExperimentConfig:
     p_geometry: float = 0.20
     p_merge: float = 0.20
     p_local: float = 0.20
+
+    # Crossover method
+    crossover_method: str = "subset_greedy"
 
     # Quadtree parameters
     quadtree_min_size: int = 4

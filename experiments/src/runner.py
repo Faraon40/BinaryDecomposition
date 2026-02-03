@@ -83,7 +83,8 @@ def run_single_experiment(
             verbose=False,
             mutation_geometry=config.p_geometry,
             mutation_merge=config.p_merge,
-            mutation_local=config.p_local
+            mutation_local=config.p_local,
+            crossover_method=config.crossover_method
         )
         generations_used = len(generation_history)
 

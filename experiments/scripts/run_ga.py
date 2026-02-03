@@ -84,6 +84,7 @@ def save_solution_rectangles(
             "p_geometry": config.p_geometry,
             "p_merge": config.p_merge,
             "p_local": config.p_local,
+            "crossover_method": config.crossover_method,
             "mutation_combo": config.get_mutation_combo_code()
         },
         "metrics": metrics
@@ -140,6 +141,7 @@ def run_experiments(
     generations: int = 100,
     patience: int = 5,
     algorithm: str = "ga_rle",
+    crossover_method: str = "subset_greedy",
     max_images: int = None
 ):
     """Run experiments on images from specified directory.
@@ -166,6 +168,10 @@ def run_experiments(
     algorithm : str, optional
         Algorithm variant: "ga_rle", "ga_random", "ga_quadtree"
         (default: "ga_rle").
+    crossover_method : str, optional
+        Crossover method: "subset_greedy" (Subset Crossover with Greedy
+        Non-overlapping Extension), "single_point", "two_point",
+        "uniform" (default: "subset_greedy").
     max_images : int, optional
         Maximum number of images to process. If None, processes all
         images in directory (default: None).
@@ -203,6 +209,7 @@ def run_experiments(
     print(f"Directory: {image_dir_name}")
     print(f"Images to process: {len(image_paths)}")
     print(f"Algorithm: {algorithm}")
+    print(f"Crossover method: {crossover_method}")
     print(f"Mutation probabilities: G={p_geometry}, M={p_merge}, L={p_local}")
     print(f"Population: {pop_size}, Generations: {generations}, "
           f"Patience: {patience}")
@@ -219,6 +226,7 @@ def run_experiments(
         p_geometry=p_geometry,
         p_merge=p_merge,
         p_local=p_local,
+        crossover_method=crossover_method,
     )
 
     mutation_combo = config.get_mutation_combo_code()
@@ -338,8 +346,12 @@ def main():
         generations=100,
         patience=5,
         algorithm="ga_rle",
+        crossover_method="subset_greedy",  # Best and fastest method
     )
     # Algorithms: "ga_rle", "ga_random", "ga_quadtree"
+    # Crossover methods: "subset_greedy" (default, best - Subset Crossover
+    #                    with Greedy Non-overlapping Extension),
+    #                    "single_point", "two_point", "uniform"
 
     # PRODUCTION MODE: Uncomment to run on all images
     # run_experiments(

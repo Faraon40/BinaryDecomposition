@@ -397,13 +397,17 @@ def overlap(r1: Rectangle, r2: Rectangle) -> bool:
     )
 
 
-def crossover(
+def subset_greedy_crossover(
     p1: Chromosome,
     p2: Chromosome,
     img: np.ndarray,
     integral: np.ndarray,
 ) -> Chromosome:
-    """Merge compatible genes from both parents into child.
+    """Subset Crossover with Greedy Non-overlapping Extension.
+
+    Merge compatible genes from both parents into child by selecting
+    a random subset from Parent 1, then greedily adding non-overlapping
+    rectangles from Parent 2.
 
     Args:
         p1: First parent chromosome.
@@ -429,6 +433,139 @@ def crossover(
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
 
+    rects = repair(rects, img, integral)
+    return Chromosome(rects)
+
+
+def single_point_crossover(
+    p1: Chromosome,
+    p2: Chromosome,
+    img: np.ndarray,
+    integral: np.ndarray,
+) -> Chromosome:
+    """Single-point crossover - split parents at random point and merge.
+
+    Args:
+        p1: First parent chromosome.
+        p2: Second parent chromosome.
+        img: Binary image.
+        integral: Integral image.
+
+    Returns:
+        New child chromosome.
+
+    """
+    if not p1.rectangles or not p2.rectangles:
+        return Chromosome(p1.rectangles or p2.rectangles)
+
+    # Single-point crossover: choose random cut point for each parent
+    cut1 = random.randint(0, len(p1.rectangles))
+    cut2 = random.randint(0, len(p2.rectangles))
+
+    # Take first part from p1, second part from p2
+    rects = list(p1.rectangles[:cut1])
+
+    # Try to add rectangles from second part of p2
+    for r in p2.rectangles[cut2:]:
+        if not any(overlap(r, r2) for r2 in rects):
+            if is_valid_rectangle_integral(integral, r):
+                rects.append(r)
+
+    # Repair to ensure complete coverage
+    rects = repair(rects, img, integral)
+    return Chromosome(rects)
+
+
+def two_point_crossover(
+    p1: Chromosome,
+    p2: Chromosome,
+    img: np.ndarray,
+    integral: np.ndarray,
+) -> Chromosome:
+    """Two-point crossover - take middle section from one parent, ends from other.
+
+    Args:
+        p1: First parent chromosome.
+        p2: Second parent chromosome.
+        img: Binary image.
+        integral: Integral image.
+
+    Returns:
+        New child chromosome.
+
+    """
+    if not p1.rectangles or not p2.rectangles:
+        return Chromosome(p1.rectangles or p2.rectangles)
+
+    # Two-point crossover: choose two cut points for each parent
+    cut1_a, cut1_b = sorted(random.sample(range(len(p1.rectangles) + 1), 2))
+    cut2_a, cut2_b = sorted(random.sample(range(len(p2.rectangles) + 1), 2))
+
+    # Take middle section from p1, ends from p2
+    rects = []
+
+    # Add beginning from p2
+    for r in p2.rectangles[:cut2_a]:
+        if is_valid_rectangle_integral(integral, r):
+            rects.append(r)
+
+    # Add middle section from p1
+    for r in p1.rectangles[cut1_a:cut1_b]:
+        if not any(overlap(r, r2) for r2 in rects):
+            if is_valid_rectangle_integral(integral, r):
+                rects.append(r)
+
+    # Add end from p2
+    for r in p2.rectangles[cut2_b:]:
+        if not any(overlap(r, r2) for r2 in rects):
+            if is_valid_rectangle_integral(integral, r):
+                rects.append(r)
+
+    # Repair to ensure complete coverage
+    rects = repair(rects, img, integral)
+    return Chromosome(rects)
+
+
+def uniform_crossover(
+    p1: Chromosome,
+    p2: Chromosome,
+    img: np.ndarray,
+    integral: np.ndarray,
+    p: float = 0.5,
+) -> Chromosome:
+    """Uniform crossover - each gene selected independently with probability p.
+
+    Args:
+        p1: First parent chromosome.
+        p2: Second parent chromosome.
+        img: Binary image.
+        integral: Integral image.
+        p: Probability of taking gene from p1 (default 0.5).
+
+    Returns:
+        New child chromosome.
+
+    """
+    if not p1.rectangles or not p2.rectangles:
+        return Chromosome(p1.rectangles or p2.rectangles)
+
+    rects = []
+
+    # Process each rectangle from p1 with probability p
+    for r in p1.rectangles:
+        if random.random() < p:
+            if not any(overlap(r, r2) for r2 in rects):
+                if is_valid_rectangle_integral(integral, r):
+                    rects.append(r)
+
+    # Process each rectangle from p2 with probability (1-p)
+    for r in p2.rectangles:
+        if random.random() < (1 - p):
+            if not any(overlap(r, r2) for r2 in rects):
+                if is_valid_rectangle_integral(integral, r):
+                    rects.append(r)
+
+    # Repair to ensure complete coverage
     rects = repair(rects, img, integral)
     return Chromosome(rects)
 
@@ -494,7 +631,7 @@ def mutate_merge(
         p_merge: Probability of merging.
 
     Returns:
-        Rectangle list with merged adjacents.
+        Rectangle list with merged adjacent.
 
     """
     rects = rects.copy()
@@ -684,6 +821,7 @@ def run_ga(
     mutation_geometry=0.05,
     mutation_merge=0.05,
     mutation_local=0.05,
+    crossover_method="subset_greedy",
 ):
     """Run the Genetic Algorithm for binary image decomposition.
 
@@ -706,6 +844,9 @@ def run_ga(
             (default: 0.05). Set to 0.0 to disable.
         mutation_local: Probability of local repartition mutation (L)
             (default: 0.05). Set to 0.0 to disable.
+        crossover_method: Crossover method to use (default: "subset_greedy").
+            Options: "subset_greedy" (Subset Crossover with Greedy
+            Non-overlapping Extension), "single_point", "two_point", "uniform".
 
     Returns:
         Tuple of (best_chromosome, generation_history).
@@ -722,6 +863,22 @@ def run_ga(
         np.random.seed(seed)
 
     integral = build_integral(img)
+
+    # Map crossover method name to function
+    crossover_methods = {
+        "subset_greedy": subset_greedy_crossover,
+        "single_point": single_point_crossover,
+        "two_point": two_point_crossover,
+        "uniform": uniform_crossover,
+    }
+
+    if crossover_method not in crossover_methods:
+        raise ValueError(
+            f"Unknown crossover_method: {crossover_method}. "
+            f"Use 'subset_greedy', 'single_point', 'two_point', or 'uniform'."
+        )
+
+    crossover_fn = crossover_methods[crossover_method]
 
     # Initialize population based on method
     if verbose:
@@ -793,7 +950,7 @@ def run_ga(
         while len(new_pop) < pop_size:
             top_candidates = population[: len(population) // 10]
             p1, p2 = random.sample(top_candidates, 2)
-            child = crossover(p1, p2, img, integral)
+            child = crossover_fn(p1, p2, img, integral)
             # Apply mutations with configured probabilities
             child = mutation(
                 child,
@@ -873,7 +1030,8 @@ def main():
         mutation_geometry=0.2,
         mutation_merge=0.2,
         mutation_local=0.2,
-        patience = 10,
+        patience=10,
+        crossover_method="subset_greedy",  # subset_greedy, single_point, two_point, uniform
         verbose=True,
     )
 
