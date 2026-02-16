@@ -13,6 +13,7 @@ from typing import Tuple, List, Dict
 import numpy as np
 
 from src.algorithms.genetic import run_ga
+from src.algorithms.graph_based import run_graph_based
 from src.algorithms.quadtree import run_quadtree
 from experiments.src.metrics import calculate_metrics
 
@@ -88,10 +89,18 @@ def run_single_experiment(
         )
         generations_used = len(generation_history)
 
+    elif config.algorithm == "graph_based":
+        solution, generation_history = run_graph_based(
+            img,
+            verbose=False
+        )
+        generations_used = None
+
     else:
         raise ValueError(
             f"Invalid algorithm: {config.algorithm}. "
-            f"Must be 'ga_rle', 'ga_random', 'ga_quadtree', or 'quadtree'."
+            f"Must be 'ga_rle', 'ga_random', 'ga_quadtree', 'quadtree', "
+            f"or 'graph_based'."
         )
 
     execution_time = time.time() - start_time

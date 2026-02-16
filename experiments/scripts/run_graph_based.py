@@ -1,9 +1,8 @@
 """
-Run genetic algorithm experiments on binary images.
+Run graph-based (FER) algorithm experiments on binary images.
 
-This is the main production script for running experiments on entire
-image directories. Results, rectangles, and visualizations are saved
-for analysis and validation.
+This script runs the Graph-Based (FER) algorithm on image directories
+and saves results, rectangles, and visualizations for analysis.
 """
 
 import json
@@ -45,7 +44,7 @@ def save_solution_rectangles(
     metrics : dict
         Metrics dictionary from experiment.
     dataset_name : str
-        Name of the dataset directory (e.g., "objects_binary").
+        Name of the dataset directory (e.g., "research_leafs_binary").
 
     Returns
     -------
@@ -54,20 +53,17 @@ def save_solution_rectangles(
 
     """
     # Create directory structure:
-    # rectangles/algorithm_mutationcombo/dataset/image_name/
+    # rectangles/graph_based/dataset/image_name/
     image_stem = Path(image_name).stem
-    mutation_combo = config.get_mutation_combo_code()
-    algo_name = f"{config.algorithm}_{mutation_combo}"
 
-    save_dir = output_dir / algo_name / dataset_name / image_stem
+    save_dir = output_dir / "graph_based" / dataset_name / image_stem
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    # Filename: seed_XXXXX_rects_NN.json
-    filename = f"seed_{config.seed}_rects_{rect_count}.json"
+    # Filename: XXXXX_rects_NN.json
+    filename = f"rects_{rect_count}.json"
     save_path = save_dir / filename
 
-    # Prepare data structure - rectangles as list of tuples
-    # Format: [[x, y, w, h], [x, y, w, h], ...]
+    # Prepare data structure
     data = {
         "image_name": image_name,
         "rectangle_count": rect_count,
@@ -77,15 +73,6 @@ def save_solution_rectangles(
         ],
         "config": {
             "algorithm": config.algorithm,
-            "seed": config.seed,
-            "pop_size": config.pop_size,
-            "generations": config.generations,
-            "patience": config.patience,
-            "p_geometry": config.p_geometry,
-            "p_merge": config.p_merge,
-            "p_local": config.p_local,
-            "crossover_method": config.crossover_method,
-            "mutation_combo": config.get_mutation_combo_code()
         },
         "metrics": metrics
     }
@@ -133,45 +120,18 @@ def load_solution_rectangles(
 
 def run_experiments(
     image_dir_name: str,
-    p_geometry: float = 0.2,
-    p_merge: float = 0.2,
-    p_local: float = 0.3,
-    seed: int = None,
-    pop_size: int = 20,
-    generations: int = 100,
-    patience: int = 5,
-    algorithm: str = "ga_rle",
-    crossover_method: str = "subset_greedy",
+    seed: int = 42,
     max_images: int = None
 ):
-    """Run experiments on images from specified directory.
+    """Run graph-based experiments on images from specified directory.
 
     Parameters
     ----------
     image_dir_name : str
         Directory name under data/datasets/ (e.g., "leafs_binary",
         "research_leafs_binary", "objects_binary").
-    p_geometry : float, optional
-        Geometry mutation probability (default: 0.2).
-    p_merge : float, optional
-        Merge mutation probability (default: 0.2).
-    p_local : float, optional
-        Local repartition mutation probability (default: 0.3).
     seed : int, optional
         Random seed for reproducibility (default: 42).
-    pop_size : int, optional
-        Population size for GA (default: 20).
-    generations : int, optional
-        Maximum generations for GA (default: 100).
-    patience : int, optional
-        Early stopping patience (default: 5).
-    algorithm : str, optional
-        Algorithm variant: "ga_rle", "ga_random", "ga_quadtree"
-        (default: "ga_rle").
-    crossover_method : str, optional
-        Crossover method: "subset_greedy" (Subset Crossover with Greedy
-        Non-overlapping Extension), "single_point", "two_point",
-        "uniform" (default: "subset_greedy").
     max_images : int, optional
         Maximum number of images to process. If None, processes all
         images in directory (default: None).
@@ -201,46 +161,35 @@ def run_experiments(
     if max_images is not None:
         image_paths = image_paths[:max_images]
 
-    mode_str = f"TEST MODE ({len(image_paths)} images)" if max_images else "PRODUCTION MODE (all images)"
+    mode_str = (
+        f"TEST MODE ({len(image_paths)} images)"
+        if max_images else "PRODUCTION MODE (all images)"
+    )
 
     print("=" * 70)
-    print(f"GENETIC ALGORITHM EXPERIMENTS - {mode_str}")
+    print(f"GRAPH-BASED (FER) ALGORITHM EXPERIMENTS - {mode_str}")
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
     print(f"Images to process: {len(image_paths)}")
-    print(f"Algorithm: {algorithm}")
-    print(f"Crossover method: {crossover_method}")
-    print(f"Mutation probabilities: G={p_geometry}, M={p_merge}, L={p_local}")
-    print(f"Population: {pop_size}, Generations: {generations}, "
-          f"Patience: {patience}")
+    print(f"Algorithm: graph_based (FER method)")
+    print(f"Seed: {seed}")
     print("=" * 70)
 
-    # Create config first to get mutation combo
+    # Create config
     config = ExperimentConfig(
-        name=f"{algorithm}_{image_dir_name}",
+        name=f"graph_based_{image_dir_name}",
         seed=seed,
-        algorithm=algorithm,
-        pop_size=pop_size,
-        generations=generations,
-        patience=patience,
-        p_geometry=p_geometry,
-        p_merge=p_merge,
-        p_local=p_local,
-        crossover_method=crossover_method,
+        algorithm="graph_based",
     )
 
-    mutation_combo = config.get_mutation_combo_code()
-
-    # Setup logger with hierarchical structure
+    # Setup logger
     logger = CSVLogger(
-        algorithm,
+        "graph_based",
         str(project_root / "experiments/results/csv/"),
         image_dir_name,
-        mutation_combo
+        "FER"  # Use "FER" as mutation combo equivalent
     )
 
-    print(f"Mutation combo: {mutation_combo}")
-    print(f"Seed: {seed}")
     print("-" * 70)
 
     # Create output directories
@@ -281,9 +230,10 @@ def run_experiments(
 
             # Print summary
             print(f"  ✓ Rectangles: {rect_count}")
-            print(f"  ✓ Fitness: {metrics.get('final_fitness', 'N/A'):.4f}")
+            final_fitness = metrics.get('final_fitness')
+            if final_fitness is not None:
+                print(f"  ✓ Fitness: {final_fitness:.4f}")
             print(f"  ✓ Time: {metrics['execution_time_sec']:.1f}s")
-            print(f"  ✓ Generations: {metrics['generations_used']}")
 
             # Save rectangles to JSON
             rect_path = save_solution_rectangles(
@@ -295,25 +245,26 @@ def run_experiments(
                 metrics,
                 image_dir_name
             )
-            print(f"  ✓ Rectangles saved: {rect_path.relative_to(project_root)}")
+            print(f"  ✓ Rectangles saved: "
+                  f"{rect_path.relative_to(project_root)}")
 
-            # Save visualization with hierarchical structure:
-            # visualizations/algorithm_mutationcombo/dataset/image_seed_XXXXX_rects_NN.png
+            # Save visualization
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
-            mutation_combo = config.get_mutation_combo_code()
-            algo_name = f"{config.algorithm}_{mutation_combo}"
-            viz_subdir = viz_dir / algo_name / image_dir_name
+            viz_subdir = viz_dir / "graph_based" / image_dir_name
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
-            viz_filename = f"{img_path.stem}_seed_{config.seed}_rects_{rect_count}.png"
+            viz_filename = (
+                f"{img_path.stem}_rects_{rect_count}.png"
+            )
             viz_path = viz_subdir / viz_filename
 
             draw_solution(
                 img, rectangles, save_path=str(viz_path), show=False
             )
-            print(f"  ✓ Visualization: {viz_path.relative_to(project_root)}")
+            print(f"  ✓ Visualization: "
+                  f"{viz_path.relative_to(project_root)}")
 
         except Exception as e:
             print(f"FAILED")
@@ -327,43 +278,21 @@ def run_experiments(
     print("=" * 70)
     print(f"Total time: {total_elapsed/60:.1f} minutes")
     print(f"Results saved to: {logger.results_csv}")
-    print(f"Generations saved to: {logger.generations_csv}")
-    print(f"Rectangles saved to: {rect_dir}")
-    print(f"Visualizations saved to: {viz_dir}")
+    print(f"Rectangles saved to: {rect_dir / 'graph_based'}")
+    print(f"Visualizations saved to: {viz_dir / 'graph_based'}")
 
 
 def main():
     """Main entry point - configure experiments here."""
-    # TEST MODE: Quick test on 5 images
+    # TEST MODE: Quick test on 3 images
     run_experiments(
         image_dir_name="objects_binary",
-        max_images=3,  # Limit to 5 images for testing
-        p_geometry=0.2,
-        p_merge=0.2,
-        p_local=0.3,
-        seed=None,
-        pop_size=20,
-        generations=100,
-        patience=5,
-        algorithm="ga_rle",
-        crossover_method="subset_greedy",  # Best and fastest method
+        max_images=3,  # Limit to 3 images for testing
     )
-    # Algorithms: "ga_rle", "ga_random", "ga_quadtree"
-    # Crossover methods: "subset_greedy" (default, best - Subset Crossover
-    #                    with Greedy Non-overlapping Extension),
-    #                    "single_point", "two_point", "uniform"
 
     # PRODUCTION MODE: Uncomment to run on all images
     # run_experiments(
     #     image_dir_name="research_leafs_binary",
-    #     p_geometry=0.2,
-    #     p_merge=0.2,
-    #     p_local=0.3,
-    #     seed=45646456,
-    #     pop_size=20,
-    #     generations=100,
-    #     patience=5,
-    #     algorithm="ga_rle",
     #     max_images=None  # Process ALL images
     # )
 
