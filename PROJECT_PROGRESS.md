@@ -1,7 +1,7 @@
 # Project Progress Tracker
 
 **Master's Thesis**: Binary Image Rectangle Decomposition
-**Last Updated**: 2026-02-03
+**Last Updated**: 2026-02-16
 
 ---
 
@@ -38,6 +38,13 @@
 - **Rectangle modes**: Maximal and Full enumeration
 - **Experiment scripts**: `run_ilp_cbc.py`, `run_ilp_gurobi.py`
 
+#### Graph-Based Decomposition
+- **Algorithm**: Flow network-based optimal decomposition
+- **Implementation**: `src/algorithms/graph_based.py`
+- **Features**: Multiple optimization levels (deterministic, optimal)
+- **Status**: Literature claims this is optimal approach - now implemented
+- **Experiment script**: `experiments/scripts/run_graph_based.py`
+
 #### Infrastructure
 - **Experiment framework**: Config system, runner, metrics, CSV logging
 - **Preprocessing**: Image binarization, data loaders, format converters
@@ -55,9 +62,11 @@
 ### To Do
 
 #### New Algorithm Implementations
-- **Graph-Based Decomposition**: Literature claims this is optimal approach
+- **Morphological Decomposition**: Greedy approach finding biggest squares/rectangles
   - Status: Not implemented
-  - Needs: Research paper review, implementation in `src/algorithms/`
+  - Approach: Recursively finds the biggest possible square or rectangle
+  - Implementation: `src/algorithms/morphological.py` (to be created)
+  - Experiment script: `experiments/scripts/run_morphological.py` (to be created)
 
 - **DTD (Distance Transformation Decomposition)**:
   - Status: Not implemented
@@ -111,10 +120,17 @@
 ### Phase 2: Missing Algorithm Implementations
 **Goal**: Implement remaining algorithms for comprehensive comparison
 
-- [ ] **Graph-Based Decomposition**
+- [x] **Graph-Based Decomposition** ✅ COMPLETED (2026-02-16)
   - Research implementation details from literature
   - Implement algorithm (literature claims this is optimal)
   - Create experiment script `experiments/scripts/run_graph_based.py`
+  - **Status**: Flow network-based approach implemented with multiple optimization levels
+
+- [ ] **Morphological Decomposition**
+  - Research morphological decomposition approach
+  - Implement recursive biggest-square/rectangle finding algorithm
+  - Implement in `src/algorithms/morphological.py`
+  - Create experiment script `experiments/scripts/run_morphological.py`
 
 - [ ] **DTD (Distance Transformation Decomposition)**
   - Research DTD algorithm
@@ -144,7 +160,8 @@
 - [ ] **Run benchmark experiments**
   - [ ] GA with best crossover strategy
   - [ ] Quadtree
-  - [ ] Graph-Based Decomposition
+  - [ ] Graph-Based Decomposition ✅
+  - [ ] Morphological Decomposition
   - [ ] DTD
   - [ ] Delta Method
   - [ ] Generalized Delta Method
@@ -195,7 +212,8 @@
 - `src/algorithms/quadtree.py` - Quadtree implementation ✅
 - `src/solvers/ilp_solver_cbc.py` - ILP with CBC ✅
 - `src/solvers/ilp_solver_gurobi.py` - ILP with Gurobi ✅
-- `src/algorithms/graph_based.py` - Graph-Based ❌
+- `src/algorithms/graph_based.py` - Graph-Based ✅
+- `src/algorithms/morphological.py` - Morphological ❌
 - `src/algorithms/dtd.py` - DTD ❌
 - `src/algorithms/delta.py` - Delta Method ❌
 - `src/algorithms/generalized_delta.py` - Generalized Delta ❌
@@ -204,6 +222,8 @@
 - `experiments/scripts/run_ga.py` ✅
 - `experiments/scripts/run_ilp_cbc.py` ✅
 - `experiments/scripts/run_ilp_gurobi.py` ✅
+- `experiments/scripts/run_graph_based.py` ✅
+- `experiments/scripts/run_morphological.py` ❌
 - Other algorithm scripts ❌
 
 ### Datasets
@@ -262,6 +282,25 @@ ExperimentConfig(
 **Configuration**: Use `crossover_method` parameter in `run_ga()` or `ExperimentConfig`
 
 **Decision**: Subset Greedy Crossover selected as default for production use based on best performance characteristics.
+
+### Graph-Based Decomposition (Phase 2) ✅
+**Completed**: 2026-02-16
+
+**Implementation**: Flow network-based approach for optimal rectangle decomposition
+
+**Key Features**:
+- Flow network construction for minimum rectangle cover problem
+- Multiple optimization levels available
+- Experiments show suboptimal performance in some cases but good time performance
+- Implemented in `src/algorithms/graph_based.py`
+
+**Notes**:
+- Literature claims this is optimal approach
+- Current implementation shows very good performance timewise
+- Minimal rectangle count achieved in most cases
+- Some edge cases where optimal cut is missed
+
+**Next Algorithm**: Morphological Decomposition - recursive greedy approach finding biggest possible squares/rectangles
 
 ### Algorithm Implementation Decisions (Phase 2)
 _To be filled during implementation_
