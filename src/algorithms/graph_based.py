@@ -4,114 +4,10 @@ import numpy as np
 from collections import defaultdict, deque
 import matplotlib.pyplot as plt
 
-
-def visualize_fer_results_diff(grid, concave_vertices, output_path='fer_results.png'):
-    """Visualize concave vertices on binary image.
-
-    Creates RGB image with white pixels for 1s, black for 0s, and red dots
-    for concave vertices.
-
-    Args:
-        grid: Binary image (numpy array).
-        concave_vertices: List of (x, y) concave vertex coordinates.
-        output_path: Path to save output image.
-
-    """
-    rows, cols = grid.shape
-
-    # Create RGB image (3 channels)
-    image = np.zeros((rows, cols, 3), dtype=np.uint8)
-
-    # Set pixels according to binary grid
-    for i in range(rows):
-        for j in range(cols):
-            if grid[i, j] == 1:
-                image[i, j] = [255, 255, 255]  # White
-            else:
-                image[i, j] = [0, 0, 0]  # Black
-
-    # Mark concave vertices with red color
-    for x, y in concave_vertices:
-        if 0 <= y < rows and 0 <= x < cols:
-            image[y, x] = [255, 0, 0]  # Red on main pixel
-
-    # Save image
-    from PIL import Image
-    img = Image.fromarray(image)
-    img.save(output_path)
-
-    print(f"Image saved: {output_path}")
-    print(f"Size: {cols}x{rows} pixels")
-    print(f"Number of concave vertices: {len(concave_vertices)}")
-    print(f"Vertex coordinates: {concave_vertices[:10]}")  # First 10 for debug
-
-
-def visualize_fer_results(grid, result, save_path=None, show=True):
-    """Visualize FER decomposition as colored rectangles on binary image.
-
-    Args:
-        grid: Binary image (numpy array).
-        result: Dict with FER algorithm results containing 'rectangles'.
-        save_path: Path to save image (optional).
-        show: Whether to display image (default: True).
-
-    """
-    rows, cols = grid.shape
-
-    plt.figure(figsize=(7, 7))
-    plt.imshow(grid, cmap="gray", origin="upper", extent=[0, cols, rows, 0])
-
-    # Color palette for rectangles
-    colors_palette = [
-        # Pastel colors
-        '#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8',
-        '#F7DC6F', '#BB8FCE', '#85C1E2', '#F8B88B', '#A8E6CF',
-
-        # Vivid colors
-        '#FF5733', '#33FF57', '#3357FF', '#FF33F5', '#F5FF33',
-        '#33FFF5', '#F533FF', '#57FF33', '#5733FF', '#FF3357',
-
-        # Warm tones
-        '#FF9999', '#FFCC99', '#FFFF99', '#CCFF99', '#99FF99',
-        '#99FFCC', '#99FFFF', '#99CCFF', '#9999FF', '#CC99FF',
-
-        # Cool tones
-        '#99CCCC', '#6699CC', '#336699', '#003366', '#006666',
-        '#009999', '#00CCCC', '#66CCCC', '#99CCFF', '#CCFFFF',
-
-        # Earth tones
-        '#D2691E', '#CD853F', '#DEB887', '#F4A460', '#DAA520',
-        '#B8860B', '#BC8F8F', '#CD5C5C', '#F08080', '#FA8072',
-
-        # Neon colors
-        '#39FF14', '#DFFF00', '#FFFF00', '#FF6600', '#FF00FF',
-        '#00FFFF', '#FF007F', '#7FFF00', '#00FF7F', '#FF1493'
-    ]
-
-    for idx, rect_data in enumerate(result['rectangles']):
-        color = colors_palette[idx % len(colors_palette)]
-
-        plt.gca().add_patch(
-            plt.Rectangle(
-                (rect_data['min_x'], rect_data['min_y']),
-                rect_data['width'],
-                rect_data['height'],
-                facecolor=color,
-                alpha=1,
-                edgecolor=color
-            )
-        )
-
-    plt.axis("off")
-    plt.title(f"FER Solution: {len(result['rectangles'])} rectangles")
-
-    if save_path:
-        plt.savefig(save_path, bbox_inches='tight', dpi=150)
-
-    if show:
-        plt.show()
-    else:
-        plt.close()
+from src.utils.visualization import (
+    visualize_concave_vertices,
+    visualize_fer_decomposition
+)
 
 
 def find_concave_vertices(grid):
@@ -1608,7 +1504,7 @@ def main():
     result = fer_algorithm_complete(concave_vertices, img, verbose=True)
 
     # Visualize results
-    visualize_fer_results(img, result, save_path=None, show=True)
+    visualize_fer_decomposition(img, result, save_path=None, show=True)
 
 
 if __name__ == "__main__":
