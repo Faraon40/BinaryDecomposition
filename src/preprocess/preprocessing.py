@@ -7,6 +7,7 @@ References:
 
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 
 def image_to_binary(path: str, save_path: str = None) -> np.ndarray:
@@ -26,27 +27,17 @@ def image_to_binary(path: str, save_path: str = None) -> np.ndarray:
     if img is None:
         raise FileNotFoundError(f"Image not found: {path}")
 
-    # Convert to HSV
-    hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+    # Convert to grayscale
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-    # Define white background range
-    lower_white = np.array([0, 0, 200], dtype=np.uint8)
-    upper_white = np.array([180, 40, 255], dtype=np.uint8)
-
-    # Mask white regions
-    mask_white = cv2.inRange(hsv, lower_white, upper_white)
-
-    # Invert: object (leaf) = 255 (1), background = 0
-    binary = cv2.bitwise_not(mask_white)
+    # Otsu threshold - automatically finds best threshold
+    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
 
     # Morphological cleaning
     kernel = np.ones((5, 5), np.uint8)
-    # Removing noise on our object, closing small holes
     binary = cv2.morphologyEx(binary, cv2.MORPH_CLOSE, kernel)
-    # Removing background noise
     binary = cv2.morphologyEx(binary, cv2.MORPH_OPEN, kernel)
 
-    # Save if requested
     if save_path:
         cv2.imwrite(save_path, binary)
 
@@ -54,6 +45,6 @@ def image_to_binary(path: str, save_path: str = None) -> np.ndarray:
 
 
 image_to_binary(
-    "../../data/datasets/original/Vitis_riparia_5.png",
-    save_path="../../data/datasets/Vitis_riparia_5_binary.png",
+    "../../data/datasets/research_leafs_binary/png/Vinca_minor_6_binary.png",
+    save_path="../../data/datasets/research_leafs_binary/demo/Vinca_minor_6_binary.png",
 )

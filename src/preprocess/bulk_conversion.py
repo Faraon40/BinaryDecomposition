@@ -39,7 +39,7 @@ def bulk_convert_to_binary(
         if img_file.suffix.lower() not in [".png", ".jpg", ".jpeg"]:
             continue
 
-        # Convert to binary (leaf=0, background=255)
+        # Convert to binary (leaf=255, background=0)
         binary = image_to_binary(str(img_file))
 
         # Save PNG (human-friendly)
@@ -48,11 +48,11 @@ def bulk_convert_to_binary(
 
         # Save NumPy array (machine-friendly, exact)
         if save_numpy:
-            out_npy = npy_dir / f"{img_file.stem}_binary.npy"
+            out_npy = npy_dir / f"{img_file.stem}.npy"
             np.save(out_npy, binary)
 
 
 if __name__ == "__main__":
-    bulk_convert_to_binary("../../data/datasets/research_leafs",
-                           "../../data/datasets/research_leafs_binary")
+    bulk_convert_to_binary("../../data/datasets/research_leafs_binary/png/",
+                           "../../data/datasets/research_leafs_binary/")
     print("Bulk conversion completed.")
