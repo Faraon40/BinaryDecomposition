@@ -995,7 +995,36 @@ def main():
         ]
     )
 
-    img = np.array([
+    img_bugged_1 = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 0, 1, 1, 0, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+        [0, 1, 1, 0, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 1, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+
+    img_bugged_2 = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
+        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
+        [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
+        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+
+    img_large = np.array([
         [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
         [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1029,25 +1058,42 @@ def main():
         [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
     ])
 
-    # Load the .npy file
-    # Make sure it's 0s and 1s
-    # img = np.load(
-    #     "../../data/datasets/research_leafs_binary/npy/Quercus_robur_2_binary.npy"
-    # )
-    # img = np.load(
-    #     "../../data/datasets/leafs_binary/npy/Vitis_riparia_5_binary.npy"
-    # )
-    # img = np.load("../../data/datasets/leafs_binary/npy/Vitis_riparia_5_binary.npy")
+    img_bugged_5 = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
+        [0, 0, 0, 1, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ])
 
-    # Use absolute path from project root
-    # from pathlib import Path
-    # project_root = Path(__file__).parent.parent.parent
-    # img = np.load(
-    #     project_root / "data/datasets/objects_binary/npy/apple-1_binary.npy"
-    # )
-    img = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
-    # img = np.load("../../data/datasets/leafs_binary/npy/Vitis_riparia_5_binary.npy")
-    img = (img > 0).astype(int)    # img = 1 - img  # if image is loaded we have to invert 0s and 1s
+    img_holes_1 = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 0, 1, 1, 1, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 0, 0, 1, 0],
+        [0, 1, 1, 1, 1, 0, 0, 0, 1, 0],
+        [0, 1, 0, 1, 1, 1, 0, 1, 1, 0],
+        [0, 1, 0, 1, 1, 0, 1, 1, 1, 0],
+        [0, 1, 0, 0, 0, 0, 0, 1, 1, 0],
+        [0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+
+    # Load the .npy file
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/leafs_binary/npy/Vitis_riparia_5_binary.npy")
+
+    img = img_holes_1
+    img = (img > 0).astype(int)
 
     # Display the image
     plt.imshow(img, cmap="gray")
