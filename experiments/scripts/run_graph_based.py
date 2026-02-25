@@ -59,11 +59,9 @@ def save_solution_rectangles(
     save_dir = output_dir / "graph_based" / dataset_name / image_stem
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    # Filename: XXXXX_rects_NN.json
     filename = f"rects_{rect_count}.json"
     save_path = save_dir / filename
 
-    # Prepare data structure
     data = {
         "image_name": image_name,
         "rectangle_count": rect_count,
@@ -77,7 +75,6 @@ def save_solution_rectangles(
         "metrics": metrics
     }
 
-    # Save to JSON
     with open(save_path, 'w', encoding='utf-8') as f:
         json.dump(data, f, indent=2)
 
@@ -105,7 +102,6 @@ def load_solution_rectangles(
     with open(json_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
 
-    # Convert lists back to tuples
     rectangles = [tuple(rect) for rect in data['rectangles']]
 
     metadata = {
@@ -120,7 +116,6 @@ def load_solution_rectangles(
 
 def run_experiments(
     image_dir_name: str,
-    seed: int = 42,
     max_images: int = None
 ):
     """Run graph-based experiments on images from specified directory.
@@ -130,8 +125,6 @@ def run_experiments(
     image_dir_name : str
         Directory name under data/datasets/ (e.g., "leafs_binary",
         "research_leafs_binary", "objects_binary").
-    seed : int, optional
-        Random seed for reproducibility (default: 42).
     max_images : int, optional
         Maximum number of images to process. If None, processes all
         images in directory (default: None).
@@ -149,7 +142,6 @@ def run_experiments(
             f"{[d.name for d in (project_root / 'data/datasets').iterdir() if d.is_dir()]}"
         )
 
-    # Get image paths
     image_paths = sorted(image_dir.glob("*.npy"))
 
     if not image_paths:
@@ -157,7 +149,6 @@ def run_experiments(
             f"No .npy files found in {image_dir}"
         )
 
-    # Limit to max_images if specified
     if max_images is not None:
         image_paths = image_paths[:max_images]
 
@@ -171,28 +162,24 @@ def run_experiments(
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
     print(f"Images to process: {len(image_paths)}")
-    print(f"Algorithm: graph_based (FER method)")
-    print(f"Seed: {seed}")
+    print(f"Algorithm: graph_based (FER method, deterministic)")
     print("=" * 70)
 
-    # Create config
     config = ExperimentConfig(
         name=f"graph_based_{image_dir_name}",
-        seed=seed,
+        seed=None,
         algorithm="graph_based",
     )
 
-    # Setup logger
     logger = CSVLogger(
         "graph_based",
         str(project_root / "experiments/results/csv/"),
         image_dir_name,
-        "FER"  # Use "FER" as mutation combo equivalent
+        "FER"
     )
 
     print("-" * 70)
 
-    # Create output directories
     viz_dir = project_root / "experiments/results/visualizations"
     viz_dir.mkdir(parents=True, exist_ok=True)
 
@@ -215,7 +202,6 @@ def run_experiments(
             elapsed = time.time() - start_time
             print(f"Done in {elapsed:.1f}s")
 
-            # Extract rectangles
             rectangles = (
                 solution.rectangles
                 if hasattr(solution, 'rectangles')
@@ -223,19 +209,13 @@ def run_experiments(
             )
             rect_count = len(rectangles)
 
-            # Log result
             logger.log_result(
                 img_path.name, config, metrics, history
             )
 
-            # Print summary
             print(f"  ✓ Rectangles: {rect_count}")
-            final_fitness = metrics.get('final_fitness')
-            if final_fitness is not None:
-                print(f"  ✓ Fitness: {final_fitness:.4f}")
             print(f"  ✓ Time: {metrics['execution_time_sec']:.1f}s")
 
-            # Save rectangles to JSON
             rect_path = save_solution_rectangles(
                 img_path.name,
                 rectangles,
@@ -248,16 +228,13 @@ def run_experiments(
             print(f"  ✓ Rectangles saved: "
                   f"{rect_path.relative_to(project_root)}")
 
-            # Save visualization
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
             viz_subdir = viz_dir / "graph_based" / image_dir_name
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
-            viz_filename = (
-                f"{img_path.stem}_rects_{rect_count}.png"
-            )
+            viz_filename = f"{img_path.stem}_rects_{rect_count}.png"
             viz_path = viz_subdir / viz_filename
 
             draw_solution(
@@ -286,8 +263,8 @@ def main():
     """Main entry point - configure experiments here."""
     # TEST MODE: Quick test on 3 images
     run_experiments(
-        image_dir_name="objects_binary",
-        max_images=3,  # Limit to 3 images for testing
+        image_dir_name="validation",
+        max_images=8,
     )
 
     # PRODUCTION MODE: Uncomment to run on all images

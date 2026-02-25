@@ -1,0 +1,77 @@
+{
+  "image_name": "hat-5_binary.npy",
+  "rectangle_count": 10,
+  "rectangles": [
+    [
+      9,
+      0,
+      32,
+      24
+    ],
+    [
+      8,
+      3,
+      1,
+      9
+    ],
+    [
+      8,
+      24,
+      35,
+      1
+    ],
+    [
+      6,
+      25,
+      40,
+      1
+    ],
+    [
+      4,
+      26,
+      12,
+      7
+    ],
+    [
+      16,
+      26,
+      18,
+      6
+    ],
+    [
+      34,
+      26,
+      16,
+      7
+    ],
+    [
+      0,
+      27,
+      4,
+      7
+    ],
+    [
+      4,
+      33,
+      7,
+      1
+    ],
+    [
+      42,
+      33,
+      5,
+      1
+    ]
+  ],
+  "config": {
+    "algorithm": "graph_based"
+  },
+  "metrics": {
+    "rectangles": 10,
+    "rectangle_count": 10,
+    "final_fitness": null,
+    "execution_time": 0.01,
+    "execution_time_sec": 0.01,
+    "generations_used": null
+  }
+}

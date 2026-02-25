@@ -961,7 +961,8 @@ def run_graph_based(img, verbose=False):
     """Run graph-based (FER) decomposition on binary image.
 
     Main entry point for the graph-based rectangle decomposition algorithm.
-    Finds concave corners, applies FER algorithm, and returns rectangles.
+    Finds concave corners, applies the complete FER algorithm, and returns
+    a list of non-overlapping rectangles covering all 1-pixels.
 
     Args:
         img: Binary image to decompose (0s and 1s).
@@ -970,7 +971,7 @@ def run_graph_based(img, verbose=False):
     Returns:
         tuple: (rectangles, generation_history) where:
             - rectangles: List of (x, y, width, height) tuples
-            - generation_history: Empty list (for compatibility)
+            - generation_history: Empty list (for runner compatibility)
 
     """
     # Find concave corners
@@ -979,10 +980,16 @@ def run_graph_based(img, verbose=False):
     # Run complete FER algorithm
     result = fer_algorithm_complete(concave_vertices, img, verbose)
 
-    return []
+    # Convert rect dicts to (x, y, width, height) tuples
+    rectangles = [
+        (int(r['min_x']), int(r['min_y']), int(r['width']), int(r['height']))
+        for r in result['rectangles']
+    ]
+
+    return rectangles, []
 
 
-def fer_algorithm_complete(concave_vertices, grid, verbose=False):
+def fer_algorithm_complete(concave_vertices, grid, verbose=False, debug=False):
     """
     Execute the complete Fast Exact Rectangle (FER) decomposition algorithm.
 
@@ -1017,8 +1024,8 @@ def fer_algorithm_complete(concave_vertices, grid, verbose=False):
     # 1. Level 1: Find optimal non-intersecting chords using Maximum Independent Set (MIS)
     level1_chords, remaining_vertices = fer_algorithm_level1(concave_vertices, grid, verbose)
 
-    if verbose:
-        level1_precise_cuts = convert_chords_to_precise_cuts(level1_chords)
+    level1_precise_cuts = convert_chords_to_precise_cuts(level1_chords)
+    if debug:
         print("\nLevel 1 Chords: ", len(level1_chords))
         for i in level1_chords:
             print(i)
@@ -1029,7 +1036,7 @@ def fer_algorithm_complete(concave_vertices, grid, verbose=False):
     # 2. Level 2: Resolve leftover vertices by extending rays to the nearest boundary/chord
     level2_chords = fer_algorithm_level2(remaining_vertices, grid, level1_chords, verbose)
 
-    if verbose:
+    if debug:
         print("\nLVL1 Chords: ")
         for i in level1_chords:
             print(i)
@@ -1041,7 +1048,7 @@ def fer_algorithm_complete(concave_vertices, grid, verbose=False):
     all_chords = level1_chords + level2_chords
     precise_cuts = convert_chords_to_precise_cuts(all_chords)
 
-    if verbose:
+    if debug:
         print("\nPrecise Cuts: ")
         for i in precise_cuts:
             print(i)
@@ -1237,8 +1244,8 @@ def main():
 
     # Load from dataset (uncomment to use)
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
-    img_loaded = np.load("../../data/datasets/validation/npy/hat-5_binary.npy")
-    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
+    # img_loaded = np.load("../../data/datasets/validation/npy/hat-5_binary.npy")
+    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
     img_loaded = (img_loaded > 1).astype(np.uint8)  # convert 255 → 1
     img = img_loaded
 
@@ -1253,7 +1260,7 @@ def main():
     concave_vertices = find_concave_corners(img)
 
     # Visualize found concave vertices
-    visualize_concave_vertices(img, concave_vertices)
+    # visualize_concave_vertices(img, concave_vertices)
     # visualize_concave_vertices_cord(img, concave_vertices)
 
     result = fer_algorithm_complete(concave_vertices, img, verbose=True)
