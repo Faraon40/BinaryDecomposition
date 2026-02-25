@@ -41,9 +41,6 @@ def find_concave_vertices(grid):
     return concave
 
 
-import numpy as np
-
-
 def find_concave_corners(grid):
     """Identify concave corners in a binary grid by analyzing orthogonal and diagonal neighbors.
 
@@ -800,10 +797,6 @@ def convert_chords_to_precise_cuts(chords):
     return precise_cuts
 
 
-import numpy as np
-from collections import deque
-
-
 def find_rectangles_from_cuts(grid, cuts, verbose=False):
     """
     Decompose a binary grid into rectangles based on specified cuts.
@@ -987,8 +980,6 @@ def run_graph_based(img, verbose=False):
 
     return []
 
-
-import numpy as np
 
 def fer_algorithm_complete(concave_vertices, grid, verbose=False):
     """
