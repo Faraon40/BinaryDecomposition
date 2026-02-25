@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 
 from src.utils.visualization import (
     visualize_concave_vertices,
+    visualize_concave_vertices_cord,
     visualize_fer_decomposition
 )
 
@@ -1252,7 +1253,7 @@ def main():
     concave_vertices = find_concave_corners(img)
 
     # Visualize found concave vertices
-    # visualize_concave_vertices(img, concave_vertices)
+    visualize_concave_vertices(img, concave_vertices)
     # visualize_concave_vertices_cord(img, concave_vertices)
 
     result = fer_algorithm_complete(concave_vertices, img, verbose=True)

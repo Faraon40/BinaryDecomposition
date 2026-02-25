@@ -104,49 +104,58 @@ def draw_solution(
         plt.close()
 
 
-def visualize_concave_vertices(
-    grid: np.ndarray,
-    concave_vertices: List[Tuple[int, int]],
-    output_path: str = 'concave_vertices.png'
-):
-    """Visualize concave vertices on binary image.
+import matplotlib.pyplot as plt
+import numpy as np
 
-    Creates RGB image with white pixels for 1s, black for 0s, and red dots
-    for concave vertices. Useful for debugging and understanding the
-    FER algorithm's input.
+def visualize_concave_vertices(grid, concave_vertices):
+    """
+    Visualize concave vertices on a binary grid using Matplotlib.
+
+    Active pixels (1) are shown in white, and background pixels (0) in black.
+    Concave vertices are highlighted as red pixels with yellow ID labels.
 
     Args:
-        grid: Binary image (numpy array).
-        concave_vertices: List of (x, y) concave vertex coordinates.
-        output_path: Path to save output image.
-
+        grid (np.ndarray): 2D binary numpy array (0s and 1s).
+        concave_vertices (list): List of tuples (id, x, y, corners).
     """
     rows, cols = grid.shape
 
-    # Create RGB image (3 channels)
+    # Create an RGB image (3 channels)
     image = np.zeros((rows, cols, 3), dtype=np.uint8)
 
-    # Set pixels according to binary grid
+    # Set pixel colors according to the binary grid
     for i in range(rows):
         for j in range(cols):
             if grid[i, j] == 1:
-                image[i, j] = [255, 255, 255]  # White
+                image[i, j] = [255, 255, 255]  # White for object
             else:
-                image[i, j] = [0, 0, 0]  # Black
+                image[i, j] = [0, 0, 0]        # Black for background
 
-    # Mark concave vertices with red color
-    for x, y in concave_vertices:
+    # Prepare plot
+    plt.figure(figsize=(6, 6))
+    plt.imshow(image)
+    plt.axis("off")
+
+    # Mark vertices in red and add text labels
+    for idx, x, y, corners, cx, cy in concave_vertices:
         if 0 <= y < rows and 0 <= x < cols:
-            image[y, x] = [255, 0, 0]  # Red on main pixel
+            image[y, x] = [255, 0, 0]  # Highlight specific vertex pixel in red
 
-    # Save image
-    img = Image.fromarray(image)
-    img.save(output_path)
+        # Add vertex ID label to the plot
+        plt.text(
+            x,
+            y,
+            str(idx),
+            color="yellow",
+            fontsize=10,
+            ha="center",
+            va="center",
+            fontweight="bold"
+        )
 
-    print(f"Image saved: {output_path}")
-    print(f"Size: {cols}x{rows} pixels")
-    print(f"Number of concave vertices: {len(concave_vertices)}")
-    print(f"Vertex coordinates (first 10): {concave_vertices[:10]}")
+    plt.imshow(image)
+    plt.title("Detected Concave Vertices")
+    plt.show()
 
 
 def visualize_fer_decomposition(
@@ -199,6 +208,75 @@ def visualize_fer_decomposition(
         plt.show()
     else:
         plt.close()
+
+
+def visualize_concave_vertices_cord(grid, concave_vertices):
+    """
+    Visualize the binary grid with pixel coordinates and highlighted concave vertices.
+
+    This function renders the input grid, labels every active pixel with its (x, y)
+    coordinates, and highlights detected concave vertices with their IDs and
+    precise geometric centers.
+
+    Args:
+        grid (np.ndarray): 2D binary numpy array (0s and 1s).
+        concave_vertices (list): List of tuples (id, x, y, corners, cx, cy).
+    """
+    rows, cols = grid.shape
+
+    # Create an RGB image: White for object (1), Black for background (0)
+    image = np.zeros((rows, cols, 3), dtype=np.uint8)
+    for i in range(rows):
+        for j in range(cols):
+            if grid[i, j] == 1:
+                image[i, j] = [255, 255, 255]
+            else:
+                image[i, j] = [0, 0, 0]
+
+    plt.figure(figsize=(10, 10))
+    plt.imshow(image)
+    plt.axis("off")
+
+    # Overlay grid coordinates for every active pixel
+    for i in range(rows):
+        for j in range(cols):
+            if grid[i, j] == 1:
+                plt.text(
+                    j, i, f"({j},{i})",
+                    color="gray", fontsize=7, ha="center", va="center",
+                    bbox=dict(
+                        boxstyle="square,pad=0.1",
+                        facecolor="none",
+                        edgecolor="gray",
+                        linewidth=0.4
+                    )
+                )
+
+    # Highlight concave vertices
+    for idx, x, y, corners, cx, cy in concave_vertices:
+        # Plot the geometric vertex (the actual corner point) in Magenta
+        plt.plot(cx, cy, "mo", markersize=5)
+
+        # Color the specific pixel representing the corner Red in the image array
+        if 0 <= y < rows and 0 <= x < cols:
+            image[y, x] = [255, 0, 0]
+
+        # Display Vertex ID in the top half of the pixel
+        plt.text(
+            x, y - 0.2, str(idx),
+            color="yellow", fontsize=10, ha="center", va="center",
+            fontweight="bold"
+        )
+
+        # Display Vertex coordinates in the bottom half of the pixel
+        plt.text(
+            x, y + 0.2, f"({x},{y})",
+            color="yellow", fontsize=7, ha="center", va="center",
+        )
+
+    plt.imshow(image)
+    plt.title("Concave Vertices Visualization")
+    plt.show()
 
 
 def visualize_rectangles_dict(
