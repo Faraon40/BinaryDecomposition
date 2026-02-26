@@ -641,8 +641,11 @@ def fer_algorithm_level2(remaining_vertices, grid, level1_chords, verbose=False)
                         return True
         return False
 
-    def extend_chord(v_cx, v_cy, direction, grid, level2_chords, level1_cuts):
-        """Cast a ray from a vertex until it hits a boundary or a chord."""
+    def extend_chord(v_cx, v_cy, direction, grid, level2_chords, level1_cuts, verbose=False):
+        """
+        Extends a ray from a concave vertex to the nearest boundary or existing chord.
+        """
+        # Combine all existing cuts that can act as a stop barrier for the ray
         blocking_all = level1_cuts + level2_chords
         curr_cx, curr_cy = v_cx, v_cy
         path = [(curr_cx, curr_cy)]
@@ -655,7 +658,7 @@ def fer_algorithm_level2(remaining_vertices, grid, level1_chords, verbose=False)
         while steps < max_steps:
             steps += 1
 
-            # 1. MOVE (by half-pixel increments)
+            # 1. MOVEMENT: Step by 0.5 units to check both pixel centers and boundaries
             if direction == 'right':
                 curr_cx += 0.5
             elif direction == 'left':
@@ -665,28 +668,37 @@ def fer_algorithm_level2(remaining_vertices, grid, level1_chords, verbose=False)
             elif direction == 'up':
                 curr_cy -= 0.5
 
-            # 2. GRID BOUNDARY CHECK (Hard limit)
+            # 2. HARD BOUNDARY CHECK: Image canvas edges
             if curr_cx < 0 or curr_cx > cols or curr_cy < 0 or curr_cy > rows:
+                if verbose:
+                    print(f"    value=EXTEND_STOP_REASON:hard_boundary_limit:({curr_cx},{curr_cy})")
                 return path
 
-            # 3. EMPTY CELL CHECK (Hitting the object boundary)
-            if curr_cx % 1.0 == 0 and curr_cy % 1.0 == 0:
-                idx_x = int(curr_cx) if direction != 'left' else int(curr_cx - 1)
-                idx_y = int(curr_cy) if direction != 'up' else int(curr_cy - 1)
+            # 3. PIXEL VALIDATION: Ensure the ray remains inside the object
+            # We determine the pixel index based on the direction of travel
+            check_x = int(curr_cx - 0.5) if direction == 'left' else int(curr_cx)
+            check_y = int(curr_cy - 0.5) if direction == 'up' else int(curr_cy)
 
-                if (0 <= idx_x < cols and 0 <= idx_y < rows):
-                    if grid[idx_y, idx_x] == 0:
-                        return path
-                else:
+            if 0 <= check_x < cols and 0 <= check_y < rows:
+                if grid[check_y, check_x] == 0:
+                    # Ray hit empty space; stop at the edge of the last valid pixel
+                    if verbose:
+                        print(f"    value=EXTEND_STOP_REASON:empty_grid_at:({check_x},{check_y})")
                     return path
+            else:
+                # Ray exited the grid dimensions
+                return path
 
-            # 4. CHORD COLLISION CHECK
+            # 4. CHORD COLLISION: Check if ray intersects an existing Level 1 or Level 2 chord
+            # This check is performed only if we are still within a valid '1' pixel
             if is_blocked_by_chord(curr_cx, curr_cy, direction, blocking_all):
                 path.append((curr_cx, curr_cy))
+                if verbose:
+                    print(f"    value=EXTEND_STOP_REASON:chord_collision")
                 return path
 
-            # 5. PATH RECORDING
-            if curr_cx % 1.0 == 0.5 or curr_cy % 1.0 == 0.5:
+            # 5. PATH RECORDING: Save coordinates at integer/half-integer intervals
+            if curr_cx % 1.0 == 0 or curr_cy % 1.0 == 0:
                 if (curr_cx, curr_cy) not in path:
                     path.append((curr_cx, curr_cy))
 
@@ -819,23 +831,22 @@ def find_rectangles_from_cuts(grid, cuts, verbose=False):
     region_id = 0
 
     def is_cut_between(y1, x1, y2, x2):
-        """Check if any cut exists between two adjacent pixels."""
         for cut in cuts:
             if cut['type'] == 'vertical':
                 x_line = cut['x_line']
                 y_start, y_end = cut['y_range']
-                # Horizontal movement between neighbors (same row)
                 if y1 == y2 and abs(x1 - x2) == 1:
-                    x_border = (x1 + x2) / 2.0
-                    if abs(x_border - x_line) < 0.1 and y_start <= y1 <= y_end:
+                    x_border = (min(x1, x2) + max(x1, x2)) / 2.0
+                    result = abs(x_border - x_line) < 0.1 and y_start < y1 < y_end
+                    if result:
                         return True
             else:
                 y_line = cut['y_line']
                 x_start, x_end = cut['x_range']
-                # Vertical movement between neighbors (same column)
                 if x1 == x2 and abs(y1 - y2) == 1:
-                    y_border = (y1 + y2) / 2.0
-                    if abs(y_border - y_line) < 0.1 and x_start <= x1 <= x_end:
+                    y_border = (min(y1, y2) + max(y1, y2)) / 2.0
+                    result = abs(y_border - y_line) < 0.1 and x_start < x1 < x_end
+                    if result:
                         return True
         return False
 
@@ -1244,9 +1255,9 @@ def main():
 
     # Load from dataset (uncomment to use)
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
-    # img_loaded = np.load("../../data/datasets/validation/npy/hat-5_binary.npy")
-    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
-    img_loaded = (img_loaded > 1).astype(np.uint8)  # convert 255 → 1
+    img_loaded = np.load("../../data/datasets/validation/npy/small_50x50_density20.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
+    img_loaded = (img_loaded > 0).astype(np.uint8)  # convert 255 → 1
     img = img_loaded
 
     # Display the image
