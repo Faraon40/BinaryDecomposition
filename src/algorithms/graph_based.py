@@ -1,5 +1,5 @@
 """Graph-based (FER) algorithm for binary image rectangle decomposition."""
-
+import networkx as nx
 import numpy as np
 from collections import defaultdict, deque
 import matplotlib.pyplot as plt
@@ -515,6 +515,82 @@ def maximum_independent_set(chords, graph, matching_pairs):
 
 
 def fer_algorithm_level1(concave_vertices, grid, verbose=False):
+    """
+    Complete Level 1: Find all possible chords, build a bipartite conflict graph,
+    and select the optimal maximum independent set (MIS) of chords.
+
+    This implementation uses Maximum Bipartite Matching (Kőnig's Theorem)
+    to guarantee the minimum number of rectangles, matching Gurobi's optimality.
+    """
+    if verbose:
+        print("=" * 70)
+        print("FER ALGORITHM - LEVEL 1 (OPTIMAL MIS)")
+        print("=" * 70)
+
+    # 1. Find all possible valid chords between concave vertices
+    # This helper should return a list of dicts with 'id', 'type', 'v1_id', 'v2_id', etc.
+    chords = find_cogrid_pairs(concave_vertices, grid)
+
+    if not chords:
+        if verbose: print("No Level 1 chords found.")
+        return [], concave_vertices
+
+    # 2. Separate chords into Horizontal and Vertical sets (the two bipartite partitions)
+    h_chords = [c for c in chords if c['type'] == 'horizontal']
+    v_chords = [c for c in chords if c['type'] == 'vertical']
+
+    # 3. Build the Bipartite Conflict Graph
+    # Nodes are identified by strings like 'h5' or 'v12' to keep partitions distinct
+    B = nx.Graph()
+    h_nodes = [f"h{c['id']}" for c in h_chords]
+    v_nodes = [f"v{c['id']}" for c in v_chords]
+
+    B.add_nodes_from(h_nodes, bipartite=0)
+    B.add_nodes_from(v_nodes, bipartite=1)
+
+    for h in h_chords:
+        for v in v_chords:
+            # We only add an edge if a horizontal chord and vertical chord intersect
+            if chords_intersect(h, v):
+                B.add_edge(f"h{h['id']}", f"v{v['id']}")
+
+    # 4. Solve for Maximum Matching
+    # Providing top_nodes explicitly helps NetworkX handle disconnected components
+    matching = nx.bipartite.maximum_matching(B, top_nodes=h_nodes)
+
+    # 5. Find Minimum Vertex Cover (MVC)
+    # In bipartite graphs, the Maximum Independent Set (MIS) is the complement of the MVC.
+    # Passing the matching explicitly prevents the AmbiguousSolution error.
+    mvc = nx.bipartite.to_vertex_cover(B, matching, top_nodes=h_nodes)
+
+    # 6. Select chords that are NOT in the Vertex Cover (this forms the MIS)
+    selected_chord_ids = []
+    for c in chords:
+        node_id = f"{'h' if c['type'] == 'horizontal' else 'v'}{c['id']}"
+        if node_id not in mvc:
+            selected_chord_ids.append(c['id'])
+
+    level1_chords = [c for c in chords if c['id'] in selected_chord_ids]
+
+    # 7. Identify remaining vertices (those not used as endpoints for Level 1 chords)
+    used_v_ids = set()
+    for c in level1_chords:
+        used_v_ids.add(c['v1_id'])
+        used_v_ids.add(c['v2_id'])
+
+    # Filter concave_vertices based on whether their unique ID was used
+    # Assuming concave_vertices is a list of tuples/lists where index 0 is the ID
+    remaining_vertices = [v for v in concave_vertices if v[0] not in used_v_ids]
+
+    if verbose:
+        print(f"Total possible chords: {len(chords)}")
+        print(f"MIS selected (Optimal): {len(level1_chords)} chords")
+        print(f"Remaining vertices for Level 2: {len(remaining_vertices)}")
+
+    return level1_chords, remaining_vertices
+
+
+def fer_algorithm_level1_z(concave_vertices, grid, verbose=False):
     """
     Execute Level 1 of the FER algorithm to optimize polygon decomposition.
 
@@ -1254,8 +1330,8 @@ def main():
     ])
 
     # Load from dataset (uncomment to use)
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
-    img_loaded = np.load("../../data/datasets/validation/npy/small_50x50_density20.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    # img_loaded = np.load("../../data/datasets/validation/npy/small_75x75_density50.npy")
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
     img_loaded = (img_loaded > 0).astype(np.uint8)  # convert 255 → 1
     img = img_loaded
