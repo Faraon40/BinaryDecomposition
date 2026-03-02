@@ -1091,8 +1091,11 @@ def main():
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
     # img_loaded = np.load("../../data/datasets/leafs_binary/npy/Vitis_riparia_5_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
 
-    img = img_holes_1
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
+
+    img = img_loaded
     img = (img > 0).astype(int)
 
     # Display the image

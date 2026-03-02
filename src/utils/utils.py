@@ -8,7 +8,7 @@ functions from the visualization module.
 from src.utils.visualization import (
     draw_solution,
     visualize_concave_vertices,
-    visualize_fer_decomposition,
+    visualize_gbd_decomposition,
     visualize_rectangles_dict,
     COLOR_PALETTE
 )
@@ -17,7 +17,7 @@ from src.utils.visualization import (
 __all__ = [
     'draw_solution',
     'visualize_concave_vertices',
-    'visualize_fer_decomposition',
+    'visualize_gbd_decomposition',
     'visualize_rectangles_dict',
     'COLOR_PALETTE'
 ]

@@ -158,7 +158,7 @@ def visualize_concave_vertices(grid, concave_vertices):
     plt.show()
 
 
-def visualize_fer_decomposition(
+def visualize_gbd_decomposition(
     grid: np.ndarray,
     result: Dict,
     save_path: Optional[str] = None,

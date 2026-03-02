@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 from src.utils.visualization import (
     visualize_concave_vertices,
     visualize_concave_vertices_cord,
-    visualize_fer_decomposition
+    visualize_gbd_decomposition
 )
 
 
@@ -514,7 +514,7 @@ def maximum_independent_set(chords, graph, matching_pairs):
     return mis
 
 
-def fer_algorithm_level1(concave_vertices, grid, verbose=False):
+def gbd_algorithm_level1(concave_vertices, grid, verbose=False):
     """
     Complete Level 1: Find all possible chords, build a bipartite conflict graph,
     and select the optimal maximum independent set (MIS) of chords.
@@ -524,7 +524,7 @@ def fer_algorithm_level1(concave_vertices, grid, verbose=False):
     """
     if verbose:
         print("=" * 70)
-        print("FER ALGORITHM - LEVEL 1 (OPTIMAL MIS)")
+        print("GBD ALGORITHM - LEVEL 1 (OPTIMAL MIS)")
         print("=" * 70)
 
     # 1. Find all possible valid chords between concave vertices
@@ -590,9 +590,9 @@ def fer_algorithm_level1(concave_vertices, grid, verbose=False):
     return level1_chords, remaining_vertices
 
 
-def fer_algorithm_level1_z(concave_vertices, grid, verbose=False):
+def gbd_algorithm_level1_z(concave_vertices, grid, verbose=False):
     """
-    Execute Level 1 of the FER algorithm to optimize polygon decomposition.
+    Execute Level 1 of the GBD algorithm to optimize polygon decomposition.
 
     This stage identifies all valid internal chords between concave vertices,
     constructs a conflict graph based on intersections, and selects a Maximum
@@ -611,7 +611,7 @@ def fer_algorithm_level1_z(concave_vertices, grid, verbose=False):
     """
     if verbose:
         print("=" * 70)
-        print("FER ALGORITHM - LEVEL 1 (GREEDY MIS)")
+        print("GBD ALGORITHM - LEVEL 1 (GREEDY MIS)")
         print("=" * 70)
 
     # 1. Find all possible valid horizontal and vertical chords
@@ -660,9 +660,9 @@ def fer_algorithm_level1_z(concave_vertices, grid, verbose=False):
     return level1_chords, remaining_vertices
 
 
-def fer_algorithm_level2(remaining_vertices, grid, level1_chords, verbose=False):
+def gbd_algorithm_level2(remaining_vertices, grid, level1_chords, verbose=False):
     """
-    Execute Level 2 of the FER algorithm: Ray-casting to the nearest edge.
+    Execute Level 2 of the GBD algorithm: Ray-casting to the nearest edge.
 
     For concave vertices not resolved in Level 1, this function casts rays in
     allowed directions until they hit either the object boundary or an existing
@@ -679,7 +679,7 @@ def fer_algorithm_level2(remaining_vertices, grid, level1_chords, verbose=False)
     """
     if verbose:
         print("\n" + "=" * 70)
-        print("FER ALGORITHM - LEVEL 2 (NEAREST EDGE)")
+        print("GBD ALGORITHM - LEVEL 2 (NEAREST EDGE)")
         print("=" * 70)
         print(f"remaining_vertices_count: {len(remaining_vertices)}")
 
@@ -1045,10 +1045,10 @@ def find_rectangles_from_cuts(grid, cuts, verbose=False):
 
 
 def run_graph_based(img, verbose=False):
-    """Run graph-based (FER) decomposition on binary image.
+    """Run graph-based (GBD) decomposition on binary image.
 
     Main entry point for the graph-based rectangle decomposition algorithm.
-    Finds concave corners, applies the complete FER algorithm, and returns
+    Finds concave corners, applies the complete GBD algorithm, and returns
     a list of non-overlapping rectangles covering all 1-pixels.
 
     Args:
@@ -1064,8 +1064,8 @@ def run_graph_based(img, verbose=False):
     # Find concave corners
     concave_vertices = find_concave_corners(img)
 
-    # Run complete FER algorithm
-    result = fer_algorithm_complete(concave_vertices, img, verbose)
+    # Run complete GBD algorithm
+    result = gbd_algorithm_complete(concave_vertices, img, verbose)
 
     # Convert rect dicts to (x, y, width, height) tuples
     rectangles = [
@@ -1076,9 +1076,9 @@ def run_graph_based(img, verbose=False):
     return rectangles, []
 
 
-def fer_algorithm_complete(concave_vertices, grid, verbose=False, debug=False):
+def gbd_algorithm_complete(concave_vertices, grid, verbose=False, debug=False):
     """
-    Execute the complete Fast Exact Rectangle (FER) decomposition algorithm.
+    Execute the complete Graph Based Decomposition (GBD) algorithm.
 
     This function orchestrates the full pipeline:
     1. Analyzes concave vertices.
@@ -1109,7 +1109,7 @@ def fer_algorithm_complete(concave_vertices, grid, verbose=False, debug=False):
             print(f"{idx}: [{x},{y}] corner: {corner} (geom: {cx}, {cy})")
 
     # 1. Level 1: Find optimal non-intersecting chords using Maximum Independent Set (MIS)
-    level1_chords, remaining_vertices = fer_algorithm_level1(concave_vertices, grid, verbose)
+    level1_chords, remaining_vertices = gbd_algorithm_level1(concave_vertices, grid, verbose)
 
     level1_precise_cuts = convert_chords_to_precise_cuts(level1_chords)
     if debug:
@@ -1121,7 +1121,7 @@ def fer_algorithm_complete(concave_vertices, grid, verbose=False, debug=False):
             print(i)
 
     # 2. Level 2: Resolve leftover vertices by extending rays to the nearest boundary/chord
-    level2_chords = fer_algorithm_level2(remaining_vertices, grid, level1_chords, verbose)
+    level2_chords = gbd_algorithm_level2(remaining_vertices, grid, level1_chords, verbose)
 
     if debug:
         print("\nLVL1 Chords: ")
@@ -1159,7 +1159,7 @@ def fer_algorithm_complete(concave_vertices, grid, verbose=False, debug=False):
 
     if verbose:
         print("\n" + "=" * 70)
-        print("COMPLETE FER ALGORITHM - SUMMARY")
+        print("COMPLETE GBD ALGORITHM - SUMMARY")
         print("=" * 70)
         print(f"Total concave vertices: {len(concave_vertices)}")
         print(f"Level 1 (MIS): {len(level1_chords)} cuts")
@@ -1180,7 +1180,7 @@ def fer_algorithm_complete(concave_vertices, grid, verbose=False, debug=False):
 
 
 def main():
-    """Run FER algorithm demo on sample binary image."""
+    """Run GBD algorithm demo on sample binary image."""
     # Small test image
     img_small = np.array([
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1330,30 +1330,32 @@ def main():
     ])
 
     # Load from dataset (uncomment to use)
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
     # img_loaded = np.load("../../data/datasets/validation/npy/small_75x75_density50.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
+
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
     img_loaded = (img_loaded > 0).astype(np.uint8)  # convert 255 → 1
     img = img_loaded
 
     # Display the image
-    plt.title("Binary Image for FER Decomposition")
+    plt.title("Binary Image for GBD Decomposition")
     print(np.unique(img, return_counts=True))
     plt.imshow(img, cmap="gray")  # 0=black, 255=white — correct
     plt.axis("off")
     plt.show()
 
-    # Find concave corners and run FER algorithm
+    # Find concave corners and run GBD algorithm
     concave_vertices = find_concave_corners(img)
 
     # Visualize found concave vertices
     # visualize_concave_vertices(img, concave_vertices)
     # visualize_concave_vertices_cord(img, concave_vertices)
 
-    result = fer_algorithm_complete(concave_vertices, img, verbose=True)
+    result = gbd_algorithm_complete(concave_vertices, img, verbose=True)
 
     # Visualize results
-    visualize_fer_decomposition(img, result, save_path=None, show=True)
+    visualize_gbd_decomposition(img, result, save_path=None, show=True)
 
 
 if __name__ == "__main__":
