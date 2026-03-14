@@ -15,6 +15,7 @@ import numpy as np
 from src.algorithms.genetic import run_ga
 from src.algorithms.graph_based import run_graph_based
 from src.algorithms.quadtree import run_quadtree
+from src.algorithms.rle import run_rle
 from experiments.src.metrics import calculate_metrics
 
 
@@ -96,11 +97,16 @@ def run_single_experiment(
         )
         generations_used = None
 
+    elif config.algorithm == "rle":
+        solution = run_rle(img, verbose=False)
+        generation_history = []
+        generations_used = None
+
     else:
         raise ValueError(
             f"Invalid algorithm: {config.algorithm}. "
             f"Must be 'ga_rle', 'ga_random', 'ga_quadtree', 'quadtree', "
-            f"or 'graph_based'."
+            f"'graph_based', or 'rle'."
         )
 
     execution_time = time.time() - start_time

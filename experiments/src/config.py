@@ -21,7 +21,7 @@ class ExperimentConfig:
         Random seed for reproducibility.
     algorithm : str
         Algorithm variant: "ga_rle", "ga_random", "ga_quadtree",
-        "quadtree", or "graph_based".
+        "quadtree", "graph_based", or "rle".
     pop_size : int, optional
         Population size for GA (default: 100).
     generations : int, optional
