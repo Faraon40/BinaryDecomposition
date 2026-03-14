@@ -6,6 +6,7 @@ one image with specified configuration. Wraps the algorithm
 implementations and provides a unified interface.
 """
 
+import random
 import time
 from pathlib import Path
 from typing import Tuple, List, Dict
@@ -72,6 +73,9 @@ def run_single_experiment(
     elif config.algorithm in ["ga_rle", "ga_random", "ga_quadtree"]:
         # Determine init method from algorithm name
         init_method = config.algorithm.split("_")[1]  # Extract from name
+
+        if config.seed is None:
+            config.seed = random.randint(0, 2**31 - 1)
 
         solution, generation_history = run_ga(
             img,

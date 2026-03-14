@@ -9,6 +9,8 @@ import csv
 from pathlib import Path
 from typing import Dict, List, Set
 
+_GA_ALGORITHMS = {"ga_rle", "ga_random", "ga_quadtree"}
+
 
 class CSVLogger:
     """Logger for experiment results with CSV output.
@@ -57,6 +59,7 @@ class CSVLogger:
         self.algorithm_name = algorithm_name
         self.dataset_name = dataset_name
         self.mutation_combo = mutation_combo
+        self._is_ga = algorithm_name in _GA_ALGORITHMS
 
         # Create hierarchical directory:
         # csv/algorithm_mutationcombo/dataset_name/
@@ -75,19 +78,26 @@ class CSVLogger:
         if not self.results_csv.exists():
             with open(self.results_csv, 'w', newline='') as f:
                 writer = csv.writer(f)
-                writer.writerow([
-                    'image_name',
-                    'seed',
-                    'mutation_combo',
-                    'pop_size',
-                    'generations',
-                    'rectangle_count',
-                    'execution_time_sec',
-                    'final_fitness',
-                    'generations_used'
-                ])
+                if self._is_ga:
+                    writer.writerow([
+                        'image_name',
+                        'seed',
+                        'mutation_combo',
+                        'pop_size',
+                        'generations',
+                        'rectangle_count',
+                        'execution_time_sec',
+                        'final_fitness',
+                        'generations_used'
+                    ])
+                else:
+                    writer.writerow([
+                        'image_name',
+                        'rectangle_count',
+                        'execution_time_sec'
+                    ])
 
-        if not self.generations_csv.exists():
+        if self._is_ga and not self.generations_csv.exists():
             with open(self.generations_csv, 'w', newline='') as f:
                 writer = csv.writer(f)
                 writer.writerow([
@@ -118,22 +128,28 @@ class CSVLogger:
             Rectangle counts per generation (for GA only).
 
         """
-        mutation_combo = config.get_mutation_combo_code()
-
         # Append to results CSV
         with open(self.results_csv, 'a', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow([
-                image_name,
-                config.seed,
-                mutation_combo,
-                config.pop_size,
-                config.generations,
-                metrics['rectangle_count'],
-                metrics['execution_time_sec'],
-                metrics.get('final_fitness', ''),
-                metrics.get('generations_used', '')
-            ])
+            if self._is_ga:
+                mutation_combo = config.get_mutation_combo_code()
+                writer.writerow([
+                    image_name,
+                    config.seed,
+                    mutation_combo,
+                    config.pop_size,
+                    config.generations,
+                    metrics['rectangle_count'],
+                    metrics['execution_time_sec'],
+                    metrics.get('final_fitness', ''),
+                    metrics.get('generations_used', '')
+                ])
+            else:
+                writer.writerow([
+                    image_name,
+                    metrics['rectangle_count'],
+                    metrics['execution_time_sec']
+                ])
 
         # Append generation history if available
         if generation_history:

@@ -7,6 +7,7 @@ mutation combinations.
 """
 
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass
@@ -17,8 +18,9 @@ class ExperimentConfig:
     ----------
     name : str
         Human-readable experiment name.
-    seed : int
-        Random seed for reproducibility.
+    seed : Optional[int]
+        Random seed for reproducibility. If None, a seed is
+        auto-generated at runtime for GA algorithms.
     algorithm : str
         Algorithm variant: "ga_rle", "ga_random", "ga_quadtree",
         "quadtree", "graph_based", or "rle".
@@ -54,7 +56,7 @@ class ExperimentConfig:
     """
 
     name: str
-    seed: int
+    seed: Optional[int]
     algorithm: str
 
     # GA parameters
