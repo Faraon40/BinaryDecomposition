@@ -9,6 +9,7 @@ import numpy as np
 
 from src.utils.types import Chromosome, Rectangle
 from src.utils.utils import draw_solution
+from src.algorithms.rle import init_population_rle
 
 
 def build_integral(img: np.ndarray) -> np.ndarray:
@@ -261,68 +262,6 @@ def repair_with_regions(
 
     return repaired
 
-
-def init_population_rle(
-    img: np.ndarray, integral: np.ndarray, pop_size: int
-) -> List[Chromosome]:
-    """Initialize GA rectangles using run-length decomposition.
-
-    Decomposes by rows or columns depending on image shape.
-
-    Args:
-        img: Binary image.
-        integral: Integral image.
-        pop_size: Population size.
-
-    Returns:
-        List of initialized chromosomes.
-
-    """
-    height, width = img.shape
-    population = []
-
-    for _ in range(pop_size):
-        rects = []
-
-        mode = "row" if width >= height else "col"
-
-        # ROW-wise decomposition
-        if mode == "row":
-            for y in range(height):
-                x = 0
-                while x < width:
-                    if img[y, x] == 1:
-                        x_start = x
-                        while x < width and img[y, x] == 1:
-                            x += 1
-                        w = x - x_start
-                        rect = (x_start, y, w, 1)
-                        if is_valid_rectangle_integral(integral, rect):
-                            rects.append(rect)
-                    else:
-                        x += 1
-
-        # COLUMN-wise decomposition
-        elif mode == "col":
-            for x in range(width):
-                y = 0
-                while y < height:
-                    if img[y, x] == 1:
-                        y_start = y
-                        while y < height and img[y, x] == 1:
-                            y += 1
-                        h = y - y_start
-                        rect = (x, y_start, 1, h)
-                        if is_valid_rectangle_integral(integral, rect):
-                            rects.append(rect)
-                    else:
-                        y += 1
-
-        # Shuffle for variation
-        random.shuffle(rects)
-        population.append(Chromosome(rects))
-
-    return population
 
 
 def init_population_random(
@@ -899,9 +838,8 @@ def run_ga(
         )
 
     if verbose:
-        print(
-            f"Initial population: {len(population[0].rectangles)} rectangles"
-        )
+        print(f"Initial population: {len(population[0].rectangles)} rectangles")
+        draw_solution(img, population[0], show=True)
 
     best_fitness = float("-inf")
     stagnant_generations = 0
@@ -1087,11 +1025,11 @@ def main():
     ])
 
     # Load the .npy file
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
     # img_loaded = np.load("../../data/datasets/leafs_binary/npy/Vitis_riparia_5_binary.npy")
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
 
@@ -1113,7 +1051,7 @@ def main():
         mutation_geometry=0.2,
         mutation_merge=0.2,
         mutation_local=0.2,
-        patience=10,
+        patience=5,
         crossover_method="subset_greedy",  # subset_greedy, single_point, two_point, uniform
         verbose=True,
     )
