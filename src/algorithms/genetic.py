@@ -1,6 +1,7 @@
 """Genetic algorithm for binary image rectangle decomposition."""
 
 import random
+import time
 from typing import List
 from scipy import ndimage
 
@@ -10,6 +11,7 @@ import numpy as np
 from src.utils.types import Chromosome, Rectangle
 from src.utils.utils import draw_solution
 from src.algorithms.rle import init_population_rle
+from src.algorithms.quadtree import init_population_quadtree
 
 
 def build_integral(img: np.ndarray) -> np.ndarray:
@@ -263,7 +265,6 @@ def repair_with_regions(
     return repaired
 
 
-
 def init_population_random(
     img: np.ndarray,
     integral: np.ndarray,
@@ -272,53 +273,66 @@ def init_population_random(
 ) -> List[Chromosome]:
     """Initialize rectangles with random rectangles.
 
-    Args:
-        img: Binary image.
-        integral: Integral image.
-        pop_size: Population size.
-        max_attempts: Max attempts per individual.
+       Args:
+           img: Binary image.
+           integral: Integral image.
+           pop_size: Population size.
+           max_attempts: Max attempts per individual.
 
-    Returns:
-        List of initialized chromosomes.
+       Returns:
+           List of initialized chromosomes.
 
-    """
+   """
     height, width = img.shape
     population = []
-    ones_count = np.sum(img)
+
+    # Precompute all pixels with value 1
+    ones = [tuple(p) for p in np.argwhere(img == 1)]
 
     for _ in range(pop_size):
+
         rects = []
-        covered = np.zeros_like(img)
+
+        # Local copy of uncovered pixels
+        uncovered = set(ones)
+
         attempts = 0
 
-        while np.sum(covered) < ones_count and attempts < max_attempts:
-            # Randomly select top-left on uncovered 1
-            ys, xs = np.where((img == 1) & (covered == 0))
-            if len(xs) == 0:
-                break
-            idx = random.randrange(len(xs))
-            x0, y0 = xs[idx], ys[idx]
+        while uncovered and attempts < max_attempts:
 
-            # Randomly select width and height
+            # Random uncovered pixel
+            y0, x0 = random.choice(tuple(uncovered))
+
+            # Random rectangle size
             max_w = width - x0
             max_h = height - y0
+
             w = random.randint(1, max_w)
             h = random.randint(1, max_h)
 
             rect = (x0, y0, w, h)
+
             if is_valid_rectangle_integral(integral, rect):
+
                 rects.append(rect)
-                covered[y0 : y0 + h, x0 : x0 + w] = 1
+
+                # Remove covered pixels from uncovered set
+                for y in range(y0, y0 + h):
+                    for x in range(x0, x0 + w):
+                        if (y, x) in uncovered:
+                            uncovered.remove((y, x))
 
             attempts += 1
 
-        # Repair remaining uncovered 1s
+        # Repair remaining uncovered pixels
         rects = repair(rects, img, integral)
+
         population.append(Chromosome(rects))
+
     return population
 
 
-def overlap(r1: Rectangle, r2: Rectangle) -> bool:
+def is_overlap(r1: Rectangle, r2: Rectangle) -> bool:
     """Check if two rectangles overlap.
 
     Args:
@@ -368,11 +382,11 @@ def subset_greedy_crossover(
 
     # Try to add non-overlapping rectangles from Parent 2
     for r in p2.rectangles:
-        if not any(overlap(r, r2) for r2 in rects):
+        if not any(is_overlap(r, r2) for r2 in rects):
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
+    # rects = repair(rects, img, integral)
 
-    rects = repair(rects, img, integral)
     return Chromosome(rects)
 
 
@@ -406,12 +420,12 @@ def single_point_crossover(
 
     # Try to add rectangles from second part of p2
     for r in p2.rectangles[cut2:]:
-        if not any(overlap(r, r2) for r2 in rects):
+        if not any(is_overlap(r, r2) for r2 in rects):
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
 
     # Repair to ensure complete coverage
-    rects = repair(rects, img, integral)
+    # rects = repair(rects, img, integral)
     return Chromosome(rects)
 
 
@@ -450,18 +464,18 @@ def two_point_crossover(
 
     # Add middle section from p1
     for r in p1.rectangles[cut1_a:cut1_b]:
-        if not any(overlap(r, r2) for r2 in rects):
+        if not any(is_overlap(r, r2) for r2 in rects):
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
 
     # Add end from p2
     for r in p2.rectangles[cut2_b:]:
-        if not any(overlap(r, r2) for r2 in rects):
+        if not any(is_overlap(r, r2) for r2 in rects):
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
 
     # Repair to ensure complete coverage
-    rects = repair(rects, img, integral)
+    # rects = repair(rects, img, integral)
     return Chromosome(rects)
 
 
@@ -493,19 +507,20 @@ def uniform_crossover(
     # Process each rectangle from p1 with probability p
     for r in p1.rectangles:
         if random.random() < p:
-            if not any(overlap(r, r2) for r2 in rects):
+            if not any(is_overlap(r, r2) for r2 in rects):
                 if is_valid_rectangle_integral(integral, r):
                     rects.append(r)
 
     # Process each rectangle from p2 with probability (1-p)
     for r in p2.rectangles:
         if random.random() < (1 - p):
-            if not any(overlap(r, r2) for r2 in rects):
+            if not any(is_overlap(r, r2) for r2 in rects):
                 if is_valid_rectangle_integral(integral, r):
                     rects.append(r)
 
     # Repair to ensure complete coverage
-    rects = repair(rects, img, integral)
+    # rects = repair(rects, img, integral)
+
     return Chromosome(rects)
 
 
@@ -792,14 +807,16 @@ def run_ga(
         generation_history: List of best rectangle counts per generation.
 
     """
-    import time
-
     start_time = time.time()
 
     # Set random seeds for reproducibility
-    if seed is not None:
-        random.seed(seed)
-        np.random.seed(seed)
+    if seed is None:
+        seed = random.randint(0, 2 ** 31 - 1)
+    random.seed(seed)
+    np.random.seed(seed)
+
+    if verbose:
+        print(f"Seed: {seed}")
 
     integral = build_integral(img)
 
@@ -828,8 +845,6 @@ def run_ga(
     elif init_method == "random":
         population = init_population_random(img, integral, pop_size)
     elif init_method == "quadtree":
-        from src.algorithms.quadtree import init_population_quadtree
-
         population = init_population_quadtree(img, integral, pop_size)
     else:
         raise ValueError(
@@ -906,8 +921,7 @@ def run_ga(
 
     if verbose:
         print(f"\nCompleted in {execution_time:.2f} seconds")
-        print(
-            f"Best solution: {len(best_chrom.rectangles)} rectangles, "
+        print(f"Best solution: {len(best_chrom.rectangles)} rectangles, "
             f"fitness={best_chrom.fitness:.2f}"
         )
 
@@ -917,8 +931,8 @@ def run_ga(
 
 def main():
     """Run GA demo on sample binary image."""
-    img = np.array(
-        [
+
+    img = np.array([
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
             [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
@@ -930,8 +944,7 @@ def main():
             [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
             [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ]
-    )
+        ])
 
     img_bugged_1 = np.array([
         [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -1025,10 +1038,9 @@ def main():
     ])
 
     # Load the .npy file
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
-    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Ginkgo_biloba_4_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
-    # img_loaded = np.load("../../data/datasets/leafs_binary/npy/Vitis_riparia_5_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
@@ -1042,6 +1054,8 @@ def main():
     plt.axis("off")
     plt.show()
 
+    print(img.shape)
+
     best, history = run_ga(
         img,
         init_method="rle",
@@ -1049,7 +1063,7 @@ def main():
         generations=100,
         seed=None,
         mutation_geometry=0.2,
-        mutation_merge=0.2,
+        mutation_merge=0.3,
         mutation_local=0.2,
         patience=5,
         crossover_method="subset_greedy",  # subset_greedy, single_point, two_point, uniform
