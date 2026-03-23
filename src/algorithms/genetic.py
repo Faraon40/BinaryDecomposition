@@ -109,10 +109,89 @@ def fitness(
     return float(score)
 
 
-def repair(
+def _build_covered(
+    rects: List[Rectangle], img: np.ndarray
+) -> np.ndarray:
+    """Build a binary mask of pixels covered by the given rectangles."""
+    covered = np.zeros_like(img, dtype=np.uint8)
+    for x, y, w, h in rects:
+        covered[y : y + h, x : x + w] = 1
+    return covered
+
+
+def _trim_to_uncovered(
+    rect: Rectangle, covered: np.ndarray, integral: np.ndarray
+) -> Rectangle | None:
+    """Trim rect to fit within uncovered region using 4-directional clipping.
+
+    Tries clipping from right, left, bottom, and top; returns the largest
+    valid non-overlapping result, or None if no valid trim exists.
+
+    Args:
+        rect: Rectangle to trim.
+        covered: Binary mask of already-covered pixels.
+        integral: Integral image for validity checks.
+
+    Returns:
+        Largest valid trimmed rectangle, or None.
+
+    """
+    x, y, w, h = rect
+    overlap = covered[y : y + h, x : x + w]
+
+    # Per-column / per-row overlap flags
+    cols = np.any(overlap, axis=0)   # shape (w,)
+    rows = np.any(overlap, axis=1)   # shape (h,)
+    overlap_cols = np.where(cols)[0]
+    overlap_rows = np.where(rows)[0]
+
+    candidates: List[Rectangle] = []
+
+    # Trim from right: keep columns before first overlapping column
+    new_w = int(overlap_cols[0])
+    if new_w > 0:
+        r = (x, y, new_w, h)
+        if is_valid_rectangle_integral(integral, r):
+            candidates.append(r)
+
+    # Trim from left: keep columns after last overlapping column
+    new_x = x + int(overlap_cols[-1]) + 1
+    new_w = w - (int(overlap_cols[-1]) + 1)
+    if new_w > 0:
+        r = (new_x, y, new_w, h)
+        if is_valid_rectangle_integral(integral, r):
+            candidates.append(r)
+
+    # Trim from bottom: keep rows before first overlapping row
+    new_h = int(overlap_rows[0])
+    if new_h > 0:
+        r = (x, y, w, new_h)
+        if is_valid_rectangle_integral(integral, r):
+            candidates.append(r)
+
+    # Trim from top: keep rows after last overlapping row
+    new_y = y + int(overlap_rows[-1]) + 1
+    new_h = h - (int(overlap_rows[-1]) + 1)
+    if new_h > 0:
+        r = (x, new_y, w, new_h)
+        if is_valid_rectangle_integral(integral, r):
+            candidates.append(r)
+
+    if not candidates:
+        return None
+    return max(candidates, key=lambda r: r[2] * r[3])
+
+
+def repair_overlaps(
     rects: List[Rectangle], img: np.ndarray, integral: np.ndarray
 ) -> List[Rectangle]:
-    """Repair solution by removing overlaps and covering missing pixels.
+    """Repair overlapping rectangles by trimming instead of discarding.
+
+    Processes rectangles in order. For each rectangle that overlaps with
+    already-covered pixels, tries to clip it from one of 4 directions
+    (right, left, bottom, top) and keeps the largest valid result.
+    Rectangles that cannot be trimmed to a valid non-overlapping form
+    are discarded.
 
     Args:
         rects: List of rectangles to repair.
@@ -120,22 +199,69 @@ def repair(
         integral: Integral image.
 
     Returns:
-        Repaired list of valid non-overlapping rectangles.
+        List of non-overlapping valid rectangles.
 
     """
     covered = np.zeros_like(img, dtype=np.uint8)
-    repaired = []
+    repaired: List[Rectangle] = []
 
-    # Keep valid non-overlapping rects
-    for x, y, w, h in rects:
-        if np.all(covered[y : y + h, x : x + w] == 0) and (
-            is_valid_rectangle_integral(integral, (x, y, w, h))
+    for rect in rects:
+        x, y, w, h = rect
+        # Skip out-of-bounds rectangles
+        if (
+            x < 0
+            or y < 0
+            or x + w > img.shape[1]
+            or y + h > img.shape[0]
         ):
-            repaired.append((x, y, w, h))
-            covered[y : y + h, x : x + w] = 1
+            continue
 
-    # Cover remaining uncovered pixels (where img == 1)
+        if np.all(covered[y : y + h, x : x + w] == 0):
+            if is_valid_rectangle_integral(integral, rect):
+                repaired.append(rect)
+                covered[y : y + h, x : x + w] = 1
+        else:
+            trimmed = _trim_to_uncovered(rect, covered, integral)
+            if trimmed is not None:
+                tx, ty, tw, th = trimmed
+                repaired.append(trimmed)
+                covered[ty : ty + th, tx : tx + tw] = 1
+
+    return repaired
+
+
+def repair_coverage(
+    rects: List[Rectangle],
+    img: np.ndarray,
+    integral: np.ndarray,
+    p_coverage: float = 0.5,
+) -> List[Rectangle]:
+    """Cover uncovered foreground pixels with greedy rectangle expansion.
+
+    Args:
+        rects: List of already non-overlapping rectangles.
+        img: Binary image.
+        integral: Integral image.
+        p_coverage: Fraction of uncovered pixels to attempt to cover
+            (0.0–1.0). Values below 1.0 randomly subsample uncovered
+            pixels, leaving the rest penalised by fitness instead.
+
+    Returns:
+        Extended list with additional rectangles covering uncovered pixels.
+
+    """
+    covered = _build_covered(rects, img)
+    repaired = list(rects)
+
     ys, xs = np.where((img == 1) & (covered == 0))
+    if len(ys) == 0:
+        return repaired
+
+    if p_coverage < 1.0:
+        n = max(1, int(len(ys) * p_coverage))
+        idx = np.random.permutation(len(ys))[:n]
+        ys, xs = ys[idx], xs[idx]
+
     for x, y in zip(xs, ys):
         if covered[y, x] == 1:
             continue
@@ -161,11 +287,30 @@ def repair(
             else:
                 break
         max_h = h
-        # Place the biggest rectangle found
-        new_rect = (x, y, max_w, max_h)
-        repaired.append(new_rect)
+        repaired.append((x, y, max_w, max_h))
         covered[y : y + max_h, x : x + max_w] = 1
+
     return repaired
+
+
+def repair(
+    rects: List[Rectangle], img: np.ndarray, integral: np.ndarray
+) -> List[Rectangle]:
+    """Repair solution: trim overlaps then cover remaining pixels.
+
+    Thin wrapper combining repair_overlaps and repair_coverage.
+
+    Args:
+        rects: List of rectangles to repair.
+        img: Binary image.
+        integral: Integral image.
+
+    Returns:
+        Repaired list of valid non-overlapping rectangles.
+
+    """
+    rects = repair_overlaps(rects, img, integral)
+    return repair_coverage(rects, img, integral)
 
 
 def init_population_random(
@@ -227,8 +372,9 @@ def init_population_random(
 
             attempts += 1
 
-        # Repair remaining uncovered pixels
-        rects = repair(rects, img, integral)
+        # Repair remaining uncovered pixels (full coverage during init)
+        rects = repair_overlaps(rects, img, integral)
+        rects = repair_coverage(rects, img, integral)
 
         population.append(Chromosome(rects))
 
@@ -974,6 +1120,7 @@ def mutation(
     p_shift: float = 0.05,
     p_delete: float = 0.05,
     p_largest: float = 0.05,
+    p_repair: float = 0.5,
     max_step: int = 5,
 ) -> "Chromosome":
     """Apply mutation operators to chromosome.
@@ -985,8 +1132,9 @@ def mutation(
     4. shift         — translate one rectangle
     5. local         — re-decompose a random region
     6. largest_rect  — replace region with largest uncovered rectangle
-    7. repair        — restore full coverage
-    8. merge         — consolidate adjacent rectangles
+    7. repair_overlaps — trim overlapping rectangles (always applied)
+    8. repair_coverage — fill uncovered pixels (applied with prob p_repair)
+    9. merge         — consolidate adjacent rectangles
 
     Args:
         chrom: Chromosome to mutate.
@@ -999,6 +1147,10 @@ def mutation(
         p_shift: Probability of shift mutation.
         p_delete: Probability of delete mutation.
         p_largest: Probability of largest-rect mutation.
+        p_repair: Probability of applying coverage repair after mutations.
+            Overlap trimming is always applied regardless of this value.
+            Set to 1.0 (default) to always repair full coverage, or lower
+            to let fitness penalise uncovered pixels instead.
         max_step: Maximum step size for geometry and shift mutations.
 
     Returns:
@@ -1016,7 +1168,9 @@ def mutation(
     rects = mutate_local_repartition_v2(rects, img, integral, p_local)
     rects = mutate_largest_rect(rects, img, integral, p_largest)
     rects = mutate_merge_v2(rects, integral, p_merge)
-    rects = repair(rects, img, integral)
+    rects = repair_overlaps(rects, img, integral)
+    if random.random() < p_repair:
+        rects = repair_coverage(rects, img, integral)
 
     return Chromosome(rects)
 
@@ -1040,6 +1194,7 @@ def run_ga(
     mutation_shift=0.05,
     mutation_delete=0.05,
     mutation_largest=0.05,
+    repair_coverage_prob=0.5,
     crossover_method="subset_greedy",
 ):
     """Run the Genetic Algorithm for binary image decomposition.
@@ -1078,6 +1233,10 @@ def run_ga(
         mutation_largest: Probability of largest-rect mutation (R)
             (default: 0.05). Replaces a region with the largest
             uncovered rectangle found by the morphological scan.
+        repair_coverage_prob: Probability of applying coverage repair after
+            each mutation (default: 1.0). Overlap trimming is always applied.
+            Values below 1.0 allow uncovered pixels to persist, penalised
+            by fitness, which promotes more exploratory mutations.
         crossover_method: Crossover method to use (default: "subset_greedy").
             Options: "subset_greedy" (Subset Crossover with Greedy
             Non-overlapping Extension), "single_point", "two_point",
@@ -1127,7 +1286,7 @@ def run_ga(
         population = init_population_random(img, integral, pop_size)
     elif init_method == "quadtree":
         population = init_population_quadtree(img, integral, pop_size)
-    elif init_method == "morpho":
+    elif init_method == "morphological":
         population = init_population_morphological(img, integral, pop_size)
     elif init_method == "mixed":
         n_rle = pop_size // 3
@@ -1208,6 +1367,7 @@ def run_ga(
                 p_shift=mutation_shift,
                 p_delete=mutation_delete,
                 p_largest=mutation_largest,
+                p_repair=repair_coverage_prob,
             )
             new_pop.append(child)
 
@@ -1334,10 +1494,10 @@ def main():
     ])
 
     # Load the .npy file
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
-    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_tataricum_8_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-3_binary.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_campestre_1_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-20_binary.npy")
 
@@ -1354,19 +1514,20 @@ def main():
 
     best, history = run_ga(
         img,
-        pop_size=100,
+        pop_size=30,
         generations=500,
-        patience=25,
+        patience=10,
         seed=None,
-        init_method="morpho",
+        init_method="morphological",
         verbose=True,
-        mutation_geometry=0.2,
+        mutation_geometry=0.3,
         mutation_merge=0.2,
-        mutation_local=0.2,
+        mutation_local=0.4,
         mutation_split=0.2,
-        mutation_shift=0.2,
+        mutation_shift=0.5,
         mutation_delete=0.2,
-        mutation_largest=0.1,
+        mutation_largest=0.3,
+        repair_coverage_prob=0.2,
         crossover_method="subset_greedy"
     )
 
