@@ -23,7 +23,8 @@ class ExperimentConfig:
         auto-generated at runtime for GA algorithms.
     algorithm : str
         Algorithm variant: "ga_rle", "ga_random", "ga_quadtree",
-        "quadtree", "graph_based", or "rle".
+        "ga_morphological", "ga_mixed", "quadtree", "graph_based",
+        "rle", or "morphological".
     pop_size : int, optional
         Population size for GA (default: 100).
     generations : int, optional
@@ -43,6 +44,9 @@ class ExperimentConfig:
         Set to 0.0 to disable.
     p_local : float, optional
         Probability of local repartition mutation (L) (default: 0.05).
+        Set to 0.0 to disable.
+    p_largest : float, optional
+        Probability of largest-rect mutation (R) (default: 0.05).
         Set to 0.0 to disable.
     crossover_method : str, optional
         Crossover method to use (default: "subset_greedy").
@@ -71,6 +75,7 @@ class ExperimentConfig:
     p_geometry: float = 0.20
     p_merge: float = 0.20
     p_local: float = 0.20
+    p_largest: float = 0.05
 
     # Crossover method
     crossover_method: str = "subset_greedy"
@@ -91,7 +96,8 @@ class ExperimentConfig:
         if not any([
             self.p_geometry > 0,
             self.p_merge > 0,
-            self.p_local > 0
+            self.p_local > 0,
+            self.p_largest > 0,
         ]):
             return "NONE"
 
@@ -102,5 +108,7 @@ class ExperimentConfig:
             code += "M"
         if self.p_local > 0:
             code += "L"
+        if self.p_largest > 0:
+            code += "R"
 
         return code

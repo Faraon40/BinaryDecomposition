@@ -70,19 +70,32 @@ def run_single_experiment(
         )
         generations_used = None
 
-    elif config.algorithm in ["ga_rle", "ga_random", "ga_quadtree"]:
+    elif config.algorithm in [
+        "ga_rle", "ga_random", "ga_quadtree",
+        "ga_morphological", "ga_mixed",
+    ]:
         # Determine init method from algorithm name
-        init_method = config.algorithm.split("_")[1]  # Extract from name
+        init_method = config.algorithm.split("_", 1)[1]
 
         if config.seed is None:
             config.seed = random.randint(0, 2**31 - 1)
 
-        solution, generation_history = run_ga(img, pop_size=config.pop_size, generations=config.generations,
-                                              elite_size=config.elite_size, penalty_extra=config.penalty,
-                                              patience=config.patience, seed=config.seed, init_method=init_method,
-                                              verbose=False, mutation_geometry=config.p_geometry,
-                                              mutation_merge=config.p_merge, mutation_local=config.p_local,
-                                              crossover_method=config.crossover_method)
+        solution, generation_history = run_ga(
+            img,
+            pop_size=config.pop_size,
+            generations=config.generations,
+            elite_size=config.elite_size,
+            penalty_extra=config.penalty,
+            patience=config.patience,
+            seed=config.seed,
+            init_method=init_method,
+            verbose=False,
+            mutation_geometry=config.p_geometry,
+            mutation_merge=config.p_merge,
+            mutation_local=config.p_local,
+            mutation_largest=config.p_largest,
+            crossover_method=config.crossover_method,
+        )
         generations_used = len(generation_history)
 
     elif config.algorithm == "graph_based":
@@ -97,11 +110,18 @@ def run_single_experiment(
         generation_history = []
         generations_used = None
 
+    elif config.algorithm == "morphological":
+        from src.algorithms.morphological import run_morphological
+        solution = run_morphological(img, verbose=False)
+        generation_history = []
+        generations_used = None
+
     else:
         raise ValueError(
             f"Invalid algorithm: {config.algorithm}. "
-            f"Must be 'ga_rle', 'ga_random', 'ga_quadtree', 'quadtree', "
-            f"'graph_based', or 'rle'."
+            f"Must be 'ga_rle', 'ga_random', 'ga_quadtree', "
+            f"'ga_morphological', 'ga_mixed', 'quadtree', "
+            f"'graph_based', 'rle', or 'morphological'."
         )
 
     execution_time = time.time() - start_time

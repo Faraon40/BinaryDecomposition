@@ -12,6 +12,10 @@ from src.utils.types import Chromosome, Rectangle
 from src.utils.utils import draw_solution
 from src.algorithms.rle import init_population_rle
 from src.algorithms.quadtree import init_population_quadtree
+from src.algorithms.morphological import (
+    init_population_morphological,
+    largest_rect_in_image,
+)
 
 
 def build_integral(img: np.ndarray) -> np.ndarray:
@@ -776,6 +780,62 @@ def mutate_local_repartition_v2(
     return rects
 
 
+def mutate_largest_rect(
+    rects: List[Rectangle],
+    img: np.ndarray,
+    integral: np.ndarray,
+    p_largest: float = 0.05,
+) -> List[Rectangle]:
+    """Replace part of a region with the largest uncovered rectangle.
+
+    Picks a random region, removes rectangles fully inside it, then
+    finds the largest valid rectangle among the remaining uncovered
+    foreground pixels and appends it.  The ``repair()`` call in the
+    outer mutation pipeline fills any remaining gaps.
+
+    Args:
+        rects: List of rectangles.
+        img: Binary image.
+        integral: Integral image (kept for API consistency).
+        p_largest: Probability that the mutation fires at all.
+
+    Returns:
+        Modified rectangle list.
+
+    """
+    if not rects or random.random() >= p_largest:
+        return rects
+
+    rects = rects.copy()
+    height, width = img.shape
+    cx = random.randint(0, width - 1)
+    cy = random.randint(0, height - 1)
+    region_size = random.randint(10, 50)
+    x1 = max(0, cx - region_size)
+    y1 = max(0, cy - region_size)
+    x2 = min(width, cx + region_size)
+    y2 = min(height, cy + region_size)
+
+    remaining = [
+        r for r in rects
+        if not (
+            r[0] >= x1 and r[1] >= y1
+            and r[0] + r[2] <= x2 and r[1] + r[3] <= y2
+        )
+    ]
+
+    # Build covered mask from ALL surviving rects to avoid overlap
+    covered = np.zeros_like(img, dtype=np.uint8)
+    for rx, ry, rw, rh in remaining:
+        covered[ry: ry + rh, rx: rx + rw] = 1
+
+    best = largest_rect_in_image(img, covered)
+    if best is not None:
+        remaining = remaining + [best]
+
+    return remaining
+
+
 def mutate_split(
     rects: List[Rectangle],
     integral: np.ndarray,
@@ -913,18 +973,20 @@ def mutation(
     p_split: float = 0.05,
     p_shift: float = 0.05,
     p_delete: float = 0.05,
+    p_largest: float = 0.05,
     max_step: int = 5,
 ) -> "Chromosome":
     """Apply mutation operators to chromosome.
 
     Pipeline order:
-    1. delete  — remove a rectangle, creating gaps for repair to refill
-    2. split   — break a rectangle into two, expanding the search space
-    3. geometry — resize one rectangle
-    4. shift   — translate one rectangle
-    5. local   — re-decompose a random region
-    6. repair  — restore full coverage
-    7. merge   — consolidate adjacent rectangles
+    1. delete        — remove a rectangle, creating gaps for repair
+    2. split         — break a rectangle into two
+    3. geometry      — resize one rectangle
+    4. shift         — translate one rectangle
+    5. local         — re-decompose a random region
+    6. largest_rect  — replace region with largest uncovered rectangle
+    7. repair        — restore full coverage
+    8. merge         — consolidate adjacent rectangles
 
     Args:
         chrom: Chromosome to mutate.
@@ -936,6 +998,7 @@ def mutation(
         p_split: Probability of split mutation.
         p_shift: Probability of shift mutation.
         p_delete: Probability of delete mutation.
+        p_largest: Probability of largest-rect mutation.
         max_step: Maximum step size for geometry and shift mutations.
 
     Returns:
@@ -946,14 +1009,14 @@ def mutation(
     if not rects:
         return chrom
 
-
     rects = mutate_delete(rects, p_delete)
     rects = mutate_split(rects, integral, p_split)
     rects = mutate_geometry(rects, img, integral, max_step, p_geo)
     rects = mutate_shift(rects, img, integral, p_shift, max_step)
     rects = mutate_local_repartition_v2(rects, img, integral, p_local)
-    rects = repair(rects, img, integral)
+    rects = mutate_largest_rect(rects, img, integral, p_largest)
     rects = mutate_merge_v2(rects, integral, p_merge)
+    rects = repair(rects, img, integral)
 
     return Chromosome(rects)
 
@@ -976,6 +1039,7 @@ def run_ga(
     mutation_split=0.05,
     mutation_shift=0.05,
     mutation_delete=0.05,
+    mutation_largest=0.05,
     crossover_method="subset_greedy",
 ):
     """Run the Genetic Algorithm for binary image decomposition.
@@ -996,7 +1060,8 @@ def run_ga(
         patience: Generations without improvement before stopping.
         seed: Random seed for reproducibility (default: None).
         init_method: Population initialization method:
-            "rle" (default), "random", or "quadtree".
+            "rle" (default), "random", "quadtree", "morphological",
+            or "mixed" (pop_size//3 each of rle, morphological, random).
         verbose: Print progress information (default: True).
         mutation_geometry: Probability of geometry mutation (G)
             (default: 0.05). Set to 0.0 to disable.
@@ -1010,9 +1075,13 @@ def run_ga(
             Translates one rectangle to a new position.
         mutation_delete: Probability of delete mutation (default: 0.05).
             Removes one rectangle; repair() refills the freed region.
+        mutation_largest: Probability of largest-rect mutation (R)
+            (default: 0.05). Replaces a region with the largest
+            uncovered rectangle found by the morphological scan.
         crossover_method: Crossover method to use (default: "subset_greedy").
             Options: "subset_greedy" (Subset Crossover with Greedy
-            Non-overlapping Extension), "single_point", "two_point", "uniform".
+            Non-overlapping Extension), "single_point", "two_point",
+            "uniform".
 
     Returns:
         Tuple of (best_chromosome, generation_history).
@@ -1058,10 +1127,21 @@ def run_ga(
         population = init_population_random(img, integral, pop_size)
     elif init_method == "quadtree":
         population = init_population_quadtree(img, integral, pop_size)
+    elif init_method == "morpho":
+        population = init_population_morphological(img, integral, pop_size)
+    elif init_method == "mixed":
+        n_rle = pop_size // 3
+        n_morph = pop_size // 3
+        n_rand = pop_size - n_rle - n_morph
+        population = (
+            init_population_rle(img, integral, n_rle)
+            + init_population_morphological(img, integral, n_morph)
+            + init_population_random(img, integral, n_rand)
+        )
     else:
         raise ValueError(
             f"Unknown init_method: {init_method}. "
-            f"Use 'rle', 'random', or 'quadtree'."
+            f"Use 'rle', 'random', 'quadtree', 'morphological', or 'mixed'."
         )
 
     if verbose:
@@ -1127,6 +1207,7 @@ def run_ga(
                 p_split=mutation_split,
                 p_shift=mutation_shift,
                 p_delete=mutation_delete,
+                p_largest=mutation_largest,
             )
             new_pop.append(child)
 
@@ -1254,13 +1335,13 @@ def main():
 
     # Load the .npy file
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
-    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Vitis_vinifera_3_binary.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_tataricum_8_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-20_binary.npy")
 
-    img = img_large
+    img = img_loaded
     img = (img > 0).astype(int)
 
     # Display the image
@@ -1273,11 +1354,11 @@ def main():
 
     best, history = run_ga(
         img,
-        pop_size=20,
+        pop_size=100,
         generations=500,
-        patience=100,
+        patience=25,
         seed=None,
-        init_method="quadtree",
+        init_method="morpho",
         verbose=True,
         mutation_geometry=0.2,
         mutation_merge=0.2,
@@ -1285,6 +1366,7 @@ def main():
         mutation_split=0.2,
         mutation_shift=0.2,
         mutation_delete=0.2,
+        mutation_largest=0.1,
         crossover_method="subset_greedy"
     )
 
