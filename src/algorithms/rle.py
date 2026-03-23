@@ -63,16 +63,22 @@ def is_valid_rectangle_integral(
 
 
 def rle_decomposition(
-    img: np.ndarray, integral: np.ndarray
+    img: np.ndarray,
+    integral: np.ndarray,
+    direction: str = "random",
 ) -> List[Rectangle]:
     """Perform a single RLE pass over the image.
 
-    Scans row-wise if width >= height, else column-wise.
     Each run of consecutive 1-pixels becomes one rectangle.
 
     Args:
         img: Binary image (2-D NumPy array).
         integral: Precomputed integral image.
+        direction: Scan direction - ``"row"`` for row-wise (1-pixel-tall
+            rectangles), ``"col"`` for column-wise (1-pixel-wide
+            rectangles), ``"auto"`` to pick based on aspect ratio
+            (row-wise when width >= height, column-wise otherwise),
+            ``"random"`` to choose uniformly at random.
 
     Returns:
         List of non-overlapping rectangles covering all 1-pixels.
@@ -81,8 +87,12 @@ def rle_decomposition(
     height, width = img.shape
     rects: List[Rectangle] = []
 
-    if width >= height:
-        # Row-wise decomposition
+    if direction == "random":
+        direction = random.choice(["row", "col"])
+    elif direction == "auto":
+        direction = "row" if width >= height else "col"
+
+    if direction == "row":
         for y in range(height):
             x = 0
             while x < width:
@@ -96,7 +106,6 @@ def rle_decomposition(
                 else:
                     x += 1
     else:
-        # Column-wise decomposition
         for x in range(width):
             y = 0
             while y < height:
