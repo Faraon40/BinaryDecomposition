@@ -55,35 +55,54 @@ def is_valid_rectangle_integral(integral: np.ndarray, rect: Rectangle) -> bool:
     return rect_sum(integral, x, y, w, h) == w * h
 
 
-def fitness(chrom: Chromosome, img: np.ndarray, penalty: float) -> float:
-    """Calculate fitness of chromosome solution.
+def fitness(
+    chrom: Chromosome,
+    img: np.ndarray,
+    penalty_extra: float = 2.0,
+    penalty_overlap: float = 5.0,
+    penalty_count: float = 10.0,
+) -> float:
+    """Calculate fitness of a chromosome using a two-phase hierarchical scoring.
 
-    Balances rectangle count, coverage errors, and total area.
+    Phase 1 (incomplete coverage): drives evolution toward full coverage
+    using a continuous gradient based on coverage ratio.
+    Phase 2 (full coverage): optimizes for fewer rectangles, no background
+    coverage, and no overlaps.
 
     Args:
         chrom: Chromosome with rectangles.
-        img: Binary image to decompose.
-        penalty: Penalty factor for extra coverage.
+        img: Binary image to decompose (0s and 1s).
+        penalty_extra: Penalty coefficient for pixels outside the object
+            (background pixels covered by rectangles).
+        penalty_overlap: Penalty coefficient for overlapping pixels
+            (pixels covered by more than one rectangle).
+        penalty_count: Penalty coefficient for each rectangle in the solution.
 
     Returns:
         Fitness score (higher is better).
 
     """
-    covered = np.zeros_like(img)
-    total_area = 0
-
+    covered = np.zeros_like(img, dtype=np.uint8)
     for x, y, w, h in chrom.rectangles:
-        covered[y : y + h, x : x + w] = 1
-        total_area += w * h
+        covered[y: y + h, x: x + w] += 1
 
-    missing = np.sum((img == 1) & (covered == 0))
-    extra = np.sum((img == 0) & (covered == 1))
+    missing_pixels = np.sum((img == 1) & (covered == 0))
+    extra_pixels = np.sum((img == 0) & (covered > 0))
+    overlap_pixels = np.sum(covered > 1)
+    total_obj_pixels = np.sum(img == 1)
 
-    if missing > 0:
-        return -1e6  # invalid: not all 1s covered
+    if missing_pixels > 0:
+        # Phase 1: drive toward full coverage
+        coverage_ratio = (total_obj_pixels - missing_pixels) / total_obj_pixels
+        score = -1e6 * (1.0 - coverage_ratio) - (missing_pixels ** 2)
+    else:
+        # Phase 2: optimize within feasible region
+        score = 10000.0
+        score -= extra_pixels * penalty_extra
+        score -= overlap_pixels * penalty_overlap
+        score -= len(chrom.rectangles) * penalty_count
 
-    # Balance: fewer rectangles, fewer extras, larger rectangles
-    return -len(chrom.rectangles) - penalty * extra + 0.01 * total_area
+    return float(score)
 
 
 def repair(
@@ -145,131 +164,11 @@ def repair(
     return repaired
 
 
-def repair_optimized(
-        rects: List[Rectangle], img: np.ndarray, integral: np.ndarray
-) -> List[Rectangle]:
-    """Optimized repair with reduced redundant checks.
-    Args:
-        rects: List of rectangles to repair.
-        img: Binary image.
-        integral: Integral image.
-
-    Returns:
-        Repaired list of valid non-overlapping rectangles.
-
-    """
-    covered = np.zeros_like(img, dtype=np.uint8)
-    repaired = []
-
-    # Phase 1: Keep valid non-overlapping rects (unchanged)
-    for x, y, w, h in rects:
-        if np.all(covered[y: y + h, x: x + w] == 0) and (
-                is_valid_rectangle_integral(integral, (x, y, w, h))
-        ):
-            repaired.append((x, y, w, h))
-            covered[y: y + h, x: x + w] = 1
-
-    # Phase 2: Cover remaining pixels - optimized
-    ys, xs = np.where((img == 1) & (covered == 0))
-    uncovered = set(zip(xs, ys))
-
-    while uncovered:
-        # Vezmi prvý nepokrytý pixel
-        x, y = uncovered.pop()
-
-        # Skip ak medzičasom bol pokrytý
-        if covered[y, x] == 1:
-            continue
-
-        # Expanduj šírku
-        w = 1
-        while (x + w < img.shape[1] and
-               img[y, x + w] == 1 and
-               covered[y, x + w] == 0 and
-               is_valid_rectangle_integral(integral, (x, y, w + 1, 1))):
-            w += 1
-
-        # Expanduj výšku
-        h = 1
-        while y + h < img.shape[0]:
-            # Check celý nový riadok naraz
-            if not (np.all(img[y + h, x:x + w] == 1) and
-                    np.all(covered[y + h, x:x + w] == 0) and
-                    is_valid_rectangle_integral(integral, (x, y, w, h + 1))):
-                break
-            h += 1
-
-        # Umiestni obdĺžnik
-        repaired.append((x, y, w, h))
-        covered[y:y + h, x:x + w] = 1
-
-        # Odstráň pokryté pixely zo setu
-        for py in range(y, y + h):
-            for px in range(x, x + w):
-                uncovered.discard((px, py))
-
-    return repaired
-
-
-def repair_with_regions(
-        rects: List[Rectangle], img: np.ndarray, integral: np.ndarray
-) -> List[Rectangle]:
-    """Use connected components for faster processing.
-
-    Args:
-        rects: List of rectangles to repair.
-        img: Binary image.
-        integral: Integral image.
-
-    Returns:
-        Repaired list of valid non-overlapping rectangles.
-
-    """
-    covered = np.zeros_like(img, dtype=np.uint8)
-    repaired = []
-
-    # Phase 1: unchanged
-    for x, y, w, h in rects:
-        if np.all(covered[y: y + h, x: x + w] == 0) and (
-                is_valid_rectangle_integral(integral, (x, y, w, h))
-        ):
-            repaired.append((x, y, w, h))
-            covered[y: y + h, x: x + w] = 1
-
-    # Phase 2: Nájdi súvislé komponenty nepokrytých pixelov
-    uncovered_mask = (img == 1) & (covered == 0)
-    labeled, num_features = ndimage.label(uncovered_mask)
-
-    # Pre každú komponentu vytvor obdĺžniky
-    for region_id in range(1, num_features + 1):
-        region_mask = (labeled == region_id)
-        ys, xs = np.where(region_mask)
-
-        # Jednoduchá heuristika: bounding box komponenty
-        min_x, max_x = xs.min(), xs.max()
-        min_y, max_y = ys.min(), ys.max()
-
-        # Skús najprv celý bounding box
-        w, h = max_x - min_x + 1, max_y - min_y + 1
-        if (is_valid_rectangle_integral(integral, (min_x, min_y, w, h)) and
-                np.all(img[min_y:min_y + h, min_x:min_x + w] == 1)):
-            repaired.append((min_x, min_y, w, h))
-            covered[min_y:min_y + h, min_x:min_x + w] = 1
-        else:
-            # Fallback na pôvodnú greedy expanziu pre túto oblasť
-            for x, y in zip(xs, ys):
-                if covered[y, x] == 1:
-                    continue
-                # ... greedy expand ...
-
-    return repaired
-
-
 def init_population_random(
     img: np.ndarray,
     integral: np.ndarray,
     pop_size: int,
-    max_attempts: int = 100,
+    max_attempts: int = 1000,
 ) -> List[Chromosome]:
     """Initialize rectangles with random rectangles.
 
@@ -528,7 +427,7 @@ def mutate_geometry(
     rects: List[Rectangle],
     img: np.ndarray,
     integral: np.ndarray,
-    max_step: int = 5,
+    max_step: int = 50,
     p: float = 0.2,
 ) -> List[Rectangle]:
     """Expand or shrink one rectangle randomly.
@@ -569,6 +468,7 @@ def mutate_geometry(
     # accept only valid rectangles
     if is_valid_rectangle_integral(integral, new_rect):
         rects[idx] = new_rect
+    # rects = repair(rects, img, integral)
     return rects
 
 
@@ -621,6 +521,78 @@ def mutate_merge(
                     continue
             j += 1
         i += 1
+    return rects
+
+
+def mutate_merge_v2(
+    rects: List[Rectangle],
+    integral: np.ndarray,
+    p_merge: float = 0.05,
+) -> List[Rectangle]:
+    """Merge randomly selected pairs of adjacent rectangles.
+
+    Repeats up to n_attempts times: picks one rectangle at random,
+    finds its adjacent neighbours, picks one at random and attempts to
+    merge them.  Each successful merge reduces the rectangle count by
+    one and updates the list for the next attempt.
+
+    Args:
+        rects: List of rectangles.
+        integral: Integral image.
+        p_merge: Probability that the mutation fires at all.
+        n_attempts: Maximum number of merge attempts per call.
+
+    Returns:
+        Rectangle list with up to n_attempts merges applied.
+
+    """
+    if not rects or random.random() >= p_merge:
+        return rects
+
+    rects = rects.copy()
+    n_attempts = random.randint(1, max(1, len(rects) // 2))
+    for _ in range(n_attempts):
+        if len(rects) < 2:
+            break
+
+        idx = random.randrange(len(rects))
+        r1 = rects[idx]
+
+        adjacent = []
+        for j, r2 in enumerate(rects):
+            if j == idx:
+                continue
+            horiz_adj = (
+                r1[1] == r2[1]
+                and r1[3] == r2[3]
+                and (r1[0] + r1[2] == r2[0] or r2[0] + r2[2] == r1[0])
+            )
+            vert_adj = (
+                r1[0] == r2[0]
+                and r1[2] == r2[2]
+                and (r1[1] + r1[3] == r2[1] or r2[1] + r2[3] == r1[1])
+            )
+            if horiz_adj or vert_adj:
+                adjacent.append(j)
+
+        if not adjacent:
+            continue
+
+        j = random.choice(adjacent)
+        r2 = rects[j]
+
+        x = min(r1[0], r2[0])
+        y = min(r1[1], r2[1])
+        w = max(r1[0] + r1[2], r2[0] + r2[2]) - x
+        h = max(r1[1] + r1[3], r2[1] + r2[3]) - y
+        new_rect = (x, y, w, h)
+
+        if is_valid_rectangle_integral(integral, new_rect):
+            high, low = (idx, j) if idx > j else (j, idx)
+            rects.pop(high)
+            rects.pop(low)
+            rects.append(new_rect)
+
     return rects
 
 
@@ -717,6 +689,220 @@ def mutate_local_repartition(
     return remaining + new_rects
 
 
+def mutate_local_repartition_v2(
+    rects: List[Rectangle],
+    img: np.ndarray,
+    integral: np.ndarray,
+    p_local: float = 0.1,
+) -> List[Rectangle]:
+    """Re-decompose a local area using random greedy coverage.
+
+    Selects a random region, removes rectangles fully contained within
+    it, then re-covers the freed pixels with randomly generated valid
+    rectangles.  Unlike mutate_local_repartition the re-decomposition
+    is stochastic: starting pixels are shuffled and rectangle sizes are
+    chosen randomly, so each call produces a different result for the
+    same region.
+
+    Args:
+        rects: List of rectangles.
+        img: Binary image.
+        integral: Integral image.
+        p_local: Probability that the mutation fires at all.
+
+    Returns:
+        Modified rectangle list.
+
+    """
+    if not rects or random.random() >= p_local:
+        return rects
+
+    rects = rects.copy()
+    height, width = img.shape
+
+    cx = random.randint(0, width - 1)
+    cy = random.randint(0, height - 1)
+    region_size = random.randint(10, 30)
+    x1 = max(0, cx - region_size)
+    y1 = max(0, cy - region_size)
+    x2 = min(width, cx + region_size)
+    y2 = min(height, cy + region_size)
+
+    remaining = [
+        r for r in rects
+        if not (
+            r[0] >= x1 and r[1] >= y1
+            and r[0] + r[2] <= x2 and r[1] + r[3] <= y2
+        )
+    ]
+
+    # Build coverage mask from rectangles that survived removal
+    combined_covered = np.zeros_like(img, dtype=np.uint8)
+    for rx, ry, rw, rh in remaining:
+        combined_covered[ry: ry + rh, rx: rx + rw] = 1
+
+    # Uncovered 1-pixels inside the region
+    region_mask = (
+        (img[y1:y2, x1:x2] == 1)
+        & (combined_covered[y1:y2, x1:x2] == 0)
+    )
+    ys, xs = np.where(region_mask)
+    if len(xs) == 0:
+        return remaining
+
+    # Shuffle starting pixels for random greedy coverage
+    candidates = list(zip((xs + x1).tolist(), (ys + y1).tolist()))
+    random.shuffle(candidates)
+
+    new_rects = []
+    for x0, y0 in candidates:
+        if combined_covered[y0, x0] == 1:
+            continue
+
+        max_w = x2 - x0
+        max_h = y2 - y0
+        w = random.randint(1, max_w)
+        h = random.randint(1, max_h)
+        rect = (x0, y0, w, h)
+
+        if (
+            is_valid_rectangle_integral(integral, rect)
+            and np.all(combined_covered[y0: y0 + h, x0: x0 + w] == 0)
+        ):
+            new_rects.append(rect)
+            combined_covered[y0: y0 + h, x0: x0 + w] = 1
+    rects = remaining + new_rects
+    # rects = repair(rects, img, integral)
+    return rects
+
+
+def mutate_split(
+    rects: List[Rectangle],
+    integral: np.ndarray,
+    p_split: float = 0.05,
+) -> List[Rectangle]:
+    """Split one randomly selected rectangle into two along a random axis.
+
+    Picks one rectangle at random and divides it either horizontally or
+    vertically at a random cut point.  Both halves are guaranteed valid
+    because any sub-rectangle of a fully-covered rectangle is also
+    fully covered.  This is the inverse operation of mutate_merge and
+    enables the search to escape local optima where a single large
+    rectangle blocks a better configuration.
+
+    Args:
+        rects: List of rectangles.
+        integral: Integral image.
+        p_split: Probability that the mutation fires at all.
+
+    Returns:
+        Rectangle list with one rectangle replaced by two.
+
+    """
+    if not rects or random.random() >= p_split:
+        return rects
+
+    rects = rects.copy()
+    idx = random.randrange(len(rects))
+    x, y, w, h = rects[idx]
+
+    can_split_h = w > 1
+    can_split_v = h > 1
+
+    if not can_split_h and not can_split_v:
+        return rects
+
+    axes = []
+    if can_split_h:
+        axes.append("h")
+    if can_split_v:
+        axes.append("v")
+    axis = random.choice(axes)
+
+    if axis == "h":
+        k = random.randint(1, w - 1)
+        r1 = (x, y, k, h)
+        r2 = (x + k, y, w - k, h)
+    else:
+        k = random.randint(1, h - 1)
+        r1 = (x, y, w, k)
+        r2 = (x, y + k, w, h - k)
+
+    rects.pop(idx)
+    rects.extend([r1, r2])
+    return rects
+
+
+def mutate_shift(
+    rects: List[Rectangle],
+    img: np.ndarray,
+    integral: np.ndarray,
+    p_shift: float = 0.05,
+    max_step: int = 5,
+) -> List[Rectangle]:
+    """Translate one randomly selected rectangle by a random offset.
+
+    Unlike mutate_geometry which changes rectangle size, this mutation
+    moves the rectangle to a different position while keeping its
+    dimensions unchanged.  Only valid translations (within image bounds
+    and covering only 1-pixels) are accepted.
+
+    Args:
+        rects: List of rectangles.
+        img: Binary image.
+        integral: Integral image.
+        p_shift: Probability that the mutation fires at all.
+        max_step: Maximum translation step in pixels.
+
+    Returns:
+        Rectangle list with one rectangle potentially moved.
+
+    """
+    if not rects or random.random() >= p_shift:
+        return rects
+
+    rects = rects.copy()
+    idx = random.randrange(len(rects))
+    x, y, w, h = rects[idx]
+
+    dx = random.randint(-max_step, max_step)
+    dy = random.randint(-max_step, max_step)
+    new_rect = (x + dx, y + dy, w, h)
+
+    if is_valid_rectangle_integral(integral, new_rect):
+        rects[idx] = new_rect
+
+    return rects
+
+
+def mutate_delete(
+    rects: List[Rectangle],
+    p_delete: float = 0.05,
+) -> List[Rectangle]:
+    """Remove one randomly selected rectangle from the solution.
+
+    Deleting a rectangle creates uncovered pixels that repair() will
+    fill with a fresh local decomposition.  This forces the search to
+    explore alternative decompositions for the freed region without
+    being constrained by the deleted rectangle's boundaries.
+
+    Args:
+        rects: List of rectangles.
+        p_delete: Probability that the mutation fires at all.
+
+    Returns:
+        Rectangle list with one rectangle removed.
+
+    """
+    if len(rects) <= 1 or random.random() >= p_delete:
+        return rects
+
+    rects = rects.copy()
+    idx = random.randrange(len(rects))
+    rects.pop(idx)
+    return rects
+
+
 def mutation(
     chrom: Chromosome,
     img: np.ndarray,
@@ -724,11 +910,21 @@ def mutation(
     p_geo: float = 0.05,
     p_merge: float = 0.05,
     p_local: float = 0.05,
+    p_split: float = 0.05,
+    p_shift: float = 0.05,
+    p_delete: float = 0.05,
     max_step: int = 5,
 ) -> "Chromosome":
     """Apply mutation operators to chromosome.
 
-    Applies geometry, merge, and local repartition mutations.
+    Pipeline order:
+    1. delete  — remove a rectangle, creating gaps for repair to refill
+    2. split   — break a rectangle into two, expanding the search space
+    3. geometry — resize one rectangle
+    4. shift   — translate one rectangle
+    5. local   — re-decompose a random region
+    6. repair  — restore full coverage
+    7. merge   — consolidate adjacent rectangles
 
     Args:
         chrom: Chromosome to mutate.
@@ -736,8 +932,11 @@ def mutation(
         integral: Integral image.
         p_geo: Probability of geometry mutation.
         p_merge: Probability of merge mutation.
-        p_local: Probability of local repartition.
-        max_step: Maximum step for geometry mutation.
+        p_local: Probability of local repartition mutation.
+        p_split: Probability of split mutation.
+        p_shift: Probability of shift mutation.
+        p_delete: Probability of delete mutation.
+        max_step: Maximum step size for geometry and shift mutations.
 
     Returns:
         Mutated chromosome.
@@ -747,27 +946,26 @@ def mutation(
     if not rects:
         return chrom
 
-    # Local geometric tweak
+
+    rects = mutate_delete(rects, p_delete)
+    rects = mutate_split(rects, integral, p_split)
     rects = mutate_geometry(rects, img, integral, max_step, p_geo)
-
-    # Low-probability merge of compatible rectangles
-    rects = mutate_merge(rects, integral, p_merge)
-
-    # Local re-decomposition of a random patch
-    rects = mutate_local_repartition(rects, img, integral, p_local)
-
-    # Final repair to ensure feasibility
+    rects = mutate_shift(rects, img, integral, p_shift, max_step)
+    rects = mutate_local_repartition_v2(rects, img, integral, p_local)
     rects = repair(rects, img, integral)
+    rects = mutate_merge_v2(rects, integral, p_merge)
 
     return Chromosome(rects)
 
 
 def run_ga(
     img: np.ndarray,
-    pop_size=100,
-    generations=10,
+    pop_size=20,
+    generations=100,
     elite_size=3,
-    penalty=1.5,
+    penalty_extra=2.0,
+    penalty_overlap=5.0,
+    penalty_count=10.0,
     patience=10,
     seed=None,
     init_method="rle",
@@ -775,6 +973,9 @@ def run_ga(
     mutation_geometry=0.05,
     mutation_merge=0.05,
     mutation_local=0.05,
+    mutation_split=0.05,
+    mutation_shift=0.05,
+    mutation_delete=0.05,
     crossover_method="subset_greedy",
 ):
     """Run the Genetic Algorithm for binary image decomposition.
@@ -786,7 +987,12 @@ def run_ga(
         pop_size: Population size.
         generations: Maximum generations.
         elite_size: Number of elites to keep.
-        penalty: Penalty for extra coverage.
+        penalty_extra: Penalty coefficient for background pixels covered by
+            rectangles (extra coverage).
+        penalty_overlap: Penalty coefficient for pixels covered by more than
+            one rectangle (default: 5.0).
+        penalty_count: Penalty coefficient per rectangle in the solution
+            (default: 10.0).
         patience: Generations without improvement before stopping.
         seed: Random seed for reproducibility (default: None).
         init_method: Population initialization method:
@@ -798,6 +1004,12 @@ def run_ga(
             (default: 0.05). Set to 0.0 to disable.
         mutation_local: Probability of local repartition mutation (L)
             (default: 0.05). Set to 0.0 to disable.
+        mutation_split: Probability of split mutation (default: 0.05).
+            Splits one rectangle into two along a random axis.
+        mutation_shift: Probability of shift mutation (default: 0.05).
+            Translates one rectangle to a new position.
+        mutation_delete: Probability of delete mutation (default: 0.05).
+            Removes one rectangle; repair() refills the freed region.
         crossover_method: Crossover method to use (default: "subset_greedy").
             Options: "subset_greedy" (Subset Crossover with Greedy
             Non-overlapping Extension), "single_point", "two_point", "uniform".
@@ -854,7 +1066,7 @@ def run_ga(
 
     if verbose:
         print(f"Initial population: {len(population[0].rectangles)} rectangles")
-        draw_solution(img, population[0], show=True)
+        # draw_solution(img, population[0], show=True)
 
     best_fitness = float("-inf")
     stagnant_generations = 0
@@ -864,7 +1076,7 @@ def run_ga(
     for g in range(generations):
         # Evaluate fitness
         for chrom in population:
-            chrom.fitness = fitness(chrom, img, penalty)
+            chrom.fitness = fitness(chrom, img, penalty_extra, penalty_overlap, penalty_count)
 
         # Sort by fitness descending
         population.sort(key=lambda c: c.fitness, reverse=True)
@@ -909,9 +1121,12 @@ def run_ga(
                 child,
                 img,
                 integral,
-                mutation_geometry,
-                mutation_merge,
-                mutation_local
+                p_geo=mutation_geometry,
+                p_merge=mutation_merge,
+                p_local=mutation_local,
+                p_split=mutation_split,
+                p_shift=mutation_shift,
+                p_delete=mutation_delete,
             )
             new_pop.append(child)
 
@@ -1039,13 +1254,13 @@ def main():
 
     # Load the .npy file
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
-    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Ginkgo_biloba_4_binary.npy")
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
+    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Vitis_vinifera_3_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
 
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-20_binary.npy")
 
-    img = img_loaded
+    img = img_large
     img = (img > 0).astype(int)
 
     # Display the image
@@ -1058,16 +1273,19 @@ def main():
 
     best, history = run_ga(
         img,
-        init_method="rle",
-        pop_size=30,
-        generations=100,
+        pop_size=20,
+        generations=500,
+        patience=100,
         seed=None,
-        mutation_geometry=0.2,
-        mutation_merge=0.3,
-        mutation_local=0.2,
-        patience=5,
-        crossover_method="subset_greedy",  # subset_greedy, single_point, two_point, uniform
+        init_method="quadtree",
         verbose=True,
+        mutation_geometry=0.2,
+        mutation_merge=0.2,
+        mutation_local=0.2,
+        mutation_split=0.2,
+        mutation_shift=0.2,
+        mutation_delete=0.2,
+        crossover_method="subset_greedy"
     )
 
     draw_solution(img, best.rectangles, show=True)

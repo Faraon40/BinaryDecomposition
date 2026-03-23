@@ -77,21 +77,12 @@ def run_single_experiment(
         if config.seed is None:
             config.seed = random.randint(0, 2**31 - 1)
 
-        solution, generation_history = run_ga(
-            img,
-            pop_size=config.pop_size,
-            generations=config.generations,
-            elite_size=config.elite_size,
-            penalty=config.penalty,
-            patience=config.patience,
-            seed=config.seed,
-            init_method=init_method,
-            verbose=False,
-            mutation_geometry=config.p_geometry,
-            mutation_merge=config.p_merge,
-            mutation_local=config.p_local,
-            crossover_method=config.crossover_method
-        )
+        solution, generation_history = run_ga(img, pop_size=config.pop_size, generations=config.generations,
+                                              elite_size=config.elite_size, penalty_extra=config.penalty,
+                                              patience=config.patience, seed=config.seed, init_method=init_method,
+                                              verbose=False, mutation_geometry=config.p_geometry,
+                                              mutation_merge=config.p_merge, mutation_local=config.p_local,
+                                              crossover_method=config.crossover_method)
         generations_used = len(generation_history)
 
     elif config.algorithm == "graph_based":
