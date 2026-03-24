@@ -140,7 +140,7 @@ def run_experiments(
     pop_size: int = 20,
     generations: int = 100,
     patience: int = 5,
-    algorithm: str = "ga_rle",
+    algorithm: str = "ga_dm",
     crossover_method: str = "subset_greedy",
     max_images: int = None
 ):
@@ -166,8 +166,8 @@ def run_experiments(
     patience : int, optional
         Early stopping patience (default: 5).
     algorithm : str, optional
-        Algorithm variant: "ga_rle", "ga_random", "ga_quadtree"
-        (default: "ga_rle").
+        Algorithm variant: "ga_dm", "ga_random", "ga_quadtree"
+        (default: "ga_dm").
     crossover_method : str, optional
         Crossover method: "subset_greedy" (Subset Crossover with Greedy
         Non-overlapping Extension), "single_point", "two_point",
@@ -345,11 +345,11 @@ def main():
         pop_size=20,
         generations=100,
         patience=5,
-        algorithm="ga_rle",
+        algorithm="ga_dm",
         crossover_method="subset_greedy",  # Best and fastest method
     )
 
-    # Algorithms: "ga_rle", "ga_random", "ga_quadtree"
+    # Algorithms: "ga_dm", "ga_random", "ga_quadtree"
     # Crossover methods: "subset_greedy" (default, best - Subset Crossover
     #                    with Greedy Non-overlapping Extension),
     #                    "single_point", "two_point", "uniform"
@@ -364,7 +364,7 @@ def main():
     #     pop_size=20,
     #     generations=100,
     #     patience=5,
-    #     algorithm="ga_rle",
+    #     algorithm="ga_dm",
     #     max_images=None  # Process ALL images
     # )
 
