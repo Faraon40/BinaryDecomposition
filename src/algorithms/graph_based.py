@@ -5,9 +5,9 @@ from collections import defaultdict, deque
 import matplotlib.pyplot as plt
 
 from src.utils.visualization import (
+    draw_solution,
     visualize_concave_vertices,
     visualize_concave_vertices_cord,
-    visualize_gbd_decomposition
 )
 
 
@@ -1332,7 +1332,13 @@ def main():
     # Load from dataset (uncomment to use)
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
     # img_loaded = np.load("../../data/datasets/validation/npy/small_75x75_density50.npy")
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Sorbus_aria_1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Vitis_vinifera_3_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-3_binary.npy")
+
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Ginkgo_biloba_4_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_2_binary.npy")
     img_loaded = (img_loaded > 0).astype(np.uint8)  # convert 255 → 1
@@ -1355,7 +1361,11 @@ def main():
     result = gbd_algorithm_complete(concave_vertices, img, verbose=True)
 
     # Visualize results
-    visualize_gbd_decomposition(img, result, save_path=None, show=True)
+    rect_tuples = [
+        (r['min_x'], r['min_y'], r['width'], r['height'])
+        for r in result['rectangles']
+    ]
+    draw_solution(img, rect_tuples, show=True)
 
 
 if __name__ == "__main__":
