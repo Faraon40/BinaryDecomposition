@@ -265,28 +265,50 @@ def repair_coverage(
     for x, y in zip(xs, ys):
         if covered[y, x] == 1:
             continue
-        # Expand width
-        w = 1
-        while x + w < img.shape[1] and np.all(
-            (img[y : y + 1, x : x + w + 1] == 1)
-            & (covered[y : y + 1, x : x + w + 1] == 0)
-        ):
-            if is_valid_rectangle_integral(integral, (x, y, w + 1, 1)):
-                w += 1
-            else:
-                break
-        max_w = w
-        # Expand height with chosen width
-        h = 1
-        while y + h < img.shape[0] and np.all(
-            (img[y : y + h + 1, x : x + max_w] == 1)
-            & (covered[y : y + h + 1, x : x + max_w] == 0)
-        ):
-            if is_valid_rectangle_integral(integral, (x, y, max_w, h + 1)):
-                h += 1
-            else:
-                break
-        max_h = h
+        if random.random() < 0.5:
+            # Expand width first, then height
+            w = 1
+            while x + w < img.shape[1] and np.all(
+                (img[y : y + 1, x : x + w + 1] == 1)
+                & (covered[y : y + 1, x : x + w + 1] == 0)
+            ):
+                if is_valid_rectangle_integral(integral, (x, y, w + 1, 1)):
+                    w += 1
+                else:
+                    break
+            max_w = w
+            h = 1
+            while y + h < img.shape[0] and np.all(
+                (img[y : y + h + 1, x : x + max_w] == 1)
+                & (covered[y : y + h + 1, x : x + max_w] == 0)
+            ):
+                if is_valid_rectangle_integral(integral, (x, y, max_w, h + 1)):
+                    h += 1
+                else:
+                    break
+            max_h = h
+        else:
+            # Expand height first, then width
+            h = 1
+            while y + h < img.shape[0] and np.all(
+                (img[y : y + h + 1, x : x + 1] == 1)
+                & (covered[y : y + h + 1, x : x + 1] == 0)
+            ):
+                if is_valid_rectangle_integral(integral, (x, y, 1, h + 1)):
+                    h += 1
+                else:
+                    break
+            max_h = h
+            w = 1
+            while x + w < img.shape[1] and np.all(
+                (img[y : y + max_h, x : x + w + 1] == 1)
+                & (covered[y : y + max_h, x : x + w + 1] == 0)
+            ):
+                if is_valid_rectangle_integral(integral, (x, y, w + 1, max_h)):
+                    w += 1
+                else:
+                    break
+            max_w = w
         repaired.append((x, y, max_w, max_h))
         covered[y : y + max_h, x : x + max_w] = 1
 
@@ -1514,20 +1536,20 @@ def main():
 
     best, history = run_ga(
         img,
-        pop_size=30,
+        pop_size=100,
         generations=500,
-        patience=10,
+        patience=15,
         seed=None,
         init_method="morphological",
         verbose=True,
-        mutation_geometry=0.3,
+        mutation_geometry=0.2,
         mutation_merge=0.2,
-        mutation_local=0.4,
-        mutation_split=0.2,
-        mutation_shift=0.5,
-        mutation_delete=0.2,
+        mutation_local=0.2,
+        mutation_split=0.4,
+        mutation_shift=0.2,
+        mutation_delete=0.3,
         mutation_largest=0.3,
-        repair_coverage_prob=0.2,
+        repair_coverage_prob=0.4,
         crossover_method="subset_greedy"
     )
 
