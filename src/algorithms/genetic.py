@@ -11,6 +11,7 @@ import numpy as np
 from src.utils.types import Chromosome, Rectangle
 from src.utils.utils import draw_solution
 from src.algorithms.dm import init_population_dm
+from src.algorithms.gdm import init_population_gdm
 from src.algorithms.quadtree import init_population_quadtree
 from src.algorithms.morphological import (
     init_population_morphological,
@@ -1238,7 +1239,7 @@ def run_ga(
         seed: Random seed for reproducibility (default: None).
         init_method: Population initialization method:
             "dm" (default), "random", "quadtree", "morphological",
-            or "mixed" (pop_size//3 each of dm, morphological, random).
+            "gdm", or "mixed" (pop_size//3 each of dm, morphological, random).
         verbose: Print progress information (default: True).
         mutation_geometry: Probability of geometry mutation (G)
             (default: 0.05). Set to 0.0 to disable.
@@ -1304,6 +1305,8 @@ def run_ga(
 
     if init_method == "dm":
         population = init_population_dm(img, integral, pop_size)
+    elif init_method == "gdm":
+        population = init_population_gdm(img, integral, pop_size)
     elif init_method == "random":
         population = init_population_random(img, integral, pop_size)
     elif init_method == "quadtree":
@@ -1322,7 +1325,8 @@ def run_ga(
     else:
         raise ValueError(
             f"Unknown init_method: {init_method}. "
-            f"Use 'dm', 'random', 'quadtree', 'morphological', or 'mixed'."
+            f"Use 'dm', 'gdm', 'random', 'quadtree', 'morphological', "
+            f"or 'mixed'."
         )
 
     if verbose:
@@ -1516,14 +1520,14 @@ def main():
     ])
 
     # Load the .npy file
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-3_binary.npy")
-    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_campestre_1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-3_binary.npy")
+    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-20_binary.npy")
 
-    img = img_loaded
+    img = img_holes_1
     img = (img > 0).astype(int)
 
     # Display the image
@@ -1540,12 +1544,12 @@ def main():
         generations=500,
         patience=15,
         seed=None,
-        init_method="morphological",
+        init_method="random",
         verbose=True,
         mutation_geometry=0.2,
         mutation_merge=0.2,
         mutation_local=0.2,
-        mutation_split=0.4,
+        mutation_split=0.7,
         mutation_shift=0.2,
         mutation_delete=0.3,
         mutation_largest=0.3,
