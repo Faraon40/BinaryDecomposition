@@ -56,7 +56,7 @@ def save_solution_rectangles(
     # rectangles/graph_based/dataset/image_name/
     image_stem = Path(image_name).stem
 
-    save_dir = output_dir / "graph_based" / dataset_name / image_stem
+    save_dir = output_dir / "graph_based_GBD" / dataset_name / image_stem
     save_dir.mkdir(parents=True, exist_ok=True)
 
     filename = f"rects_{rect_count}.json"
@@ -158,11 +158,11 @@ def run_experiments(
     )
 
     print("=" * 70)
-    print(f"GRAPH-BASED (FER) ALGORITHM EXPERIMENTS - {mode_str}")
+    print(f"GRAPH-BASED (GBD) ALGORITHM EXPERIMENTS - {mode_str}")
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
     print(f"Images to process: {len(image_paths)}")
-    print(f"Algorithm: graph_based (FER method, deterministic)")
+    print(f"Algorithm: graph_based (GBD method, deterministic)")
     print("=" * 70)
 
     config = ExperimentConfig(
@@ -175,7 +175,7 @@ def run_experiments(
         "graph_based",
         str(project_root / "experiments/results/csv/"),
         image_dir_name,
-        "FER"
+        "GBD"
     )
 
     print("-" * 70)
@@ -231,7 +231,7 @@ def run_experiments(
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
-            viz_subdir = viz_dir / "graph_based" / image_dir_name
+            viz_subdir = viz_dir / "graph_based_GBD" / image_dir_name
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
             viz_filename = f"{img_path.stem}_rects_{rect_count}.png"
@@ -255,8 +255,8 @@ def run_experiments(
     print("=" * 70)
     print(f"Total time: {total_elapsed/60:.1f} minutes")
     print(f"Results saved to: {logger.results_csv}")
-    print(f"Rectangles saved to: {rect_dir / 'graph_based'}")
-    print(f"Visualizations saved to: {viz_dir / 'graph_based'}")
+    print(f"Rectangles saved to: {rect_dir / 'graph_based_GBD'}")
+    print(f"Visualizations saved to: {viz_dir / 'graph_based_GBD'}")
 
 
 def main():

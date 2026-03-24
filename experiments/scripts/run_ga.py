@@ -54,12 +54,10 @@ def save_solution_rectangles(
 
     """
     # Create directory structure:
-    # rectangles/algorithm_mutationcombo/dataset/image_name/
+    # rectangles/algorithm/dataset/image_name/
     image_stem = Path(image_name).stem
-    mutation_combo = config.get_mutation_combo_code()
-    algo_name = f"{config.algorithm}_{mutation_combo}"
 
-    save_dir = output_dir / algo_name / dataset_name / image_stem
+    save_dir = output_dir / config.algorithm / dataset_name / image_stem
     save_dir.mkdir(parents=True, exist_ok=True)
 
     # Filename: seed_XXXXX_rects_NN.json
@@ -229,17 +227,14 @@ def run_experiments(
         crossover_method=crossover_method,
     )
 
-    mutation_combo = config.get_mutation_combo_code()
-
     # Setup logger with hierarchical structure
     logger = CSVLogger(
         algorithm,
         str(project_root / "experiments/results/csv/"),
         image_dir_name,
-        mutation_combo
+        ""
     )
 
-    print(f"Mutation combo: {mutation_combo}")
     print(f"Seed: {seed}")
     print("-" * 70)
 
@@ -298,13 +293,11 @@ def run_experiments(
             print(f"  ✓ Rectangles saved: {rect_path.relative_to(project_root)}")
 
             # Save visualization with hierarchical structure:
-            # visualizations/algorithm_mutationcombo/dataset/image_seed_XXXXX_rects_NN.png
+            # visualizations/algorithm/dataset/image_seed_XXXXX_rects_NN.png
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
-            mutation_combo = config.get_mutation_combo_code()
-            algo_name = f"{config.algorithm}_{mutation_combo}"
-            viz_subdir = viz_dir / algo_name / image_dir_name
+            viz_subdir = viz_dir / config.algorithm / image_dir_name
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
             viz_filename = f"{img_path.stem}_seed_{config.seed}_rects_{rect_count}.png"
@@ -349,7 +342,7 @@ def main():
         crossover_method="subset_greedy",  # Best and fastest method
     )
 
-    # Algorithms: "ga_dm", "ga_random", "ga_quadtree"
+    # Algorithms: "ga_dm", "ga_gdm", "ga_random", "ga_qtd", "ga_morph"
     # Crossover methods: "subset_greedy" (default, best - Subset Crossover
     #                    with Greedy Non-overlapping Extension),
     #                    "single_point", "two_point", "uniform"

@@ -71,11 +71,19 @@ def run_single_experiment(
         generations_used = None
 
     elif config.algorithm in [
-        "ga_dm", "ga_gdm", "ga_random", "ga_quadtree",
-        "ga_morphological", "ga_mixed",
+        "ga_dm", "ga_gdm", "ga_random", "ga_qtd",
+        "ga_morph", "ga_mixed",
     ]:
-        # Determine init method from algorithm name
-        init_method = config.algorithm.split("_", 1)[1]
+        # Map algorithm name to GA init method
+        _init_map = {
+            "ga_dm": "dm",
+            "ga_gdm": "gdm",
+            "ga_random": "random",
+            "ga_qtd": "quadtree",
+            "ga_morph": "morphological",
+            "ga_mixed": "mixed",
+        }
+        init_method = _init_map[config.algorithm]
 
         if config.seed is None:
             config.seed = random.randint(0, 2**31 - 1)
@@ -125,8 +133,8 @@ def run_single_experiment(
     else:
         raise ValueError(
             f"Invalid algorithm: {config.algorithm}. "
-            f"Must be 'ga_dm', 'ga_gdm', 'ga_random', 'ga_quadtree', "
-            f"'ga_morphological', 'ga_mixed', 'quadtree', "
+            f"Must be 'ga_dm', 'ga_gdm', 'ga_random', 'ga_qtd', "
+            f"'ga_morph', 'ga_mixed', 'quadtree', "
             f"'graph_based', 'dm', 'gdm', or 'morphological'."
         )
 

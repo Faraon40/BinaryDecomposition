@@ -155,15 +155,15 @@ def run_experiments(
     )
 
     print("=" * 70)
-    print(f"DELTA METHOD DECOMPOSITION EXPERIMENTS - {mode_str}")
+    print(f"GENERALIZED DELTA METHOD DECOMPOSITION EXPERIMENTS - {mode_str}")
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
     print(f"Images to process: {len(image_paths)}")
-    print(f"Algorithm: dm (Delta Method, deterministic)")
+    print(f"Algorithm: gdm (Generalized Delta Method, deterministic)")
     print("=" * 70)
 
     config = ExperimentConfig(
-        name=f"dm_{image_dir_name}",
+        name=f"gdm_{image_dir_name}",
         seed=None,
         algorithm="gdm",
     )
@@ -252,8 +252,8 @@ def run_experiments(
     print("=" * 70)
     print(f"Total time: {total_elapsed/60:.1f} minutes")
     print(f"Results saved to: {logger.results_csv}")
-    print(f"Rectangles saved to: {rect_dir / 'dm'}")
-    print(f"Visualizations saved to: {viz_dir / 'dm'}")
+    print(f"Rectangles saved to: {rect_dir / 'gdm_GDM'}")
+    print(f"Visualizations saved to: {viz_dir / 'gdm_GDM'}")
 
 
 def main():

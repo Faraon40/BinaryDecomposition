@@ -9,7 +9,7 @@ import csv
 from pathlib import Path
 from typing import Dict, List, Set
 
-_GA_ALGORITHMS = {"ga_dm", "ga_random", "ga_quadtree"}
+_GA_ALGORITHMS = {"ga_dm", "ga_gdm", "ga_random", "ga_qtd", "ga_morph"}
 
 
 class CSVLogger:
@@ -63,7 +63,10 @@ class CSVLogger:
 
         # Create hierarchical directory:
         # csv/algorithm_mutationcombo/dataset_name/
-        algo_dir = f"{algorithm_name}_{mutation_combo}"
+        if mutation_combo:
+            algo_dir = f"{algorithm_name}_{mutation_combo}"
+        else:
+            algo_dir = algorithm_name
         self.output_dir = Path(output_dir) / algo_dir / dataset_name
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
