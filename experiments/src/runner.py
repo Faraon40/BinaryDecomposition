@@ -71,7 +71,7 @@ def run_single_experiment(
         generations_used = None
 
     elif config.algorithm in [
-        "ga_dm", "ga_random", "ga_quadtree",
+        "ga_dm", "ga_gdm", "ga_random", "ga_quadtree",
         "ga_morphological", "ga_mixed",
     ]:
         # Determine init method from algorithm name
@@ -110,6 +110,12 @@ def run_single_experiment(
         generation_history = []
         generations_used = None
 
+    elif config.algorithm == "gdm":
+        from src.algorithms.gdm import run_gdm
+        solution = run_gdm(img, verbose=False)
+        generation_history = []
+        generations_used = None
+
     elif config.algorithm == "morphological":
         from src.algorithms.morphological import run_morphological
         solution = run_morphological(img, verbose=False)
@@ -119,9 +125,9 @@ def run_single_experiment(
     else:
         raise ValueError(
             f"Invalid algorithm: {config.algorithm}. "
-            f"Must be 'ga_dm', 'ga_random', 'ga_quadtree', "
+            f"Must be 'ga_dm', 'ga_gdm', 'ga_random', 'ga_quadtree', "
             f"'ga_morphological', 'ga_mixed', 'quadtree', "
-            f"'graph_based', 'dm', or 'morphological'."
+            f"'graph_based', 'dm', 'gdm', or 'morphological'."
         )
 
     execution_time = time.time() - start_time

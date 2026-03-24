@@ -22,9 +22,9 @@ class ExperimentConfig:
         Random seed for reproducibility. If None, a seed is
         auto-generated at runtime for GA algorithms.
     algorithm : str
-        Algorithm variant: "ga_dm", "ga_random", "ga_quadtree",
+        Algorithm variant: "ga_dm", "ga_gdm", "ga_random", "ga_quadtree",
         "ga_morphological", "ga_mixed", "quadtree", "graph_based",
-        "dm", or "morphological".
+        "dm", "gdm", or "morphological".
     pop_size : int, optional
         Population size for GA (default: 100).
     generations : int, optional
