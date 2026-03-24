@@ -9,7 +9,7 @@ import csv
 from pathlib import Path
 from typing import Dict, List, Set
 
-_GA_ALGORITHMS = {"ga_rle", "ga_random", "ga_quadtree"}
+_GA_ALGORITHMS = {"ga_dm", "ga_random", "ga_quadtree"}
 
 
 class CSVLogger:
@@ -25,7 +25,7 @@ class CSVLogger:
     Parameters
     ----------
     algorithm_name : str
-        Name of the algorithm (e.g., "ga_rle").
+        Name of the algorithm (e.g., "ga_dm").
     output_dir : str or Path
         Base directory to save CSV files.
     dataset_name : str

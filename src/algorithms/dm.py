@@ -1,7 +1,7 @@
-"""Run-Length Encoding (RLE) decomposition for binary images.
+"""Delta Method (DM) decomposition for binary images.
 
-This module implements RLE-based rectangle decomposition as a standalone
-algorithm, producing a set of 1-pixel-tall (or 1-pixel-wide) rectangles
+This module implements the Delta Method rectangle decomposition as a
+standalone algorithm, producing 1-pixel-tall (or 1-pixel-wide) rectangles
 that cover all foreground pixels without overlap.
 
 The decomposition direction is chosen automatically:
@@ -62,12 +62,12 @@ def is_valid_rectangle_integral(
     return rect_sum(integral, x, y, w, h) == w * h
 
 
-def rle_decomposition(
+def dm_decomposition(
     img: np.ndarray,
     integral: np.ndarray,
     direction: str = "random",
 ) -> List[Rectangle]:
-    """Perform a single RLE pass over the image.
+    """Perform a single Delta Method pass over the image.
 
     Each run of consecutive 1-pixels becomes one rectangle.
 
@@ -122,8 +122,8 @@ def rle_decomposition(
     return rects
 
 
-def run_rle(img: np.ndarray, verbose: bool = False) -> List[Rectangle]:
-    """Run RLE decomposition on a binary image.
+def run_dm(img: np.ndarray, verbose: bool = False) -> List[Rectangle]:
+    """Run Delta Method decomposition on a binary image.
 
     Args:
         img: Binary image (2-D NumPy array of 0/1 values).
@@ -135,22 +135,22 @@ def run_rle(img: np.ndarray, verbose: bool = False) -> List[Rectangle]:
     """
     t0 = time.time()
     integral = build_integral(img)
-    rects = rle_decomposition(img, integral)
+    rects = dm_decomposition(img, integral)
     if verbose:
         elapsed = time.time() - t0
         print(
-            f"RLE decomposition: {len(rects)} rectangles "
+            f"Delta Method decomposition: {len(rects)} rectangles "
             f"in {elapsed:.4f}s"
         )
     return rects
 
 
-def init_population_rle(
+def init_population_dm(
     img: np.ndarray, integral: np.ndarray, pop_size: int
 ) -> List[Chromosome]:
-    """Initialize GA population using RLE decomposition (shuffled variants).
+    """Initialize GA population using Delta Method decomposition (shuffled variants).
 
-    Generates ``pop_size`` chromosomes, each built from the same RLE
+    Generates ``pop_size`` chromosomes, each built from the same DM
     decomposition but with rectangles shuffled for variation.
 
     Args:
@@ -164,7 +164,7 @@ def init_population_rle(
     """
     population: List[Chromosome] = []
     for _ in range(pop_size):
-        rects = rle_decomposition(img, integral)
+        rects = dm_decomposition(img, integral)
         random.shuffle(rects)
         population.append(Chromosome(rects))
     return population

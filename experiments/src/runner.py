@@ -16,7 +16,7 @@ import numpy as np
 from src.algorithms.genetic import run_ga
 from src.algorithms.graph_based import run_graph_based
 from src.algorithms.quadtree import run_quadtree
-from src.algorithms.rle import run_rle
+from src.algorithms.dm import run_dm
 from experiments.src.metrics import calculate_metrics
 
 
@@ -71,7 +71,7 @@ def run_single_experiment(
         generations_used = None
 
     elif config.algorithm in [
-        "ga_rle", "ga_random", "ga_quadtree",
+        "ga_dm", "ga_random", "ga_quadtree",
         "ga_morphological", "ga_mixed",
     ]:
         # Determine init method from algorithm name
@@ -105,8 +105,8 @@ def run_single_experiment(
         )
         generations_used = None
 
-    elif config.algorithm == "rle":
-        solution = run_rle(img, verbose=False)
+    elif config.algorithm == "dm":
+        solution = run_dm(img, verbose=False)
         generation_history = []
         generations_used = None
 
@@ -119,9 +119,9 @@ def run_single_experiment(
     else:
         raise ValueError(
             f"Invalid algorithm: {config.algorithm}. "
-            f"Must be 'ga_rle', 'ga_random', 'ga_quadtree', "
+            f"Must be 'ga_dm', 'ga_random', 'ga_quadtree', "
             f"'ga_morphological', 'ga_mixed', 'quadtree', "
-            f"'graph_based', 'rle', or 'morphological'."
+            f"'graph_based', 'dm', or 'morphological'."
         )
 
     execution_time = time.time() - start_time

@@ -1,7 +1,7 @@
-"""Run RLE decomposition experiments on binary images.
+"""Run Delta Method (DM) decomposition experiments on binary images.
 
-This script runs the RLE (Run-Length Encoding) decomposition algorithm on
-image directories and saves results, rectangles, and visualizations for
+This script runs the Delta Method decomposition algorithm on image
+directories and saves results, rectangles, and visualizations for
 analysis.
 """
 
@@ -54,7 +54,7 @@ def save_solution_rectangles(
     """
     image_stem = Path(image_name).stem
 
-    save_dir = output_dir / "rle" / dataset_name / image_stem
+    save_dir = output_dir / "dm" / dataset_name / image_stem
     save_dir.mkdir(parents=True, exist_ok=True)
 
     filename = f"rects_{rect_count}.json"
@@ -116,7 +116,7 @@ def run_experiments(
     image_dir_name: str,
     max_images: int = None
 ):
-    """Run RLE decomposition experiments on images from specified directory.
+    """Run Delta Method decomposition experiments on images from specified directory.
 
     Parameters
     ----------
@@ -128,7 +128,6 @@ def run_experiments(
         images in directory (default: None).
 
     """
-    # Setup paths
     script_dir = Path(__file__).parent
     project_root = script_dir.parent.parent
     image_dir = project_root / "data/datasets" / image_dir_name / "npy"
@@ -156,24 +155,24 @@ def run_experiments(
     )
 
     print("=" * 70)
-    print(f"RLE DECOMPOSITION EXPERIMENTS - {mode_str}")
+    print(f"DELTA METHOD DECOMPOSITION EXPERIMENTS - {mode_str}")
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
     print(f"Images to process: {len(image_paths)}")
-    print(f"Algorithm: rle (Run-Length Encoding, deterministic)")
+    print(f"Algorithm: dm (Delta Method, deterministic)")
     print("=" * 70)
 
     config = ExperimentConfig(
-        name=f"rle_{image_dir_name}",
+        name=f"dm_{image_dir_name}",
         seed=None,
-        algorithm="rle",
+        algorithm="dm",
     )
 
     logger = CSVLogger(
-        "rle",
+        "dm",
         str(project_root / "experiments/results/csv/"),
         image_dir_name,
-        "RLE"
+        "DM"
     )
 
     print("-" * 70)
@@ -229,7 +228,7 @@ def run_experiments(
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
-            viz_subdir = viz_dir / "rle" / image_dir_name
+            viz_subdir = viz_dir / "dm" / image_dir_name
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
             viz_filename = f"{img_path.stem}_rects_{rect_count}.png"
@@ -253,8 +252,8 @@ def run_experiments(
     print("=" * 70)
     print(f"Total time: {total_elapsed/60:.1f} minutes")
     print(f"Results saved to: {logger.results_csv}")
-    print(f"Rectangles saved to: {rect_dir / 'rle'}")
-    print(f"Visualizations saved to: {viz_dir / 'rle'}")
+    print(f"Rectangles saved to: {rect_dir / 'dm'}")
+    print(f"Visualizations saved to: {viz_dir / 'dm'}")
 
 
 def main():

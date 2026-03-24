@@ -10,7 +10,7 @@ import numpy as np
 
 from src.utils.types import Chromosome, Rectangle
 from src.utils.utils import draw_solution
-from src.algorithms.rle import init_population_rle
+from src.algorithms.dm import init_population_dm
 from src.algorithms.quadtree import init_population_quadtree
 from src.algorithms.morphological import (
     init_population_morphological,
@@ -1185,7 +1185,7 @@ def run_ga(
     penalty_count=10.0,
     patience=10,
     seed=None,
-    init_method="rle",
+    init_method="dm",
     verbose=False,
     mutation_geometry=0.05,
     mutation_merge=0.05,
@@ -1215,8 +1215,8 @@ def run_ga(
         patience: Generations without improvement before stopping.
         seed: Random seed for reproducibility (default: None).
         init_method: Population initialization method:
-            "rle" (default), "random", "quadtree", "morphological",
-            or "mixed" (pop_size//3 each of rle, morphological, random).
+            "dm" (default), "random", "quadtree", "morphological",
+            or "mixed" (pop_size//3 each of dm, morphological, random).
         verbose: Print progress information (default: True).
         mutation_geometry: Probability of geometry mutation (G)
             (default: 0.05). Set to 0.0 to disable.
@@ -1280,8 +1280,8 @@ def run_ga(
     if verbose:
         print(f"Initializing population (method: {init_method})...")
 
-    if init_method == "rle":
-        population = init_population_rle(img, integral, pop_size)
+    if init_method == "dm":
+        population = init_population_dm(img, integral, pop_size)
     elif init_method == "random":
         population = init_population_random(img, integral, pop_size)
     elif init_method == "quadtree":
@@ -1289,18 +1289,18 @@ def run_ga(
     elif init_method == "morphological":
         population = init_population_morphological(img, integral, pop_size)
     elif init_method == "mixed":
-        n_rle = pop_size // 3
+        n_dm = pop_size // 3
         n_morph = pop_size // 3
-        n_rand = pop_size - n_rle - n_morph
+        n_rand = pop_size - n_dm - n_morph
         population = (
-            init_population_rle(img, integral, n_rle)
+            init_population_dm(img, integral, n_dm)
             + init_population_morphological(img, integral, n_morph)
             + init_population_random(img, integral, n_rand)
         )
     else:
         raise ValueError(
             f"Unknown init_method: {init_method}. "
-            f"Use 'rle', 'random', 'quadtree', 'morphological', or 'mixed'."
+            f"Use 'dm', 'random', 'quadtree', 'morphological', or 'mixed'."
         )
 
     if verbose:

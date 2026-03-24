@@ -11,7 +11,7 @@
 
 #### Genetic Algorithm (GA)
 - **Initialization strategies**: 3 implemented
-  - RLE-based initialization
+  - DM-based initialization
   - Random rectangle generation
   - Quadtree-based initialization
 - **Mutation operators**: 3 implemented
@@ -243,7 +243,7 @@
 ### GA Configuration (from CLAUDE.md)
 ```python
 ExperimentConfig(
-    algorithm="ga_quadtree",  # or "ga_rle", "ga_random"
+    algorithm="ga_quadtree",  # or "ga_dm", "ga_random"
     pop_size=20,
     generations=100,
     p_geometry=0.2,   # Geometry mutation
