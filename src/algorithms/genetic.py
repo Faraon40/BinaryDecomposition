@@ -11,7 +11,7 @@ import numpy as np
 from src.utils.types import Chromosome, Rectangle
 from src.utils.utils import draw_solution
 from src.algorithms.dm import init_population_dm
-from src.algorithms.gdm import init_population_gdm
+from src.algorithms.gdm import init_population_gdm, gdm_decomposition
 from src.algorithms.quadtree import init_population_quadtree
 from src.algorithms.morphological import (
     init_population_morphological,
@@ -64,8 +64,8 @@ def fitness(
     chrom: Chromosome,
     img: np.ndarray,
     penalty_extra: float = 2.0,
-    penalty_overlap: float = 5.0,
-    penalty_count: float = 10.0,
+    penalty_overlap: float = 1.1,
+    penalty_count: float = 5.0,
 ) -> float:
     """Calculate fitness of a chromosome using a two-phase hierarchical scoring.
 
@@ -949,6 +949,82 @@ def mutate_local_repartition_v2(
     return rects
 
 
+def mutate_local_repartition_gdm(
+    rects: List[Rectangle],
+    img: np.ndarray,
+    integral: np.ndarray,
+    p_local: float = 0.1,
+    min_region: int = 10,
+    max_region: int = 50,
+) -> List[Rectangle]:
+    """Re-decompose a local area using GDM in both directions.
+
+    Selects a random region, removes rectangles fully contained within
+    it, then re-decomposes the freed pixels using GDM in both row and
+    col directions.  Keeps the result with fewer rectangles.  Unlike
+    the random-greedy v2, GDM produces structurally larger rectangles,
+    allowing the search to escape DM-stripe local optima.
+
+    Args:
+        rects: List of rectangles.
+        img: Binary image.
+        integral: Integral image.
+        p_local: Probability that the mutation fires at all.
+        min_region: Minimum half-size of the region in pixels.
+        max_region: Maximum half-size of the region in pixels.
+
+    Returns:
+        Modified rectangle list.
+
+    """
+    if not rects or random.random() >= p_local:
+        return rects
+
+    height, width = img.shape
+    cx = random.randint(0, width - 1)
+    cy = random.randint(0, height - 1)
+    region_size = random.randint(min_region, max_region)
+    x1 = max(0, cx - region_size)
+    y1 = max(0, cy - region_size)
+    x2 = min(width, cx + region_size)
+    y2 = min(height, cy + region_size)
+
+    remaining = [
+        r for r in rects
+        if not (r[0] >= x1 and r[1] >= y1 and r[0] + r[2] <= x2 and r[1] + r[3] <= y2)
+    ]
+
+    # Mask pixels already covered by surviving rectangles
+    covered = np.zeros_like(img, dtype=np.uint8)
+    for rx, ry, rw, rh in remaining:
+        covered[ry: ry + rh, rx: rx + rw] = 1
+
+    # Sub-image: only the freed foreground pixels inside the region
+    sub_img = img[y1:y2, x1:x2].copy()
+    sub_img[covered[y1:y2, x1:x2] == 1] = 0
+
+    if sub_img.sum() == 0:
+        return remaining
+
+    # Try GDM in both directions, keep the fewest-rectangle result
+    best_new: List[Rectangle] = []
+    for direction in ("row", "col"):
+        local = gdm_decomposition(sub_img, direction=direction)
+
+        # Offset coordinates back to full image space
+        offset = [(x + x1, y + y1, w, h) for x, y, w, h in local]
+        # Validate each rectangle in the full image context
+        valid = [
+            r for r in offset
+            if is_valid_rectangle_integral(integral, r)
+            and np.all(covered[r[1]: r[1] + r[3], r[0]: r[0] + r[2]] == 0)
+        ]
+        if not best_new or len(valid) < len(best_new):
+            best_new = valid
+
+    return remaining + best_new
+
+
 def mutate_largest_rect(
     rects: List[Rectangle],
     img: np.ndarray,
@@ -1188,7 +1264,7 @@ def mutation(
     rects = mutate_split(rects, integral, p_split)
     rects = mutate_geometry(rects, img, integral, max_step, p_geo)
     rects = mutate_shift(rects, img, integral, p_shift, max_step)
-    rects = mutate_local_repartition_v2(rects, img, integral, p_local)
+    rects = mutate_local_repartition_gdm(rects, img, integral, p_local)
     rects = mutate_largest_rect(rects, img, integral, p_largest)
     rects = mutate_merge_v2(rects, integral, p_merge)
     rects = repair_overlaps(rects, img, integral)
@@ -1202,9 +1278,9 @@ def run_ga(
     img: np.ndarray,
     pop_size=20,
     generations=100,
-    elite_size=3,
+    elite_size=2,
     penalty_extra=2.0,
-    penalty_overlap=5.0,
+    penalty_overlap=1.5,
     penalty_count=10.0,
     patience=10,
     seed=None,
@@ -1299,116 +1375,167 @@ def run_ga(
 
     crossover_fn = crossover_methods[crossover_method]
 
-    # Initialize population based on method
+    def _evolve(population, inject_fn, label=""):
+        """Run the GA evolution loop on the given population.
+
+        Args:
+            population: Initial list of Chromosome objects.
+            inject_fn: Callable(n) returning n fresh Chromosome objects
+                used for diversity injection on stagnation.
+            label: Optional prefix for verbose output (e.g. "[row] ").
+
+        Returns:
+            Tuple of (best_chromosome, generation_history).
+
+        """
+        ev_best_fitness = float("-inf")
+        ev_stagnant = 0
+        ev_best_chrom = None
+        ev_history = []
+
+        for g in range(generations):
+            # Evaluate fitness (skip chromosomes that already have a score)
+            for chrom in population:
+                if chrom.fitness is None:
+                    chrom.fitness = fitness(
+                        chrom, img, penalty_extra, penalty_overlap, penalty_count
+                    )
+
+            population.sort(key=lambda c: c.fitness, reverse=True)
+            best = population[0]
+            ev_history.append(len(best.rectangles))
+
+            if verbose:
+                print(
+                    f"{label}Gen {g:3d}: Fitness={best.fitness:7.2f}, "
+                    f"Rects={len(best.rectangles):3d}"
+                )
+
+            if best.fitness > ev_best_fitness:
+                ev_best_fitness = best.fitness
+                ev_stagnant = 0
+                ev_best_chrom = best
+            else:
+                ev_stagnant += 1
+
+            if ev_stagnant >= patience:
+                if verbose:
+                    print(
+                        f"{label}Early stopping at generation {g}: "
+                        f"No improvement for {patience} generations."
+                    )
+                break
+
+            # Diversity injection on stagnation
+            if ev_stagnant > 0 and ev_stagnant % (patience // 2) == 0:
+                n_inject = max(1, pop_size // 3)
+                injected = inject_fn(n_inject)
+                population = population[: pop_size - n_inject] + injected
+                if verbose:
+                    print(
+                        f"{label}  [inject] {n_inject} fresh chromosomes "
+                        f"at gen {g}"
+                    )
+
+            new_pop = population[:elite_size]
+            while len(new_pop) < pop_size:
+                top_candidates = population[
+                    : max(2, len(population) * 5 // 10)
+                ]
+                p1, p2 = random.sample(top_candidates, 2)
+                child = crossover_fn(p1, p2, img, integral)
+                child = mutation(
+                    child,
+                    img,
+                    integral,
+                    p_geo=mutation_geometry,
+                    p_merge=mutation_merge,
+                    p_local=mutation_local,
+                    p_split=mutation_split,
+                    p_shift=mutation_shift,
+                    p_delete=mutation_delete,
+                    p_largest=mutation_largest,
+                    p_repair=repair_coverage_prob,
+                )
+                new_pop.append(child)
+            population = new_pop
+
+        result = ev_best_chrom if ev_best_chrom else population[0]
+        return result, ev_history
+
+    # Initialize population and run evolution
     if verbose:
         print(f"Initializing population (method: {init_method})...")
 
-    if init_method == "dm":
-        population = init_population_dm(img, integral, pop_size)
-    elif init_method == "gdm":
-        population = init_population_gdm(img, integral, pop_size)
-    elif init_method == "random":
-        population = init_population_random(img, integral, pop_size)
-    elif init_method == "quadtree":
-        population = init_population_quadtree(img, integral, pop_size)
-    elif init_method == "morphological":
-        population = init_population_morphological(img, integral, pop_size)
-    elif init_method == "mixed":
-        n_dm = pop_size // 3
-        n_morph = pop_size // 3
-        n_rand = pop_size - n_dm - n_morph
-        population = (
-            init_population_dm(img, integral, n_dm)
-            + init_population_morphological(img, integral, n_morph)
-            + init_population_random(img, integral, n_rand)
-        )
-    else:
-        raise ValueError(
-            f"Unknown init_method: {init_method}. "
-            f"Use 'dm', 'gdm', 'random', 'quadtree', 'morphological', "
-            f"or 'mixed'."
-        )
-
-    if verbose:
-        print(f"Initial population: {len(population[0].rectangles)} rectangles")
-        # draw_solution(img, population[0], show=True)
-
-    best_fitness = float("-inf")
-    stagnant_generations = 0
-    best_chrom = None
-    generation_history = []  # Track rectangle counts per generation
-
-    for g in range(generations):
-        # Evaluate fitness
-        for chrom in population:
-            chrom.fitness = fitness(chrom, img, penalty_extra, penalty_overlap, penalty_count)
-
-        # Sort by fitness descending
-        population.sort(key=lambda c: c.fitness, reverse=True)
-        best = population[0]
-
-        # Track history
-        generation_history.append(len(best.rectangles))
-
-        if verbose:
-            print(
-                f"Gen {g:3d}: Fitness={best.fitness:7.2f}, "
-                f"Rects={len(best.rectangles):3d}"
-            )
-
-        # Track improvement
-        if best.fitness > best_fitness:
-            best_fitness = best.fitness
-            stagnant_generations = 0
-            best_chrom = best
-        else:
-            stagnant_generations += 1
-
-        # Early stopping check
-        if stagnant_generations >= patience:
+    if init_method in ("dm", "gdm"):
+        # Run two separate evolutions — row-wise and col-wise — to avoid
+        # mixing stripe directions in crossover.  Return the better result.
+        best_overall = None
+        hist_overall = []
+        for direction in ("row", "col"):
+            if init_method == "dm":
+                pop = init_population_dm(
+                    img, integral, pop_size, direction=direction
+                )
+                inject_fn = lambda n, d=direction: init_population_gdm(
+                    img, integral, n, direction=d
+                )
+            else:
+                pop = init_population_gdm(
+                    img, integral, pop_size, direction=direction
+                )
+                inject_fn = lambda n, d=direction: init_population_gdm(
+                    img, integral, n, direction=d
+                )
+            label = f"[{direction}] " if verbose else ""
             if verbose:
                 print(
-                    f"Early stopping at generation {g}: "
-                    f"No improvement for {patience} generations."
+                    f"{label}Initial population: "
+                    f"{len(pop[0].rectangles)} rectangles"
                 )
-            break
-
-        # Elitism: keep the best few chromosomes
-        new_pop = population[:elite_size]
-
-        # Generate offspring
-        while len(new_pop) < pop_size:
-            top_candidates = population[: len(population) // 10]
-            p1, p2 = random.sample(top_candidates, 2)
-            child = crossover_fn(p1, p2, img, integral)
-            # Apply mutations with configured probabilities
-            child = mutation(
-                child,
-                img,
-                integral,
-                p_geo=mutation_geometry,
-                p_merge=mutation_merge,
-                p_local=mutation_local,
-                p_split=mutation_split,
-                p_shift=mutation_shift,
-                p_delete=mutation_delete,
-                p_largest=mutation_largest,
-                p_repair=repair_coverage_prob,
+            best, history = _evolve(pop, inject_fn, label=label)
+            if best_overall is None or best.fitness > best_overall.fitness:
+                best_overall = best
+                hist_overall = history
+        best_chrom = best_overall
+        generation_history = hist_overall
+    else:
+        if init_method == "random":
+            population = init_population_random(img, integral, pop_size)
+        elif init_method == "quadtree":
+            population = init_population_quadtree(img, integral, pop_size)
+        elif init_method == "morphological":
+            population = init_population_morphological(img, integral, pop_size)
+        # elif init_method == "mixed":
+        #     n_dm = pop_size // 3
+        #     n_morph = pop_size // 3
+        #     n_rand = pop_size - n_dm - n_morph
+        #     population = (
+        #         init_population_dm(img, integral, n_dm)
+        #         + init_population_morphological(img, integral, n_morph)
+        #         + init_population_random(img, integral, n_rand)
+        #     )
+        else:
+            raise ValueError(
+                f"Unknown init_method: {init_method}. "
+                f"Use 'dm', 'gdm', 'random', 'quadtree', 'morphological', "
+                f"or 'mixed'."
             )
-            new_pop.append(child)
-
-        population = new_pop
+        if verbose:
+            print(f"Initial population: {len(population[0].rectangles)} rectangles")
+        inject_fn = lambda n: init_population_dm(img, integral, n)
+        best_chrom, generation_history = _evolve(population, inject_fn)
 
     execution_time = time.time() - start_time
 
     if verbose:
         print(f"\nCompleted in {execution_time:.2f} seconds")
-        print(f"Best solution: {len(best_chrom.rectangles)} rectangles, "
+        print(
+            f"Best solution: {len(best_chrom.rectangles)} rectangles, "
             f"fitness={best_chrom.fitness:.2f}"
         )
 
-    # Return best found (not just last generation)
-    return best_chrom if best_chrom else population[0], generation_history
+    return best_chrom, generation_history
 
 
 def main():
@@ -1520,14 +1647,14 @@ def main():
     ])
 
     # Load the .npy file
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-3_binary.npy")
-    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-20_binary.npy")
 
-    img = img_holes_1
+    img = img_loaded
     img = (img > 0).astype(int)
 
     # Display the image
@@ -1540,20 +1667,20 @@ def main():
 
     best, history = run_ga(
         img,
-        pop_size=100,
+        pop_size=20,
         generations=500,
-        patience=15,
+        patience=20,
         seed=None,
-        init_method="random",
+        init_method="gdm",
         verbose=True,
         mutation_geometry=0.2,
         mutation_merge=0.2,
         mutation_local=0.2,
-        mutation_split=0.7,
+        mutation_split=0.2,
         mutation_shift=0.2,
-        mutation_delete=0.3,
-        mutation_largest=0.3,
-        repair_coverage_prob=0.4,
+        mutation_delete=0.2,
+        mutation_largest=0.2,
+        repair_coverage_prob=0.2,
         crossover_method="subset_greedy"
     )
 

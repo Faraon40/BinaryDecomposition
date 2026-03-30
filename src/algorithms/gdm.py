@@ -151,17 +151,19 @@ def run_gdm(img: np.ndarray, verbose: bool = False) -> List[Rectangle]:
 
 
 def init_population_gdm(
-    img: np.ndarray, integral: np.ndarray, pop_size: int
+    img: np.ndarray,
+    integral: np.ndarray,
+    pop_size: int,
+    direction: str = "random",
 ) -> List[Chromosome]:
     """Initialize GA population using GDM decomposition (shuffled variants).
-
-    Each chromosome is built from a fresh GDM decomposition with a
-    randomly chosen scan direction, then rectangles are shuffled.
 
     Args:
         img: Binary image.
         integral: Precomputed integral image (kept for API consistency).
         pop_size: Number of chromosomes to generate.
+        direction: Scan direction passed to ``gdm_decomposition``.
+            ``"row"``, ``"col"``, ``"auto"``, or ``"random"`` (default).
 
     Returns:
         List of initialized Chromosome objects.
@@ -169,7 +171,8 @@ def init_population_gdm(
     """
     population: List[Chromosome] = []
     for _ in range(pop_size):
-        rects = gdm_decomposition(img, direction="random")
+        rects = gdm_decomposition(img, direction=direction)
+        rects = list(rects)
         random.shuffle(rects)
         population.append(Chromosome(rects))
     return population

@@ -146,25 +146,39 @@ def run_dm(img: np.ndarray, verbose: bool = False) -> List[Rectangle]:
 
 
 def init_population_dm(
-    img: np.ndarray, integral: np.ndarray, pop_size: int
+    img: np.ndarray,
+    integral: np.ndarray,
+    pop_size: int,
+    direction: str = "mixed",
 ) -> List[Chromosome]:
     """Initialize GA population using Delta Method decomposition (shuffled variants).
-
-    Generates ``pop_size`` chromosomes, each built from the same DM
-    decomposition but with rectangles shuffled for variation.
 
     Args:
         img: Binary image.
         integral: Precomputed integral image.
         pop_size: Number of chromosomes to generate.
+        direction: ``"row"`` for row-wise only, ``"col"`` for column-wise
+            only, ``"mixed"`` (default) for half-and-half.
 
     Returns:
         List of initialized Chromosome objects.
 
     """
+    if direction == "mixed":
+        rects_row = dm_decomposition(img, integral, direction="row")
+        rects_col = dm_decomposition(img, integral, direction="col")
+        half = pop_size // 2
+        sources = [(rects_row, half), (rects_col, pop_size - half)]
+    else:
+        rects = dm_decomposition(img, integral, direction=direction)
+        sources = [(rects, pop_size)]
+
     population: List[Chromosome] = []
-    for _ in range(pop_size):
-        rects = dm_decomposition(img, integral)
-        random.shuffle(rects)
-        population.append(Chromosome(rects))
+    for rects, count in sources:
+        for _ in range(count):
+            chromosome_rects = list(rects)
+            random.shuffle(chromosome_rects)
+            population.append(Chromosome(chromosome_rects))
+
+    random.shuffle(population)
     return population
