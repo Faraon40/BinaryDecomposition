@@ -1278,21 +1278,21 @@ def run_ga(
     img: np.ndarray,
     pop_size=20,
     generations=100,
-    elite_size=2,
+    elite_size=3,
     penalty_extra=2.0,
     penalty_overlap=1.5,
     penalty_count=10.0,
-    patience=10,
+    patience=15,
     seed=None,
-    init_method="dm",
+    init_method="gdm",
     verbose=False,
-    mutation_geometry=0.05,
-    mutation_merge=0.05,
-    mutation_local=0.05,
-    mutation_split=0.05,
+    mutation_delete=0.2,
+    mutation_split=0.2,
+    mutation_geometry=0.3,
+    mutation_local=0.5,
     mutation_shift=0.05,
-    mutation_delete=0.05,
-    mutation_largest=0.05,
+    mutation_largest=0.2,
+    mutation_merge=0.1,
     repair_coverage_prob=0.5,
     crossover_method="subset_greedy",
 ):
@@ -1647,9 +1647,9 @@ def main():
     ])
 
     # Load the .npy file
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-13_binary.npy")
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-20_binary.npy")
@@ -1672,16 +1672,16 @@ def main():
         patience=20,
         seed=None,
         init_method="gdm",
-        verbose=True,
-        mutation_geometry=0.2,
-        mutation_merge=0.2,
-        mutation_local=0.2,
-        mutation_split=0.2,
-        mutation_shift=0.2,
+        crossover_method="subset_greedy",
         mutation_delete=0.2,
+        mutation_split=0.2,
+        mutation_geometry=0.3,
+        mutation_local=0.5,
+        mutation_shift=0.05,
         mutation_largest=0.2,
-        repair_coverage_prob=0.2,
-        crossover_method="subset_greedy"
+        mutation_merge=0.1,
+        repair_coverage_prob=0.5,
+        verbose=True,
     )
 
     draw_solution(img, best.rectangles, show=True)
