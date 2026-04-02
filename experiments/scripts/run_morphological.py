@@ -25,7 +25,8 @@ def save_solution_rectangles(
     output_dir: Path,
     config: ExperimentConfig,
     metrics: dict,
-    dataset_name: str
+    dataset_name: str,
+    run_id: str = "run1",
 ):
     """Save solution rectangles to JSON file.
 
@@ -45,6 +46,8 @@ def save_solution_rectangles(
         Metrics dictionary from experiment.
     dataset_name : str
         Name of the dataset directory (e.g., "research_leafs_binary").
+    run_id : str, optional
+        Run identifier for distinguishing multiple runs (default: "run1").
 
     Returns
     -------
@@ -54,7 +57,9 @@ def save_solution_rectangles(
     """
     image_stem = Path(image_name).stem
 
-    save_dir = output_dir / "morphological" / dataset_name / image_stem
+    save_dir = (
+        output_dir / "morphological" / dataset_name / run_id / image_stem
+    )
     save_dir.mkdir(parents=True, exist_ok=True)
 
     filename = f"rects_{rect_count}.json"
@@ -114,7 +119,8 @@ def load_solution_rectangles(
 
 def run_experiments(
     image_dir_name: str,
-    max_images: int = None
+    max_images: int = None,
+    run_id: str = "run1",
 ):
     """Run morphological decomposition experiments on images.
 
@@ -126,6 +132,10 @@ def run_experiments(
     max_images : int, optional
         Maximum number of images to process. If None, processes all
         images in directory (default: None).
+    run_id : str, optional
+        Identifier for this run (default: "run1"). Results are saved
+        under a subdirectory named after run_id, so different run_ids
+        never overwrite each other.
 
     """
     # Setup paths
@@ -159,6 +169,7 @@ def run_experiments(
     print(f"MORPHOLOGICAL DECOMPOSITION EXPERIMENTS - {mode_str}")
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
+    print(f"Run ID: {run_id}")
     print(f"Images to process: {len(image_paths)}")
     print(
         f"Algorithm: morphological "
@@ -167,7 +178,7 @@ def run_experiments(
     print("=" * 70)
 
     config = ExperimentConfig(
-        name=f"morphological_{image_dir_name}",
+        name=f"morphological_{image_dir_name}_{run_id}",
         seed=None,
         algorithm="morphological",
     )
@@ -175,7 +186,7 @@ def run_experiments(
     logger = CSVLogger(
         "morphological",
         str(project_root / "experiments/results/csv/"),
-        image_dir_name,
+        f"{image_dir_name}/{run_id}",
         "MORPH"
     )
 
@@ -224,7 +235,8 @@ def run_experiments(
                 rect_dir,
                 config,
                 metrics,
-                image_dir_name
+                image_dir_name,
+                run_id=run_id,
             )
             print(f"  ✓ Rectangles saved: "
                   f"{rect_path.relative_to(project_root)}")
@@ -232,7 +244,7 @@ def run_experiments(
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
-            viz_subdir = viz_dir / "morphological" / image_dir_name
+            viz_subdir = viz_dir / "morphological" / image_dir_name / run_id
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
             viz_filename = f"{img_path.stem}_rects_{rect_count}.png"
