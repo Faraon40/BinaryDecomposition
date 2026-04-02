@@ -1,5 +1,6 @@
 """Genetic algorithm for binary image rectangle decomposition."""
 
+import math
 import random
 import time
 from typing import List
@@ -956,8 +957,8 @@ def mutate_local_repartition_gdm(
     img: np.ndarray,
     integral: np.ndarray,
     p_local: float = 0.1,
-    min_region: int = 10,
-    max_region: int = 50,
+    min_region: int = 0,
+    max_region: int = 0,
 ) -> List[Rectangle]:
     """Re-decompose a local area using GDM in both directions.
 
@@ -973,7 +974,9 @@ def mutate_local_repartition_gdm(
         integral: Integral image.
         p_local: Probability that the mutation fires at all.
         min_region: Minimum half-size of the region in pixels.
+            0 = auto-scale based on image size (default).
         max_region: Maximum half-size of the region in pixels.
+            0 = auto-scale based on image size (default).
 
     Returns:
         Modified rectangle list.
@@ -983,6 +986,10 @@ def mutate_local_repartition_gdm(
         return rects
 
     height, width = img.shape
+    if min_region == 0 or max_region == 0:
+        base = math.sqrt(height * width)
+        min_region = max(10, int(base / 20))
+        max_region = max(min_region + 10, int(base / 8))
     cx = random.randint(0, width - 1)
     cy = random.randint(0, height - 1)
     region_size = random.randint(min_region, max_region)
