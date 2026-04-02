@@ -65,7 +65,7 @@ def is_valid_rectangle_integral(
 def dm_decomposition(
     img: np.ndarray,
     integral: np.ndarray,
-    direction: str = "random",
+    direction: str = "auto",
 ) -> List[Rectangle]:
     """Perform a single Delta Method pass over the image.
 
