@@ -37,17 +37,29 @@ class ExperimentConfig:
         Generations without improvement before early stopping
         (default: 5).
     p_geometry : float, optional
-        Probability of geometry mutation (G) (default: 0.05).
+        Probability of geometry mutation (G) (default: 0.30).
         Set to 0.0 to disable.
     p_merge : float, optional
-        Probability of merge mutation (M) (default: 0.05).
+        Probability of merge mutation (M) (default: 0.10).
         Set to 0.0 to disable.
     p_local : float, optional
-        Probability of local repartition mutation (L) (default: 0.05).
+        Probability of local repartition mutation (L) (default: 0.50).
         Set to 0.0 to disable.
     p_largest : float, optional
-        Probability of largest-rect mutation (R) (default: 0.05).
+        Probability of largest-rect mutation (R) (default: 0.20).
         Set to 0.0 to disable.
+    p_delete : float, optional
+        Probability of delete mutation (D) (default: 0.20).
+        Set to 0.0 to disable.
+    p_split : float, optional
+        Probability of split mutation (S) (default: 0.20).
+        Set to 0.0 to disable.
+    p_shift : float, optional
+        Probability of shift mutation (H) (default: 0.05).
+        Set to 0.0 to disable.
+    p_repair : float, optional
+        Probability of coverage repair after each mutation (default: 0.50).
+        Overlap trimming is always applied regardless of this value.
     crossover_method : str, optional
         Crossover method to use (default: "subset_greedy").
         Options: "subset_greedy" (Subset Crossover with Greedy
@@ -57,6 +69,9 @@ class ExperimentConfig:
         If False, use adaptive min_size based on image size (default: True).
     quadtree_trim : bool, optional
         Trim mixed leaf rectangles using GDM (default: True).
+    morphological_coverage : float, optional
+        Stop morphological decomposition once this fraction of foreground
+        pixels is covered (default: 1.0 — full coverage).
 
     """
 
@@ -71,12 +86,15 @@ class ExperimentConfig:
     penalty: float = 2
     patience: int = 5
 
-    # Mutation probabilities (GML naming scheme)
-    # Set to 0.0 to disable a mutation
-    p_geometry: float = 0.20
-    p_merge: float = 0.20
-    p_local: float = 0.20
-    p_largest: float = 0.05
+    # Mutation probabilities — set to 0.0 to disable
+    p_delete: float = 0.20
+    p_split: float = 0.20
+    p_geometry: float = 0.30
+    p_shift: float = 0.05
+    p_local: float = 0.50
+    p_largest: float = 0.20
+    p_repair: float = 0.50
+    p_merge: float = 0.10
 
     # Crossover method
     crossover_method: str = "subset_greedy"
@@ -84,6 +102,9 @@ class ExperimentConfig:
     # Quadtree parameters
     quadtree_full_decomposition: bool = True
     quadtree_trim: bool = True
+
+    # Morphological parameters
+    morphological_coverage: float = 0.95
 
     def get_mutation_combo_code(self) -> str:
         """Get mutation combination code (e.g., 'GML', 'G', 'NONE').

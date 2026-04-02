@@ -174,7 +174,7 @@ def largest_rect_in_image(
 def morphological_decomposition(
     img: np.ndarray,
     rng: Optional[random.Random] = None,
-    coverage_threshold: float = 0.5,
+    coverage_threshold: float = 0.95,
 ) -> List[Rectangle]:
     """Decompose a binary image using largest-rectangle-first strategy.
 
@@ -218,26 +218,57 @@ def morphological_decomposition(
 
 
 def run_morphological(
-    img: np.ndarray, verbose: bool = False
+    img: np.ndarray,
+    coverage_threshold: float = 0.95,
+    verbose: bool = False,
 ) -> List[Rectangle]:
-    """Run deterministic morphological decomposition on a binary image.
+    """Run morphological decomposition, completing residual with GDM.
+
+    Morphological stops once ``coverage_threshold`` fraction of
+    foreground pixels is covered, then GDM covers the remaining
+    pixels.  This avoids the prohibitive runtime of full morphological
+    decomposition on large images while still producing large
+    rectangles for the dominant foreground regions.
 
     Args:
         img: Binary image (2-D NumPy array of 0/1 values).
-        verbose: If True, print rectangle count and elapsed time.
+        coverage_threshold: Stop morphological once this fraction of
+            foreground pixels is covered, then complete with GDM
+            (default: 0.95).  Use 1.0 for pure morphological
+            decomposition (slow on large images).
+        verbose: If True, print rectangle counts and elapsed time.
 
     Returns:
         List of non-overlapping rectangles covering all 1-pixels.
 
     """
+    from src.algorithms.gdm import gdm_decomposition
+
     t0 = time.time()
-    rects = morphological_decomposition(img, rng=None)
+    rects = morphological_decomposition(
+        img, rng=None, coverage_threshold=coverage_threshold
+    )
+
+    if coverage_threshold < 1.0:
+        # Build covered mask from morphological rectangles
+        covered = np.zeros_like(img, dtype=np.uint8)
+        for x, y, w, h in rects:
+            covered[y:y + h, x:x + w] = 1
+
+        # Residual: foreground pixels not yet covered
+        residual = ((img == 1) & (covered == 0)).astype(np.uint8)
+
+        if residual.any():
+            gdm_rects = gdm_decomposition(residual, direction="auto")
+            rects.extend(gdm_rects)
+
     if verbose:
         elapsed = time.time() - t0
-        print(
-            f"Morphological decomposition: {len(rects)} rectangles "
-            f"in {elapsed:.4f}s"
+        mode = (
+            f"morphological+GDM (coverage={coverage_threshold})"
+            if coverage_threshold < 1.0 else "morphological"
         )
+        print(f"{mode}: {len(rects)} rectangles in {elapsed:.4f}s")
     return rects
 
 
@@ -269,8 +300,7 @@ def init_population_morphological(
     rng = random.Random()
     seed_bytes = os.urandom(8)
     rng.seed(int.from_bytes(seed_bytes, "big"))
+    rects = morphological_decomposition(img, rng=rng, coverage_threshold=0.95)
     for _ in range(pop_size):
-        rects = morphological_decomposition(img, rng=rng, coverage_threshold=0.7)
-        # rects = repair(rects, img, integral)
         population.append(Chromosome(rects))
     return population

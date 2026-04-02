@@ -74,6 +74,7 @@ def save_solution_rectangles(
         ],
         "config": {
             "algorithm": config.algorithm,
+            "morphological_coverage": config.morphological_coverage,
         },
         "metrics": metrics
     }
@@ -121,6 +122,7 @@ def run_experiments(
     image_dir_name: str,
     max_images: int = None,
     run_id: str = "run1",
+    coverage: float = 1.0,
 ):
     """Run morphological decomposition experiments on images.
 
@@ -136,6 +138,10 @@ def run_experiments(
         Identifier for this run (default: "run1"). Results are saved
         under a subdirectory named after run_id, so different run_ids
         never overwrite each other.
+    coverage : float, optional
+        Stop once this fraction of foreground pixels is covered
+        (default: 1.0 — full coverage). Values below 1.0 produce
+        fewer rectangles but leave some pixels uncovered.
 
     """
     # Setup paths
@@ -170,6 +176,7 @@ def run_experiments(
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
     print(f"Run ID: {run_id}")
+    print(f"Coverage threshold: {coverage}")
     print(f"Images to process: {len(image_paths)}")
     print(
         f"Algorithm: morphological "
@@ -181,6 +188,7 @@ def run_experiments(
         name=f"morphological_{image_dir_name}_{run_id}",
         seed=None,
         algorithm="morphological",
+        morphological_coverage=coverage,
     )
 
     logger = CSVLogger(
@@ -274,16 +282,27 @@ def run_experiments(
 
 def main():
     """Main entry point - configure experiments here."""
-    # TEST MODE: Quick test on validation images
     run_experiments(
-        image_dir_name="validation",
-        max_images=1,
+        image_dir_name="leafs_binary_fix",
+        max_images=None,
+        run_id="run6",
+        coverage=0.90,
     )
+
+    # Different coverage - saves separately as run2:
+    # run_experiments(
+    #     image_dir_name="objects_binary",
+    #     max_images=1,
+    #     run_id="run2",
+    #     coverage=0.95,
+    # )
 
     # PRODUCTION MODE: Uncomment to run on all images
     # run_experiments(
     #     image_dir_name="research_leafs_binary",
-    #     max_images=None  # Process ALL images
+    #     max_images=None,
+    #     run_id="run1",
+    #     coverage=1.0,
     # )
 
 

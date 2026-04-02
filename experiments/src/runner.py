@@ -102,6 +102,10 @@ def run_single_experiment(
             mutation_merge=config.p_merge,
             mutation_local=config.p_local,
             mutation_largest=config.p_largest,
+            mutation_delete=config.p_delete,
+            mutation_split=config.p_split,
+            mutation_shift=config.p_shift,
+            repair_coverage_prob=config.p_repair,
             crossover_method=config.crossover_method,
         )
         generations_used = len(generation_history)
@@ -126,7 +130,11 @@ def run_single_experiment(
 
     elif config.algorithm == "morphological":
         from src.algorithms.morphological import run_morphological
-        solution = run_morphological(img, verbose=False)
+        solution = run_morphological(
+            img,
+            coverage_threshold=config.morphological_coverage,
+            verbose=False,
+        )
         generation_history = []
         generations_used = None
 

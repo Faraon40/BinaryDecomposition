@@ -1214,14 +1214,14 @@ def mutation(
     chrom: Chromosome,
     img: np.ndarray,
     integral: np.ndarray,
-    p_geo: float = 0.05,
-    p_merge: float = 0.05,
-    p_local: float = 0.05,
-    p_split: float = 0.05,
-    p_shift: float = 0.05,
     p_delete: float = 0.05,
+    p_split: float = 0.05,
+    p_geo: float = 0.05,
+    p_shift: float = 0.05,
+    p_local: float = 0.05,
     p_largest: float = 0.05,
     p_repair: float = 0.5,
+    p_merge: float = 0.05,
     max_step: int = 5,
 ) -> "Chromosome":
     """Apply mutation operators to chromosome.
@@ -1291,11 +1291,11 @@ def run_ga(
     mutation_delete=0.2,
     mutation_split=0.2,
     mutation_geometry=0.3,
-    mutation_local=0.5,
     mutation_shift=0.05,
+    mutation_local=0.5,
     mutation_largest=0.2,
-    mutation_merge=0.1,
     repair_coverage_prob=0.5,
+    mutation_merge=0.1,
     crossover_method="subset_greedy",
 ):
     """Run the Genetic Algorithm for binary image decomposition.
@@ -1528,6 +1528,18 @@ def run_ga(
         inject_fn = lambda n: init_population_dm(img, integral, n)
         best_chrom, generation_history = _evolve(population, inject_fn)
 
+    # Post-processing: guarantee full coverage.
+    # Mutations with p_repair < 1.0 can leave missing pixels — fill them.
+    # Extra/overlap pixels are already handled inside mutation() by
+    # repair_overlaps (always applied), so no filtering needed here.
+    rects = repair_coverage(
+        best_chrom.rectangles, img, integral, p_coverage=1.0
+    )
+    best_chrom = Chromosome(rects)
+    best_chrom.fitness = fitness(
+        best_chrom, img, penalty_extra, penalty_overlap, penalty_count
+    )
+
     execution_time = time.time() - start_time
 
     if verbose:
@@ -1649,8 +1661,8 @@ def main():
     ])
 
     # Load the .npy file
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-13_binary.npy")
-    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-13_binary.npy")
+    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
 
