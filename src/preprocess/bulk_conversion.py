@@ -9,7 +9,10 @@ from src.preprocess.preprocessing import image_to_binary
 
 
 def bulk_convert_to_binary(
-    input_dir: str, output_dir: str, save_numpy: bool = True
+    input_dir: str,
+    output_dir: str,
+    save_numpy: bool = True,
+    invert: bool = True,
 ):
     """Convert all images in input_dir to binary masks.
 
@@ -19,6 +22,9 @@ def bulk_convert_to_binary(
         input_dir: Directory with input images.
         output_dir: Base output directory.
         save_numpy: If True, save .npy arrays in subfolder.
+        invert: If True, use THRESH_BINARY_INV (dark object on light
+            background). If False, use THRESH_BINARY (already-binary
+            image with white object on black background).
 
     """
     input_path = Path(input_dir)
@@ -40,7 +46,7 @@ def bulk_convert_to_binary(
             continue
 
         # Convert to binary (leaf=255, background=0)
-        binary = image_to_binary(str(img_file))
+        binary = image_to_binary(str(img_file), invert=invert)
 
         # Save PNG (human-friendly)
         out_png = png_dir / f"{img_file.stem}_binary.png"
@@ -53,6 +59,6 @@ def bulk_convert_to_binary(
 
 
 if __name__ == "__main__":
-    bulk_convert_to_binary("../../data/datasets/research_leafs_binary/png/",
-                           "../../data/datasets/research_leafs_binary/")
+    bulk_convert_to_binary("../../data/datasets/leafs_binary/png/",
+                           "../../data/datasets/leafs_binary_fix/", invert=True)
     print("Bulk conversion completed.")
