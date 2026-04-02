@@ -64,7 +64,7 @@ def run_single_experiment(
     if config.algorithm == "quadtree":
         solution, generation_history = run_quadtree(
             img,
-            min_size=config.quadtree_min_size,
+            full_decomposition=config.quadtree_full_decomposition,
             trim=config.quadtree_trim,
             verbose=False
         )

@@ -52,10 +52,11 @@ class ExperimentConfig:
         Crossover method to use (default: "subset_greedy").
         Options: "subset_greedy" (Subset Crossover with Greedy
         Non-overlapping Extension), "single_point", "two_point", "uniform".
-    quadtree_min_size : int, optional
-        Minimum quadrant size for quadtree algorithm (default: 4).
+    quadtree_full_decomposition : bool, optional
+        If True, subdivide down to min_size=2 (precise, more rectangles).
+        If False, use adaptive min_size based on image size (default: True).
     quadtree_trim : bool, optional
-        Trim quadtree rectangles to exact coverage (default: True).
+        Trim mixed leaf rectangles using GDM (default: True).
 
     """
 
@@ -81,7 +82,7 @@ class ExperimentConfig:
     crossover_method: str = "subset_greedy"
 
     # Quadtree parameters
-    quadtree_min_size: int = 4
+    quadtree_full_decomposition: bool = True
     quadtree_trim: bool = True
 
     def get_mutation_combo_code(self) -> str:
