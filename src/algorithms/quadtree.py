@@ -11,10 +11,12 @@ References:
       structure for retrieval on composite keys"
 """
 
+import math
 from typing import List, Tuple
 
 import numpy as np
 
+from src.algorithms.gdm import gdm_decomposition
 from src.utils.types import Chromosome, Rectangle
 
 
@@ -270,6 +272,58 @@ def trim_rectangles_to_ones(
     return trimmed
 
 
+def trim_rectangles_gdm(
+    img: np.ndarray, rects: List[Rectangle]
+) -> List[Rectangle]:
+    """Trim rectangles to contain only 1s using GDM decomposition.
+
+    - If region is all 1s -> kept as is.
+    - If region is all 0s -> skipped.
+    - If region is mixed -> decomposed via GDM for fewer rectangles.
+
+    Args:
+        img: Binary image.
+        rects: List of rectangles to trim.
+
+    Returns:
+        List of trimmed rectangles containing only 1s.
+
+    """
+    trimmed = []
+
+    for rect in rects:
+        x, y, w, h = rect
+        region = img[y:y + h, x:x + w]
+
+        if not np.any(region == 1):
+            continue
+
+        if np.all(region == 1):
+            trimmed.append(rect)
+            continue
+
+        # Apply GDM on sub-region, then translate to absolute coords
+        for rx, ry, rw, rh in gdm_decomposition(region, direction="auto"):
+            trimmed.append((x + rx, y + ry, rw, rh))
+
+    return trimmed
+
+
+def auto_min_size(img: np.ndarray, factor: float = 20.0) -> int:
+    """Compute adaptive min_size based on image dimensions.
+
+    Args:
+        img: Binary image.
+        factor: Divisor for sqrt(H*W); larger = coarser decomposition.
+
+    Returns:
+        Minimum quadrant size for quadtree subdivision.
+
+    """
+    h, w = img.shape
+    return max(2, int(math.sqrt(h * w) / factor))
+
+
 def quadtree_decomposition(
     img: np.ndarray,
     min_size: int = 2,
@@ -280,21 +334,17 @@ def quadtree_decomposition(
     Args:
         img: Binary image (0s and 1s).
         min_size: Minimum quadrant size.
-        trim: Whether to trim rectangles to exact 1s coverage (default True).
+        trim: Whether to trim mixed leaf rectangles via GDM (default True).
 
     Returns:
         List of rectangles covering all 1s in image.
 
     """
-    # Build quadtree
     root = build_quadtree(img, min_size=min_size)
-
-    # Collect rectangles from leaf nodes (only 1s)
     rectangles = collect_leaf_rectangles(root, only_ones=True)
 
-    # Trim rectangles to contain only 1s
     if trim:
-        rectangles = trim_rectangles_to_ones(img, rectangles)
+        rectangles = trim_rectangles_gdm(img, rectangles)
 
     return rectangles
 
@@ -338,7 +388,7 @@ def init_population_quadtree(
 
 def run_quadtree(
     img: np.ndarray,
-    min_size: int = 2,
+    full_decomposition: bool = True,
     trim: bool = True,
     verbose: bool = True,
 ) -> Tuple[List[Rectangle], List[int]]:
@@ -346,8 +396,10 @@ def run_quadtree(
 
     Args:
         img: Binary image to decompose (0s and 1s).
-        min_size: Minimum quadrant size before stopping subdivision.
-        trim: Trim rectangles to exact 1s coverage (default: True).
+        full_decomposition: If True, subdivide down to min_size=2 (precise
+            but more rectangles). If False, use adaptive min_size based on
+            image dimensions (coarser but fewer rectangles).
+        trim: Trim mixed leaf rectangles using GDM (default: True).
         verbose: Print progress information (default: True).
 
     Returns:
@@ -358,12 +410,20 @@ def run_quadtree(
     """
     import time
 
+    if full_decomposition:
+        min_size = 2
+    else:
+        min_size = auto_min_size(img)
+
     start_time = time.time()
 
     if verbose:
-        print(f"Running quadtree decomposition (min_size={min_size})...")
+        print(
+            f"Running quadtree decomposition "
+            f"(min_size={min_size}, "
+            f"full={'yes' if full_decomposition else 'no'})..."
+        )
 
-    # Run quadtree decomposition
     rectangles = quadtree_decomposition(img, min_size=min_size, trim=trim)
 
     execution_time = time.time() - start_time
@@ -372,7 +432,6 @@ def run_quadtree(
         print(f"Completed in {execution_time:.2f} seconds")
         print(f"Solution: {len(rectangles)} rectangles")
 
-    # Return empty generation history for API compatibility with GA
     return rectangles, []
 
 
@@ -384,10 +443,26 @@ if __name__ == "__main__":
     print("Quadtree Decomposition Test")
     print("=" * 60)
 
+    img_cactus = np.array([
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
+        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
+        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    ])
+
     # Load test image
-    img = np.load(
-        "../../data/datasets/objects_binary/npy/crown-3_binary.npy"
-    )
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Ginkgo_biloba_4_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
+
+    img = img_loaded
     img = (img > 0).astype(int)
 
     # Show original image first
@@ -395,7 +470,7 @@ if __name__ == "__main__":
     draw_solution(img, [])
 
     # Run quadtree decomposition
-    rects, _ = run_quadtree(img, min_size=2, trim=True, verbose=True)
+    rects, _ = run_quadtree(img, full_decomposition=True, trim=True, verbose=True)
 
     print("\nDecomposed image:")
     draw_solution(img, rects)
