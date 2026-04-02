@@ -7,6 +7,7 @@ for analysis and validation.
 """
 
 import json
+import random
 import time
 from pathlib import Path
 from typing import List, Tuple, Any, Dict
@@ -26,7 +27,8 @@ def save_solution_rectangles(
     output_dir: Path,
     config: ExperimentConfig,
     metrics: dict,
-    dataset_name: str
+    dataset_name: str,
+    run_id: str = "run1",
 ):
     """Save solution rectangles to JSON file.
 
@@ -46,6 +48,8 @@ def save_solution_rectangles(
         Metrics dictionary from experiment.
     dataset_name : str
         Name of the dataset directory (e.g., "objects_binary").
+    run_id : str, optional
+        Run identifier for distinguishing experiment groups (default: "run1").
 
     Returns
     -------
@@ -53,15 +57,15 @@ def save_solution_rectangles(
         Path to saved JSON file.
 
     """
-    # Create directory structure:
-    # rectangles/algorithm/dataset/image_name/
     image_stem = Path(image_name).stem
 
-    save_dir = output_dir / config.algorithm / dataset_name / image_stem
+    save_dir = (
+        output_dir / config.algorithm / dataset_name
+        / run_id / f"seed_{config.seed}" / image_stem
+    )
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    # Filename: seed_XXXXX_rects_NN.json
-    filename = f"seed_{config.seed}_rects_{rect_count}.json"
+    filename = f"rects_{rect_count}.json"
     save_path = save_dir / filename
 
     # Prepare data structure - rectangles as list of tuples
@@ -69,23 +73,29 @@ def save_solution_rectangles(
     data = {
         "image_name": image_name,
         "rectangle_count": rect_count,
-        "rectangles": [
-            [int(x), int(y), int(w), int(h)]
-            for x, y, w, h in rectangles
-        ],
         "config": {
             "algorithm": config.algorithm,
             "seed": config.seed,
             "pop_size": config.pop_size,
             "generations": config.generations,
+            "elite_size": config.elite_size,
             "patience": config.patience,
+            "penalty": config.penalty,
+            "crossover_method": config.crossover_method,
             "p_geometry": config.p_geometry,
             "p_merge": config.p_merge,
             "p_local": config.p_local,
-            "crossover_method": config.crossover_method,
-            "mutation_combo": config.get_mutation_combo_code()
+            "p_largest": config.p_largest,
+            "p_delete": config.p_delete,
+            "p_split": config.p_split,
+            "p_shift": config.p_shift,
+            "p_repair": config.p_repair,
         },
-        "metrics": metrics
+        "metrics": metrics,
+        "rectangles": [
+            [int(x), int(y), int(w), int(h)]
+            for x, y, w, h in rectangles
+        ],
     }
 
     # Save to JSON
@@ -131,16 +141,22 @@ def load_solution_rectangles(
 
 def run_experiments(
     image_dir_name: str,
-    p_geometry: float = 0.2,
-    p_merge: float = 0.2,
-    p_local: float = 0.3,
     seed: int = None,
     pop_size: int = 20,
     generations: int = 100,
     patience: int = 5,
     algorithm: str = "ga_dm",
     crossover_method: str = "subset_greedy",
-    max_images: int = None
+    max_images: int = None,
+    run_id: str = "run1",
+    p_delete: float = 0.2,
+    p_split: float = 0.2,
+    p_geometry: float = 0.3,
+    p_shift: float = 0.05,
+    p_local: float = 0.5,
+    p_largest: float = 0.2,
+    p_repair: float = 0.5,
+    p_merge: float = 0.1,
 ):
     """Run experiments on images from specified directory.
 
@@ -149,14 +165,8 @@ def run_experiments(
     image_dir_name : str
         Directory name under data/datasets/ (e.g., "leafs_binary",
         "research_leafs_binary", "objects_binary").
-    p_geometry : float, optional
-        Geometry mutation probability (default: 0.2).
-    p_merge : float, optional
-        Merge mutation probability (default: 0.2).
-    p_local : float, optional
-        Local repartition mutation probability (default: 0.3).
     seed : int, optional
-        Random seed for reproducibility (default: 42).
+        Random seed for reproducibility (default: None).
     pop_size : int, optional
         Population size for GA (default: 20).
     generations : int, optional
@@ -164,15 +174,33 @@ def run_experiments(
     patience : int, optional
         Early stopping patience (default: 5).
     algorithm : str, optional
-        Algorithm variant: "ga_dm", "ga_random", "ga_quadtree"
-        (default: "ga_dm").
+        Algorithm variant: "ga_dm", "ga_gdm", "ga_random", "ga_qtd",
+        "ga_morph", "ga_mixed" (default: "ga_dm").
     crossover_method : str, optional
-        Crossover method: "subset_greedy" (Subset Crossover with Greedy
-        Non-overlapping Extension), "single_point", "two_point",
+        Crossover method: "subset_greedy", "single_point", "two_point",
         "uniform" (default: "subset_greedy").
     max_images : int, optional
-        Maximum number of images to process. If None, processes all
-        images in directory (default: None).
+        Maximum number of images to process (default: None = all).
+    run_id : str, optional
+        Identifier for this experiment group (default: "run1"). Results
+        are saved under a subdirectory named after run_id, so different
+        run_ids never overwrite each other.
+    p_delete : float, optional
+        Delete mutation probability (default: 0.2).
+    p_split : float, optional
+        Split mutation probability (default: 0.2).
+    p_geometry : float, optional
+        Geometry mutation probability (default: 0.3).
+    p_shift : float, optional
+        Shift mutation probability (default: 0.05).
+    p_local : float, optional
+        Local repartition mutation probability (default: 0.5).
+    p_largest : float, optional
+        Largest-rect mutation probability (default: 0.2).
+    p_repair : float, optional
+        Coverage repair probability after each mutation (default: 0.5).
+    p_merge : float, optional
+        Merge mutation probability (default: 0.1).
 
     """
     # Setup paths
@@ -199,43 +227,55 @@ def run_experiments(
     if max_images is not None:
         image_paths = image_paths[:max_images]
 
+    # Resolve seed once for the entire run
+    if seed is None:
+        seed = random.randint(0, 2**31 - 1)
+
     mode_str = f"TEST MODE ({len(image_paths)} images)" if max_images else "PRODUCTION MODE (all images)"
 
     print("=" * 70)
     print(f"GENETIC ALGORITHM EXPERIMENTS - {mode_str}")
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
+    print(f"Run ID: {run_id}")
+    print(f"Seed: {seed}")
     print(f"Images to process: {len(image_paths)}")
     print(f"Algorithm: {algorithm}")
     print(f"Crossover method: {crossover_method}")
-    print(f"Mutation probabilities: G={p_geometry}, M={p_merge}, L={p_local}")
+    print(
+        f"Mutations: G={p_geometry}, M={p_merge}, L={p_local}, "
+        f"R={p_largest}, D={p_delete}, S={p_split}, H={p_shift}, "
+        f"repair={p_repair}"
+    )
     print(f"Population: {pop_size}, Generations: {generations}, "
           f"Patience: {patience}")
     print("=" * 70)
 
-    # Create config first to get mutation combo
     config = ExperimentConfig(
-        name=f"{algorithm}_{image_dir_name}",
+        name=f"{algorithm}_{image_dir_name}_{run_id}",
         seed=seed,
         algorithm=algorithm,
         pop_size=pop_size,
         generations=generations,
         patience=patience,
+        crossover_method=crossover_method,
         p_geometry=p_geometry,
         p_merge=p_merge,
         p_local=p_local,
-        crossover_method=crossover_method,
+        p_largest=p_largest,
+        p_delete=p_delete,
+        p_split=p_split,
+        p_shift=p_shift,
+        p_repair=p_repair,
     )
 
-    # Setup logger with hierarchical structure
     logger = CSVLogger(
         algorithm,
         str(project_root / "experiments/results/csv/"),
-        image_dir_name,
+        f"{image_dir_name}/{run_id}/seed_{seed}",
         ""
     )
 
-    print(f"Seed: {seed}")
     print("-" * 70)
 
     # Create output directories
@@ -288,7 +328,8 @@ def run_experiments(
                 rect_dir,
                 config,
                 metrics,
-                image_dir_name
+                image_dir_name,
+                run_id=run_id,
             )
             print(f"  ✓ Rectangles saved: {rect_path.relative_to(project_root)}")
 
@@ -297,7 +338,10 @@ def run_experiments(
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
-            viz_subdir = viz_dir / config.algorithm / image_dir_name
+            viz_subdir = (
+                viz_dir / config.algorithm / image_dir_name
+                / run_id / f"seed_{seed}"
+            )
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
             viz_filename = f"{img_path.stem}_seed_{config.seed}_rects_{rect_count}.png"
@@ -329,17 +373,23 @@ def main():
     """Main entry point - configure experiments here."""
     # TEST MODE: Quick test on 5 images
     run_experiments(
-        image_dir_name="validation",
-        max_images=8,  # Limit to 5 images for testing
-        p_geometry=0.2,
-        p_merge=0.2,
-        p_local=0.3,
-        seed=None,
+        image_dir_name="leafs_binary_fix",
+        max_images=2,
+        seed=1,
         pop_size=20,
         generations=100,
-        patience=5,
-        algorithm="ga_dm",
-        crossover_method="subset_greedy",  # Best and fastest method
+        patience=25,
+        algorithm="ga_gdm",
+        crossover_method="subset_greedy",
+        run_id="run2",
+        p_delete=0.2,
+        p_split=0.2,
+        p_geometry=0.3,
+        p_shift=0.05,
+        p_local=0.5,
+        p_largest=0.2,
+        p_repair=0.5,
+        p_merge=0.1,
     )
 
     # Algorithms: "ga_dm", "ga_gdm", "ga_random", "ga_qtd", "ga_morph"
@@ -349,16 +399,22 @@ def main():
 
     # PRODUCTION MODE: Uncomment to run on all images
     # run_experiments(
-    #     image_dir_name="research_leafs_binary",
-    #     p_geometry=0.2,
-    #     p_merge=0.2,
-    #     p_local=0.3,
-    #     seed=45646456,
+    #     image_dir_name="leafs_binary_fix",
+    #     max_images=None,
+    #     seed=None,
     #     pop_size=20,
     #     generations=100,
-    #     patience=5,
-    #     algorithm="ga_dm",
-    #     max_images=None  # Process ALL images
+    #     patience=25,
+    #     algorithm="ga_gdm",
+    #     crossover_method="subset_greedy",
+    #     p_delete=0.2,
+    #     p_split=0.2,
+    #     p_geometry=0.3,
+    #     p_shift=0.05,
+    #     p_local=0.5,
+    #     p_largest=0.2,
+    #     p_repair=0.5,
+    #     p_merge=0.1,
     # )
 
 
