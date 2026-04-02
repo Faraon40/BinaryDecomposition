@@ -101,8 +101,10 @@ def fitness(
         coverage_ratio = (total_obj_pixels - missing_pixels) / total_obj_pixels
         score = -1e6 * (1.0 - coverage_ratio) - (missing_pixels ** 2)
     else:
-        # Phase 2: optimize within feasible region
-        score = 10000.0
+        # Phase 2: optimize within feasible region.
+        # Base score scales with image size so large images never go
+        # negative just because they have many rectangles.
+        score = float(total_obj_pixels)
         score -= extra_pixels * penalty_extra
         score -= overlap_pixels * penalty_overlap
         score -= len(chrom.rectangles) * penalty_count
