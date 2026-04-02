@@ -56,12 +56,10 @@ def save_solution_rectangles(
     """
     image_stem = Path(image_name).stem
 
-    save_dir = (
-        output_dir / "quadtree_QTD" / dataset_name / run_id / image_stem
-    )
+    save_dir = output_dir / "quadtree" / dataset_name / run_id
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = f"rects_{rect_count}.json"
+    filename = f"{image_stem}_rects_{rect_count}.json"
     save_path = save_dir / filename
 
     data = {
@@ -197,7 +195,6 @@ def run_experiments(
         "quadtree",
         str(project_root / "experiments/results/csv/"),
         f"{image_dir_name}/{run_id}",
-        "QTD"
     )
 
     print("-" * 70)
@@ -254,7 +251,7 @@ def run_experiments(
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
-            viz_subdir = viz_dir / "quadtree_QTD" / image_dir_name / run_id
+            viz_subdir = viz_dir / "quadtree" / image_dir_name / run_id
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
             viz_filename = f"{img_path.stem}_rects_{rect_count}.png"
@@ -278,8 +275,8 @@ def run_experiments(
     print("=" * 70)
     print(f"Total time: {total_elapsed/60:.1f} minutes")
     print(f"Results saved to: {logger.results_csv}")
-    print(f"Rectangles saved to: {rect_dir / 'quadtree_QTD'}")
-    print(f"Visualizations saved to: {viz_dir / 'quadtree_QTD'}")
+    print(f"Rectangles saved to: {rect_dir / 'quadtree'}")
+    print(f"Visualizations saved to: {viz_dir / 'quadtree'}")
 
 
 def main():

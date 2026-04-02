@@ -57,10 +57,10 @@ def save_solution_rectangles(
     """
     image_stem = Path(image_name).stem
 
-    save_dir = output_dir / "gdm" / dataset_name / run_id / image_stem
+    save_dir = output_dir / "gdm" / dataset_name / run_id
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = f"rects_{rect_count}.json"
+    filename = f"{image_stem}_rects_{rect_count}.json"
     save_path = save_dir / filename
 
     data = {
@@ -181,7 +181,6 @@ def run_experiments(
         "gdm",
         str(project_root / "experiments/results/csv/"),
         f"{image_dir_name}/{run_id}",
-        "GDM"
     )
 
     print("-" * 70)
@@ -262,8 +261,8 @@ def run_experiments(
     print("=" * 70)
     print(f"Total time: {total_elapsed/60:.1f} minutes")
     print(f"Results saved to: {logger.results_csv}")
-    print(f"Rectangles saved to: {rect_dir / 'gdm_GDM'}")
-    print(f"Visualizations saved to: {viz_dir / 'gdm_GDM'}")
+    print(f"Rectangles saved to: {rect_dir / 'gdm'}")
+    print(f"Visualizations saved to: {viz_dir / 'gdm'}")
 
 
 def main():

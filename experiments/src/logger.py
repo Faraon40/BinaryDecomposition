@@ -20,7 +20,7 @@ class CSVLogger:
     2. generations.csv - Generation history for plotting
 
     Files are saved in hierarchical structure:
-    csv/algorithm_mutationcombo/dataset_name/results.csv
+    csv/algorithm/dataset_name/results.csv
 
     Parameters
     ----------
@@ -30,8 +30,6 @@ class CSVLogger:
         Base directory to save CSV files.
     dataset_name : str
         Name of dataset directory (e.g., "objects_binary").
-    mutation_combo : str
-        Mutation combination code (e.g., "GML").
 
     """
 
@@ -40,7 +38,6 @@ class CSVLogger:
         algorithm_name: str,
         output_dir: str,
         dataset_name: str,
-        mutation_combo: str
     ):
         """Initialize CSV logger.
 
@@ -52,22 +49,14 @@ class CSVLogger:
             Base directory path for output CSVs.
         dataset_name : str
             Name of dataset directory.
-        mutation_combo : str
-            Mutation combination code.
 
         """
         self.algorithm_name = algorithm_name
         self.dataset_name = dataset_name
-        self.mutation_combo = mutation_combo
         self._is_ga = algorithm_name in _GA_ALGORITHMS
 
-        # Create hierarchical directory:
-        # csv/algorithm_mutationcombo/dataset_name/
-        if mutation_combo:
-            algo_dir = f"{algorithm_name}_{mutation_combo}"
-        else:
-            algo_dir = algorithm_name
-        self.output_dir = Path(output_dir) / algo_dir / dataset_name
+        # Create hierarchical directory: csv/algorithm/dataset_name/
+        self.output_dir = Path(output_dir) / algorithm_name / dataset_name
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
         self.results_csv = self.output_dir / "results.csv"
@@ -85,19 +74,17 @@ class CSVLogger:
                     writer.writerow([
                         'image_name',
                         'seed',
-                        'mutation_combo',
                         'pop_size',
-                        'generations',
                         'rectangle_count',
                         'execution_time_sec',
                         'final_fitness',
-                        'generations_used'
+                        'generations_used',
                     ])
                 else:
                     writer.writerow([
                         'image_name',
                         'rectangle_count',
-                        'execution_time_sec'
+                        'execution_time_sec',
                     ])
 
         if self._is_ga and not self.generations_csv.exists():
@@ -105,9 +92,8 @@ class CSVLogger:
                 writer = csv.writer(f)
                 writer.writerow([
                     'image_name',
-                    'mutation_combo',
                     'generation',
-                    'best_rectangle_count'
+                    'best_rectangle_count',
                 ])
 
     def log_result(
@@ -135,23 +121,20 @@ class CSVLogger:
         with open(self.results_csv, 'a', newline='') as f:
             writer = csv.writer(f)
             if self._is_ga:
-                mutation_combo = config.get_mutation_combo_code()
                 writer.writerow([
                     image_name,
                     config.seed,
-                    mutation_combo,
                     config.pop_size,
-                    config.generations,
                     metrics['rectangle_count'],
                     metrics['execution_time_sec'],
                     metrics.get('final_fitness', ''),
-                    metrics.get('generations_used', '')
+                    metrics.get('generations_used', ''),
                 ])
             else:
                 writer.writerow([
                     image_name,
                     metrics['rectangle_count'],
-                    metrics['execution_time_sec']
+                    metrics['execution_time_sec'],
                 ])
 
         # Append generation history if available
@@ -161,24 +144,14 @@ class CSVLogger:
                 for gen, rect_count in enumerate(generation_history):
                     writer.writerow([
                         image_name,
-                        mutation_combo,
                         gen,
-                        rect_count
+                        rect_count,
                     ])
 
-    def get_processed_images(
-        self,
-        mutation_combo: str = None
-    ) -> Set[str]:
+    def get_processed_images(self) -> Set[str]:
         """Get set of already-processed image names.
 
         Used for resuming interrupted experiments.
-
-        Parameters
-        ----------
-        mutation_combo : str, optional
-            Filter by mutation combo (e.g., "GML"). If None, returns
-            all processed images.
 
         Returns
         -------
@@ -193,10 +166,7 @@ class CSVLogger:
         with open(self.results_csv, 'r') as f:
             reader = csv.DictReader(f)
             for row in reader:
-                if mutation_combo is None:
-                    processed.add(row['image_name'])
-                elif row['mutation_combo'] == mutation_combo:
-                    processed.add(row['image_name'])
+                processed.add(row['image_name'])
 
         return processed
 

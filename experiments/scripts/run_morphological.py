@@ -57,12 +57,10 @@ def save_solution_rectangles(
     """
     image_stem = Path(image_name).stem
 
-    save_dir = (
-        output_dir / "morphological" / dataset_name / run_id / image_stem
-    )
+    save_dir = output_dir / "morphological" / dataset_name / run_id
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = f"rects_{rect_count}.json"
+    filename = f"{image_stem}_rects_{rect_count}.json"
     save_path = save_dir / filename
 
     data = {
@@ -195,7 +193,6 @@ def run_experiments(
         "morphological",
         str(project_root / "experiments/results/csv/"),
         f"{image_dir_name}/{run_id}",
-        "MORPH"
     )
 
     print("-" * 70)

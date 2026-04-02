@@ -61,11 +61,11 @@ def save_solution_rectangles(
 
     save_dir = (
         output_dir / config.algorithm / dataset_name
-        / run_id / f"seed_{config.seed}" / image_stem
+        / run_id / f"seed_{config.seed}"
     )
     save_dir.mkdir(parents=True, exist_ok=True)
 
-    filename = f"rects_{rect_count}.json"
+    filename = f"{image_stem}_rects_{rect_count}.json"
     save_path = save_dir / filename
 
     # Prepare data structure - rectangles as list of tuples
@@ -273,7 +273,6 @@ def run_experiments(
         algorithm,
         str(project_root / "experiments/results/csv/"),
         f"{image_dir_name}/{run_id}/seed_{seed}",
-        ""
     )
 
     print("-" * 70)
@@ -344,7 +343,7 @@ def run_experiments(
             )
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
-            viz_filename = f"{img_path.stem}_seed_{config.seed}_rects_{rect_count}.png"
+            viz_filename = f"{img_path.stem}_rects_{rect_count}.png"
             viz_path = viz_subdir / viz_filename
 
             draw_solution(
@@ -373,10 +372,10 @@ def main():
     """Main entry point - configure experiments here."""
     # TEST MODE: Quick test on 5 images
     run_experiments(
-        image_dir_name="leafs_binary_fix",
-        max_images=2,
+        image_dir_name="objects_binary",
+        max_images=5,
         seed=1,
-        pop_size=20,
+        pop_size=30,
         generations=100,
         patience=25,
         algorithm="ga_gdm",
