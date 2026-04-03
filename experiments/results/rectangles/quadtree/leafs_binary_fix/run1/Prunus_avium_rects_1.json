@@ -1,0 +1,25 @@
+{
+  "image_name": "Prunus_avium.npy",
+  "rectangle_count": 1,
+  "rectangles": [
+    [
+      0,
+      0,
+      1384,
+      3479
+    ]
+  ],
+  "config": {
+    "algorithm": "quadtree",
+    "quadtree_full_decomposition": true,
+    "quadtree_trim": true
+  },
+  "metrics": {
+    "rectangles": 1,
+    "rectangle_count": 1,
+    "final_fitness": null,
+    "execution_time": 0.01,
+    "execution_time_sec": 0.01,
+    "generations_used": null
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "image_name": "Prunus_avium.npy",
+  "rectangle_count": 1,
+  "rectangles": [
+    [
+      0,
+      0,
+      1384,
+      3479
+    ]
+  ],
+  "config": {
+    "algorithm": "graph_based"
+  },
+  "metrics": {
+    "rectangles": 1,
+    "rectangle_count": 1,
+    "final_fitness": null,
+    "execution_time": 26.52,
+    "execution_time_sec": 26.52,
+    "generations_used": null
+  }
+}

@@ -1,0 +1,38 @@
+{
+  "image_name": "Castanea_sativa.npy",
+  "rectangle_count": 1,
+  "config": {
+    "algorithm": "ga_gdm",
+    "seed": 272988887,
+    "pop_size": 30,
+    "generations": 100,
+    "elite_size": 3,
+    "patience": 25,
+    "penalty": 2,
+    "crossover_method": "subset_greedy",
+    "p_geometry": 0.3,
+    "p_merge": 0.1,
+    "p_local": 0.5,
+    "p_largest": 0.2,
+    "p_delete": 0.2,
+    "p_split": 0.2,
+    "p_shift": 0.05,
+    "p_repair": 0.5
+  },
+  "metrics": {
+    "rectangles": 1,
+    "rectangle_count": 1,
+    "final_fitness": 5727118.0,
+    "execution_time": 497.26,
+    "execution_time_sec": 497.26,
+    "generations_used": 26
+  },
+  "rectangles": [
+    [
+      0,
+      0,
+      1661,
+      3448
+    ]
+  ]
+}

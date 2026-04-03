@@ -1,0 +1,23 @@
+{
+  "image_name": "Castanea_sativa.npy",
+  "rectangle_count": 1,
+  "rectangles": [
+    [
+      0,
+      0,
+      1661,
+      3448
+    ]
+  ],
+  "config": {
+    "algorithm": "gdm"
+  },
+  "metrics": {
+    "rectangles": 1,
+    "rectangle_count": 1,
+    "final_fitness": null,
+    "execution_time": 0.64,
+    "execution_time_sec": 0.64,
+    "generations_used": null
+  }
+}

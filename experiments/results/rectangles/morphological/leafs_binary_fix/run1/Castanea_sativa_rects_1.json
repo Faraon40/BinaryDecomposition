@@ -1,0 +1,24 @@
+{
+  "image_name": "Castanea_sativa.npy",
+  "rectangle_count": 1,
+  "rectangles": [
+    [
+      0,
+      0,
+      1661,
+      3448
+    ]
+  ],
+  "config": {
+    "algorithm": "morphological",
+    "morphological_coverage": 0.9
+  },
+  "metrics": {
+    "rectangles": 1,
+    "rectangle_count": 1,
+    "final_fitness": null,
+    "execution_time": 2.34,
+    "execution_time_sec": 2.34,
+    "generations_used": null
+  }
+}
