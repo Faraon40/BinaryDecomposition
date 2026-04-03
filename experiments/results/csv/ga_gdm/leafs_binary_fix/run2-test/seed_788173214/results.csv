@@ -1,0 +1,6 @@
+image_name,seed,pop_size,rectangle_count,execution_time_sec,final_fitness,generations_used
+Acer_campestre.npy,788173214,30,1398,653.46,876644.0,48
+Acer_ginnala.npy,788173214,30,695,202.63,214732.0,75
+Acer_monspessulanum.npy,788173214,30,355,42.8,90828.0,26
+Acer_negundo.npy,788173214,30,607,112.62,346325.0,26
+Acer_palmatum.npy,788173214,30,519,89.15,57475.0,44
