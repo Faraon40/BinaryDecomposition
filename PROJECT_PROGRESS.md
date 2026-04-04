@@ -1,7 +1,7 @@
 # Project Progress Tracker
 
 **Master's Thesis**: Binary Image Rectangle Decomposition
-**Last Updated**: 2026-02-16
+**Last Updated**: 2026-04-04
 
 ---
 
@@ -14,22 +14,25 @@
   - DM-based initialization
   - Random rectangle generation
   - Quadtree-based initialization
+  - GDM-based initialization (added with GDM module)
 - **Mutation operators**: 3 implemented
   - Geometry mutation (rectangle dimension modification)
   - Merge mutation (combine adjacent rectangles)
   - Local repartition mutation (re-decompose local regions)
+  - GDM-guided local mutation (dual-direction evolution)
 - **Crossover strategies**: 4 implemented
   - **Subset Greedy** (default, best performance) - Subset Crossover with Greedy Non-overlapping Extension
   - Single-point crossover
   - Two-point crossover
   - Uniform crossover
-- **Fitness function**: Rectangle count + penalty for invalid pixels
-- **Experiment script**: `experiments/scripts/run_ga.py`
+- **Fitness function**: Rectangle count + penalty for invalid pixels (scaled by image size)
+- **Experiment scripts**: `experiments/scripts/run_ga.py`, `experiments/scripts/run_gdm.py` (GA+GDM hybrid)
 
 #### Quadtree Decomposition
 - **Algorithm**: Hierarchical divide-and-conquer approach
 - **Features**: Configurable min_size, optional trimming
 - **Implementation**: `src/algorithms/quadtree.py`
+- **Experiment script**: `experiments/scripts/run_quadtree.py`
 
 #### Integer Linear Programming (ILP)
 - **Solvers**: 2 implementations
@@ -42,47 +45,53 @@
 - **Algorithm**: Flow network-based optimal decomposition
 - **Implementation**: `src/algorithms/graph_based.py`
 - **Features**: Multiple optimization levels (deterministic, optimal)
-- **Status**: Literature claims this is optimal approach - now implemented
+- **Status**: Literature claims this is optimal approach - implemented and benchmarked
 - **Experiment script**: `experiments/scripts/run_graph_based.py`
+
+#### Delta Method (DM) ✅ NEW
+- **Algorithm**: Row-wise or column-wise decomposition into 1-pixel-tall/wide strips
+- **Direction**: Auto-selected based on image aspect ratio (row-wise if width ≥ height)
+- **Implementation**: `src/algorithms/dm.py` (renamed from RLE)
+- **Experiment script**: `experiments/scripts/run_dm.py`
+- **Status**: Implemented and benchmarked on research dataset
+
+#### Generalized Delta Method (GDM) ✅ NEW
+- **Algorithm**: Extends DM by merging adjacent rows/columns with identical intervals into taller rectangles
+- **Features**: Auto min_size calculation based on image size, optional trim/full decomposition, GA init support
+- **Implementation**: `src/algorithms/gdm.py`
+- **Experiment script**: `experiments/scripts/run_gdm.py`
+- **Status**: Implemented and benchmarked; used as GA initialization and guided mutation
+- **Reference**: Spiliotis & Mertzios (1998), Suk et al. (2012)
+
+#### Morphological Decomposition ✅ NEW
+- **Algorithm**: Greedy largest-rectangle-first decomposition
+- **Features**: At each step, finds and places the largest axis-aligned rectangle fitting in uncovered foreground pixels
+- **Implementation**: `src/algorithms/morphological.py`
+- **Experiment script**: `experiments/scripts/run_morphological.py`
+- **Status**: Implemented and benchmarked on research dataset
+- **GA hybrid**: Morphological+GDM hybrid with coverage threshold added to GA pipeline
 
 #### Infrastructure
 - **Experiment framework**: Config system, runner, metrics, CSV logging
 - **Preprocessing**: Image binarization, data loaders, format converters
 - **Utilities**: Integral images, rectangle validation, visualization tools
 - **Code quality**: Ruff linting/formatting (PEP 8 + PEP 257)
+- **Run tracking**: `run_id` attribute for separating multiple runs of same config
 
 #### Data & Environment
 - **Research dataset**: `research_leafs_binary/` (extracted from literature, ready for benchmarking)
-- **Other datasets**: icons, synthetic, validation sets
+- **Other datasets**: icons, synthetic, validation sets, `leafs_binary_fix/`
 - **CUDA environment**: `cuda_env` prepared in Conda (for future parallelization)
+- **Paper results**: `experiments/results/csv/paper/` contains extracted literature results for comparison
 
 ### In Progress
 - None
 
 ### To Do
 
-#### New Algorithm Implementations
-- **Morphological Decomposition**: Greedy approach finding biggest squares/rectangles
-  - Status: Not implemented
-  - Approach: Recursively finds the biggest possible square or rectangle
-  - Implementation: `src/algorithms/morphological.py` (to be created)
-  - Experiment script: `experiments/scripts/run_morphological.py` (to be created)
-
-- **DTD (Distance Transformation Decomposition)**:
-  - Status: Not implemented
-  - Mentioned in thesis theoretical part
-
-- **Delta Method**: Standalone implementation for comparison
-  - Status: Not implemented
-  - Needed for comprehensive algorithm comparison
-
-- **Generalized Delta Method**: Extended Delta approach
-  - Status: Not implemented
-  - Separate from Delta Method
-
 #### Experiments & Benchmarking
-- **Comprehensive benchmark**: Run all algorithms on `research_leafs_binary/` dataset
-- **Literature comparison**: Compare results with extracted values from thesis figures/tables
+- **ILP benchmarks**: Run ILP (CBC/Gurobi) on `research_leafs_binary/` dataset
+- **Literature comparison**: Systematic comparison with extracted paper values (`csv/paper/`)
 - **Performance analysis**: Execution time, memory usage, solution quality metrics
 - **Visualization**: Generate comparison charts and result visualizations
 
@@ -100,84 +109,65 @@
 **Goal**: Improve GA performance by testing multiple crossover strategies
 
 - [x] **Research crossover strategies**
-  - Review literature for GA crossover methods suitable for rectangle decomposition
-  - Identify 3-5 promising strategies to implement
-
 - [x] **Implement crossover strategies**
-  - [x] Strategy 1: Subset Greedy Crossover (Subset Crossover with Greedy Non-overlapping Extension)
-  - [x] Strategy 2: Single-point crossover
-  - [x] Strategy 3: Two-point crossover
-  - [x] Strategy 4: Uniform crossover
+  - [x] Subset Greedy Crossover (default, best performance)
+  - [x] Single-point crossover
+  - [x] Two-point crossover
+  - [x] Uniform crossover
+- [x] **Experimental comparison** — Subset Greedy selected as default
 
-- [x] **Experimental comparison**
-  - Select best crossover strategy for final GA implementation
-  - **Result**: Subset Greedy Crossover selected as default (best performance)
-
-**Status**: ✅ COMPLETED - 4 crossover strategies implemented and integrated. Configuration system supports selecting any crossover method via `crossover_method` parameter.
+**Status**: ✅ COMPLETED
 
 ---
 
-### Phase 2: Missing Algorithm Implementations
+### Phase 2: Missing Algorithm Implementations ✅ COMPLETED
 **Goal**: Implement remaining algorithms for comprehensive comparison
 
-- [x] **Graph-Based Decomposition** ✅ COMPLETED (2026-02-16)
-  - Research implementation details from literature
-  - Implement algorithm (literature claims this is optimal)
-  - Create experiment script `experiments/scripts/run_graph_based.py`
-  - **Status**: Flow network-based approach implemented with multiple optimization levels
+- [x] **Graph-Based Decomposition** ✅ (2026-02-16)
+  - Flow network-based approach with multiple optimization levels
 
-- [ ] **Morphological Decomposition**
-  - Research morphological decomposition approach
-  - Implement recursive biggest-square/rectangle finding algorithm
-  - Implement in `src/algorithms/morphological.py`
-  - Create experiment script `experiments/scripts/run_morphological.py`
+- [x] **Delta Method (DM)** ✅ (2026-03-24 — renamed from RLE)
+  - Row-wise/column-wise strip decomposition; auto direction based on aspect ratio
+  - Implementation: `src/algorithms/dm.py`
+  - Experiment script: `experiments/scripts/run_dm.py`
 
-- [ ] **DTD (Distance Transformation Decomposition)**
-  - Research DTD algorithm
-  - Implement in `src/algorithms/dtd.py`
-  - Create experiment script
+- [x] **Generalized Delta Method (GDM)** ✅ (2026-03-24)
+  - Merges adjacent rows/columns with identical intervals for fewer rectangles
+  - GDM-guided local mutation integrated into GA
+  - Implementation: `src/algorithms/gdm.py`
+  - Experiment script: `experiments/scripts/run_gdm.py`
 
-- [ ] **Delta Method**
-  - Implement standalone Delta Method
-  - Create experiment script
+- [x] **Morphological Decomposition** ✅ (2026-03-24)
+  - Largest-rectangle-first greedy decomposition
+  - Morphological+GDM hybrid variant added to GA pipeline
+  - Implementation: `src/algorithms/morphological.py`
+  - Experiment script: `experiments/scripts/run_morphological.py`
 
-- [ ] **Generalized Delta Method**
-  - Implement Generalized Delta Method
-  - Create experiment script
-
-**Notes**: These algorithms are mentioned in thesis theoretical part and needed for comprehensive comparison.
+**Notes**: DM and GDM correspond to "Delta Method" and "Generalized Delta Method" from thesis — previously incorrectly called "RLE".
 
 ---
 
-### Phase 3: Benchmarking & Experiments
+### Phase 3: Benchmarking & Experiments 🔄 IN PROGRESS
 **Goal**: Run comprehensive experiments and compare all algorithms
 
-- [ ] **Dataset preparation**
-  - Verify `data/datasets/research_leafs_binary/` is complete
-  - Document dataset characteristics (image sizes, complexity)
-  - Create dataset metadata file
-
-- [ ] **Run benchmark experiments**
-  - [ ] GA with best crossover strategy
-  - [ ] Quadtree
-  - [ ] Graph-Based Decomposition ✅
-  - [ ] Morphological Decomposition
-  - [ ] DTD
-  - [ ] Delta Method
-  - [ ] Generalized Delta Method
+- [x] **Dataset preparation** — `research_leafs_binary/` and `leafs_binary_fix/` ready
+- [x] **Run benchmark experiments**
+  - [x] GA (with GDM-guided mutation, subset_greedy crossover)
+  - [x] GA+GDM hybrid
+  - [x] Quadtree
+  - [x] Graph-Based Decomposition
+  - [x] Morphological Decomposition
+  - [x] Delta Method (DM)
+  - [x] Generalized Delta Method (GDM)
   - [ ] ILP (CBC and Gurobi)
-
 - [ ] **Results analysis**
-  - Compare rectangle counts with literature results (thesis figures/tables)
+  - Literature results available in `experiments/results/csv/paper/`
+  - Compare rectangle counts with paper values
   - Analyze execution times
-  - Generate visualizations
-  - Create comparison tables
-
+  - Generate visualizations and comparison tables
 - [ ] **Documentation**
   - Document findings
   - Update thesis with experimental results
-
-**Reference**: Extracted results from literature are in thesis figures/tables for comparison.
 
 ---
 
@@ -185,21 +175,8 @@
 **Goal**: Parallelize GA if execution time is too slow on large images
 
 - [ ] **Performance profiling**
-  - Profile GA execution on large images from research dataset
-  - Identify bottlenecks
-  - Decide if CUDA parallelization is necessary
-
 - [ ] **CUDA implementation** (if needed)
-  - Activate `cuda_env` Conda environment
-  - Install Numba CUDA dependencies
-  - Parallelize GA fitness evaluation
-  - Parallelize mutation/crossover operations
-  - Benchmark CUDA vs CPU performance
-
 - [ ] **Integration & testing**
-  - Integrate CUDA-accelerated GA into experiment pipeline
-  - Verify correctness (results should match CPU version)
-  - Re-run large-scale experiments if needed
 
 **Notes**: CUDA environment `cuda_env` already prepared in Conda. Only implement if GA is too slow.
 
@@ -210,40 +187,44 @@
 ### Algorithms
 - `src/algorithms/genetic.py` - GA implementation ✅
 - `src/algorithms/quadtree.py` - Quadtree implementation ✅
+- `src/algorithms/dm.py` - Delta Method ✅
+- `src/algorithms/gdm.py` - Generalized Delta Method ✅
+- `src/algorithms/morphological.py` - Morphological (largest-rect-first) ✅
 - `src/solvers/ilp_solver_cbc.py` - ILP with CBC ✅
 - `src/solvers/ilp_solver_gurobi.py` - ILP with Gurobi ✅
 - `src/algorithms/graph_based.py` - Graph-Based ✅
-- `src/algorithms/morphological.py` - Morphological ❌
-- `src/algorithms/dtd.py` - DTD ❌
-- `src/algorithms/delta.py` - Delta Method ❌
-- `src/algorithms/generalized_delta.py` - Generalized Delta ❌
 
 ### Experiment Scripts
 - `experiments/scripts/run_ga.py` ✅
+- `experiments/scripts/run_gdm.py` ✅
+- `experiments/scripts/run_dm.py` ✅
+- `experiments/scripts/run_morphological.py` ✅
+- `experiments/scripts/run_quadtree.py` ✅
+- `experiments/scripts/run_graph_based.py` ✅
 - `experiments/scripts/run_ilp_cbc.py` ✅
 - `experiments/scripts/run_ilp_gurobi.py` ✅
-- `experiments/scripts/run_graph_based.py` ✅
-- `experiments/scripts/run_morphological.py` ❌
-- Other algorithm scripts ❌
 
 ### Datasets
 - `data/datasets/research_leafs_binary/` - Main benchmark dataset ✅
+- `data/datasets/leafs_binary_fix/` - Fixed leaf dataset ✅
 - `data/datasets/icons/` - Icon dataset
+- `data/datasets/validation/` - Validation set
 - `data/datasets/synthetic/` - Synthetic test images
 
 ### Results
+- `experiments/results/csv/` - CSV experiment logs (per algorithm subdirectory)
+- `experiments/results/csv/paper/` - Extracted literature results for comparison
 - `experiments/results/rectangles/` - Solution JSON files
 - `experiments/results/visualizations/` - PNG visualizations
-- `experiments/results/logs/` - CSV experiment logs
 
 ---
 
 ## Current Configuration
 
-### GA Configuration (from CLAUDE.md)
+### GA Configuration
 ```python
 ExperimentConfig(
-    algorithm="ga_quadtree",  # or "ga_dm", "ga_random"
+    algorithm="ga_quadtree",  # or "ga_dm", "ga_gdm", "ga_random"
     pop_size=20,
     generations=100,
     p_geometry=0.2,   # Geometry mutation
@@ -253,10 +234,6 @@ ExperimentConfig(
 )
 ```
 
-### Mutation Naming
-- **GML**: Geometry + Merge + Local
-- Set `p_*=0.0` to disable a mutation type
-
 ---
 
 ## Notes & Decisions
@@ -264,62 +241,55 @@ ExperimentConfig(
 ### Crossover Strategies (Phase 1) ✅
 **Completed**: 2026-02-03
 
-**Implemented Methods**:
-1. **Subset Greedy Crossover** (`subset_greedy`) - DEFAULT
-   - Full name: Subset Crossover with Greedy Non-overlapping Extension
-   - Selects random subset from Parent 1, greedily adds non-overlapping rectangles from Parent 2
-   - Best performance and speed
-
-2. **Single-Point Crossover** (`single_point`)
-   - Split parents at random point, merge first part of P1 with second part of P2
-
-3. **Two-Point Crossover** (`two_point`)
-   - Take middle section from one parent, ends from other parent
-
-4. **Uniform Crossover** (`uniform`)
-   - Each gene selected independently with probability p (default 0.5)
-
-**Configuration**: Use `crossover_method` parameter in `run_ga()` or `ExperimentConfig`
-
 **Decision**: Subset Greedy Crossover selected as default for production use based on best performance characteristics.
 
 ### Graph-Based Decomposition (Phase 2) ✅
 **Completed**: 2026-02-16
 
-**Implementation**: Flow network-based approach for optimal rectangle decomposition
-
-**Key Features**:
-- Flow network construction for minimum rectangle cover problem
-- Multiple optimization levels available
-- Experiments show suboptimal performance in some cases but good time performance
-- Implemented in `src/algorithms/graph_based.py`
-
-**Notes**:
-- Literature claims this is optimal approach
-- Current implementation shows very good performance timewise
-- Minimal rectangle count achieved in most cases
+- Flow network-based approach for optimal rectangle decomposition
+- Good time performance; minimal rectangle count achieved in most cases
 - Some edge cases where optimal cut is missed
 
-**Next Algorithm**: Morphological Decomposition - recursive greedy approach finding biggest possible squares/rectangles
+### Delta Method & Generalized Delta Method (Phase 2) ✅
+**Completed**: 2026-03-24
+
+- DM renamed from earlier "RLE" implementation — it is the Delta Method from the literature
+- GDM produces significantly fewer rectangles than DM by merging identical-interval rows/columns
+- GDM integrated into GA as initialization strategy and guided local mutation operator
+- Dual-direction (row-wise + column-wise) evolution added for GA exploration
+
+### Morphological Decomposition (Phase 2) ✅
+**Completed**: 2026-03-24
+
+- Largest-rectangle-first greedy strategy
+- Morphological+GDM hybrid variant with coverage threshold added to GA pipeline
+- Benchmarked on research dataset
+
+### Benchmarking Status (Phase 3) 🔄
+**Updated**: 2026-04-03
+
+- Results collected for: DM, GDM, GA+GDM, Graph-Based, Morphological, Quadtree
+- Literature comparison data available in `experiments/results/csv/paper/`
+- Remaining: ILP runs, full analysis
 
 ### Algorithm Implementation Decisions (Phase 2)
-_To be filled during implementation_
+- GDM supersedes the earlier "Generalized Delta Method" placeholder — it is fully implemented
 
 ### Performance Observations (Phase 3)
-_To be filled during benchmarking_
+_To be filled after full benchmarking and comparison with literature._
 
 ### CUDA Implementation Notes (Phase 4)
-_To be filled if CUDA parallelization is needed_
+_To be filled if CUDA parallelization is needed._
 
 ---
 
 ## Thesis Integration
 
 ### Comparison Targets
-Results extracted from literature papers are in thesis figures/tables. These will be used as benchmark targets for algorithm comparison.
+Extracted literature results are in `experiments/results/csv/paper/GDM_M-GDM_SBD_CBD_research_rectangles.csv`. These will serve as benchmark targets for algorithm comparison.
 
 ### Dataset
-`research_leafs_binary` dataset corresponds to images used in referenced papers, enabling direct comparison of algorithm performance.
+`research_leafs_binary` dataset corresponds to images used in referenced papers, enabling direct performance comparison.
 
 ---
 
