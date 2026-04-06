@@ -1,6 +1,6 @@
-"""Run morphological decomposition experiments on binary images.
+"""Run greedy largest-rectangle decomposition experiments on binary images.
 
-This script runs the morphological (largest-rectangle-first) decomposition
+This script runs the largest-rectangle-first (histogram-based) decomposition
 algorithm on image directories and saves results, rectangles, and
 visualizations for analysis.
 """
@@ -57,7 +57,7 @@ def save_solution_rectangles(
     """
     image_stem = Path(image_name).stem
 
-    save_dir = output_dir / "morphological" / dataset_name / run_id
+    save_dir = output_dir / "largest_rect" / dataset_name / run_id
     save_dir.mkdir(parents=True, exist_ok=True)
 
     filename = f"{image_stem}_rects_{rect_count}.json"
@@ -72,7 +72,7 @@ def save_solution_rectangles(
         ],
         "config": {
             "algorithm": config.algorithm,
-            "morphological_coverage": config.morphological_coverage,
+            "largest_rect_coverage": config.largest_rect_coverage,
         },
         "metrics": metrics
     }
@@ -122,7 +122,7 @@ def run_experiments(
     run_id: str = "run1",
     coverage: float = 1.0,
 ):
-    """Run morphological decomposition experiments on images.
+    """Run largest-rectangle decomposition experiments on images.
 
     Parameters
     ----------
@@ -139,7 +139,8 @@ def run_experiments(
     coverage : float, optional
         Stop once this fraction of foreground pixels is covered
         (default: 1.0 — full coverage). Values below 1.0 produce
-        fewer rectangles but leave some pixels uncovered.
+        fewer rectangles but leave some pixels uncovered (residual
+        covered by GDM).
 
     """
     # Setup paths
@@ -170,27 +171,27 @@ def run_experiments(
     )
 
     print("=" * 70)
-    print(f"MORPHOLOGICAL DECOMPOSITION EXPERIMENTS - {mode_str}")
+    print(f"LARGEST-RECT DECOMPOSITION EXPERIMENTS - {mode_str}")
     print("=" * 70)
     print(f"Directory: {image_dir_name}")
     print(f"Run ID: {run_id}")
     print(f"Coverage threshold: {coverage}")
     print(f"Images to process: {len(image_paths)}")
     print(
-        f"Algorithm: morphological "
-        f"(largest-rectangle-first, deterministic)"
+        f"Algorithm: largest_rect "
+        f"(greedy largest-rectangle-first, histogram-based)"
     )
     print("=" * 70)
 
     config = ExperimentConfig(
-        name=f"morphological_{image_dir_name}_{run_id}",
+        name=f"largest_rect_{image_dir_name}_{run_id}",
         seed=None,
-        algorithm="morphological",
-        morphological_coverage=coverage,
+        algorithm="largest_rect",
+        largest_rect_coverage=coverage,
     )
 
     logger = CSVLogger(
-        "morphological",
+        "largest_rect",
         str(project_root / "experiments/results/csv/"),
         f"{image_dir_name}/{run_id}",
     )
@@ -230,8 +231,8 @@ def run_experiments(
                 img_path.name, config, metrics, history
             )
 
-            print(f"  ✓ Rectangles: {rect_count}")
-            print(f"  ✓ Time: {metrics['execution_time_sec']:.1f}s")
+            print(f"  Rectangles: {rect_count}")
+            print(f"  Time: {metrics['execution_time_sec']:.1f}s")
 
             rect_path = save_solution_rectangles(
                 img_path.name,
@@ -243,13 +244,15 @@ def run_experiments(
                 image_dir_name,
                 run_id=run_id,
             )
-            print(f"  ✓ Rectangles saved: "
+            print(f"  Rectangles saved: "
                   f"{rect_path.relative_to(project_root)}")
 
             img = np.load(img_path)
             img = (img > 0).astype(int)
 
-            viz_subdir = viz_dir / "morphological" / image_dir_name / run_id
+            viz_subdir = (
+                viz_dir / "largest_rect" / image_dir_name / run_id
+            )
             viz_subdir.mkdir(parents=True, exist_ok=True)
 
             viz_filename = f"{img_path.stem}_rects_{rect_count}.png"
@@ -258,12 +261,12 @@ def run_experiments(
             draw_solution(
                 img, rectangles, save_path=str(viz_path), show=False
             )
-            print(f"  ✓ Visualization: "
+            print(f"  Visualization: "
                   f"{viz_path.relative_to(project_root)}")
 
         except Exception as e:
             print(f"FAILED")
-            print(f"  ✗ ERROR: {e}")
+            print(f"  ERROR: {e}")
             logger.log_error(img_path.name, str(e))
 
     total_elapsed = time.time() - total_start
@@ -273,8 +276,8 @@ def run_experiments(
     print("=" * 70)
     print(f"Total time: {total_elapsed/60:.1f} minutes")
     print(f"Results saved to: {logger.results_csv}")
-    print(f"Rectangles saved to: {rect_dir / 'morphological'}")
-    print(f"Visualizations saved to: {viz_dir / 'morphological'}")
+    print(f"Rectangles saved to: {rect_dir / 'largest_rect'}")
+    print(f"Visualizations saved to: {viz_dir / 'largest_rect'}")
 
 
 def main():
@@ -282,7 +285,7 @@ def main():
     run_experiments(
         image_dir_name="leafs_binary_fix",
         max_images=None,
-        run_id="run6",
+        run_id="run1",
         coverage=0.90,
     )
 

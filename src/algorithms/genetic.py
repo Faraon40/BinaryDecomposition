@@ -14,8 +14,8 @@ from src.utils.utils import draw_solution
 from src.algorithms.dm import init_population_dm
 from src.algorithms.gdm import init_population_gdm, gdm_decomposition
 from src.algorithms.quadtree import init_population_quadtree
-from src.algorithms.morphological import (
-    init_population_morphological,
+from src.algorithms.largest_rect import (
+    init_population_largest_rect,
     largest_rect_in_image,
 )
 
@@ -1323,8 +1323,8 @@ def run_ga(
         patience: Generations without improvement before stopping.
         seed: Random seed for reproducibility (default: None).
         init_method: Population initialization method:
-            "dm" (default), "random", "quadtree", "morphological",
-            "gdm", or "mixed" (pop_size//3 each of dm, morphological, random).
+            "dm" (default), "random", "quadtree", "largest_rect",
+            "gdm", or "mixed" (pop_size//3 each of dm, largest_rect, random).
         verbose: Print progress information (default: True).
         mutation_geometry: Probability of geometry mutation (G)
             (default: 0.05). Set to 0.0 to disable.
@@ -1340,7 +1340,7 @@ def run_ga(
             Removes one rectangle; repair() refills the freed region.
         mutation_largest: Probability of largest-rect mutation (R)
             (default: 0.05). Replaces a region with the largest
-            uncovered rectangle found by the morphological scan.
+            uncovered rectangle found by the largest-rect scan.
         repair_coverage_prob: Probability of applying coverage repair after
             each mutation (default: 1.0). Overlap trimming is always applied.
             Values below 1.0 allow uncovered pixels to persist, penalised
@@ -1513,21 +1513,21 @@ def run_ga(
             population = init_population_random(img, integral, pop_size)
         elif init_method == "quadtree":
             population = init_population_quadtree(img, integral, pop_size)
-        elif init_method == "morphological":
-            population = init_population_morphological(img, integral, pop_size)
+        elif init_method == "largest_rect":
+            population = init_population_largest_rect(img, integral, pop_size)
         # elif init_method == "mixed":
         #     n_dm = pop_size // 3
-        #     n_morph = pop_size // 3
-        #     n_rand = pop_size - n_dm - n_morph
+        #     n_lrf = pop_size // 3
+        #     n_rand = pop_size - n_dm - n_lrf
         #     population = (
         #         init_population_dm(img, integral, n_dm)
-        #         + init_population_morphological(img, integral, n_morph)
+        #         + init_population_largest_rect(img, integral, n_lrf)
         #         + init_population_random(img, integral, n_rand)
         #     )
         else:
             raise ValueError(
                 f"Unknown init_method: {init_method}. "
-                f"Use 'dm', 'gdm', 'random', 'quadtree', 'morphological', "
+                f"Use 'dm', 'gdm', 'random', 'quadtree', 'largest_rect', "
                 f"or 'mixed'."
             )
         if verbose:

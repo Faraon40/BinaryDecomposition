@@ -1,10 +1,13 @@
-"""Morphological decomposition for binary images.
+"""Greedy largest-rectangle-first decomposition for binary images.
 
-This module implements largest-rectangle-first decomposition as a
-standalone algorithm and as a GA initialization strategy.  At each
-step the largest axis-aligned rectangle that fits entirely within
-uncovered foreground pixels is found and placed, until all foreground
-pixels are covered.
+This module implements a greedy decomposition that at each step finds
+and places the largest axis-aligned rectangle fitting entirely within
+uncovered foreground pixels, using the classic histogram-based
+largest-rectangle-in-a-matrix algorithm.  The process repeats until
+all foreground pixels are covered.
+
+The algorithm is also used as a GA initialization strategy
+(``init_population_largest_rect``).
 """
 
 import os
@@ -171,12 +174,12 @@ def largest_rect_in_image(
     return best_rect
 
 
-def morphological_decomposition(
+def largest_rect_decomposition(
     img: np.ndarray,
     rng: Optional[random.Random] = None,
     coverage_threshold: float = 0.95,
 ) -> List[Rectangle]:
-    """Decompose a binary image using largest-rectangle-first strategy.
+    """Decompose a binary image using greedy largest-rectangle-first strategy.
 
     Repeatedly places the largest valid rectangle of uncovered
     foreground pixels until ``coverage_threshold`` fraction of all
@@ -217,25 +220,25 @@ def morphological_decomposition(
     return rects
 
 
-def run_morphological(
+def run_largest_rect(
     img: np.ndarray,
     coverage_threshold: float = 0.95,
     verbose: bool = False,
 ) -> List[Rectangle]:
-    """Run morphological decomposition, completing residual with GDM.
+    """Run largest-rectangle-first decomposition, completing residual with GDM.
 
-    Morphological stops once ``coverage_threshold`` fraction of
-    foreground pixels is covered, then GDM covers the remaining
-    pixels.  This avoids the prohibitive runtime of full morphological
-    decomposition on large images while still producing large
-    rectangles for the dominant foreground regions.
+    The greedy largest-rectangle pass stops once ``coverage_threshold``
+    fraction of foreground pixels is covered, then GDM covers the
+    remaining pixels.  This avoids the prohibitive runtime of a full
+    pass on large images while still producing large rectangles for the
+    dominant foreground regions.
 
     Args:
         img: Binary image (2-D NumPy array of 0/1 values).
-        coverage_threshold: Stop morphological once this fraction of
+        coverage_threshold: Stop the greedy pass once this fraction of
             foreground pixels is covered, then complete with GDM
-            (default: 0.95).  Use 1.0 for pure morphological
-            decomposition (slow on large images).
+            (default: 0.95).  Use 1.0 for a pure greedy pass (slow on
+            large images).
         verbose: If True, print rectangle counts and elapsed time.
 
     Returns:
@@ -245,12 +248,12 @@ def run_morphological(
     from src.algorithms.gdm import gdm_decomposition
 
     t0 = time.time()
-    rects = morphological_decomposition(
+    rects = largest_rect_decomposition(
         img, rng=None, coverage_threshold=coverage_threshold
     )
 
     if coverage_threshold < 1.0:
-        # Build covered mask from morphological rectangles
+        # Build covered mask from greedy rectangles
         covered = np.zeros_like(img, dtype=np.uint8)
         for x, y, w, h in rects:
             covered[y:y + h, x:x + w] = 1
@@ -265,19 +268,19 @@ def run_morphological(
     if verbose:
         elapsed = time.time() - t0
         mode = (
-            f"morphological+GDM (coverage={coverage_threshold})"
-            if coverage_threshold < 1.0 else "morphological"
+            f"largest_rect+GDM (coverage={coverage_threshold})"
+            if coverage_threshold < 1.0 else "largest_rect"
         )
         print(f"{mode}: {len(rects)} rectangles in {elapsed:.4f}s")
     return rects
 
 
-def init_population_morphological(
+def init_population_largest_rect(
     img: np.ndarray,
     integral: np.ndarray,
     pop_size: int,
 ) -> List[Chromosome]:
-    """Initialize GA population using stochastic morphological decomposition.
+    """Initialize GA population using stochastic largest-rectangle decomposition.
 
     Each member of the population is produced by a fresh
     :class:`random.Random` instance seeded from ``os.urandom``, so
@@ -300,7 +303,9 @@ def init_population_morphological(
     rng = random.Random()
     seed_bytes = os.urandom(8)
     rng.seed(int.from_bytes(seed_bytes, "big"))
-    rects = morphological_decomposition(img, rng=rng, coverage_threshold=0.95)
+    rects = largest_rect_decomposition(
+        img, rng=rng, coverage_threshold=0.95
+    )
     for _ in range(pop_size):
         population.append(Chromosome(rects))
     return population

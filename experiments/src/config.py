@@ -23,8 +23,8 @@ class ExperimentConfig:
         auto-generated at runtime for GA algorithms.
     algorithm : str
         Algorithm variant: "ga_dm", "ga_gdm", "ga_random", "ga_qtd",
-        "ga_morph", "ga_mixed", "quadtree", "graph_based",
-        "dm", "gdm", or "morphological".
+        "ga_lrf", "ga_mixed", "quadtree", "graph_based",
+        "dm", "gdm", or "largest_rect".
     pop_size : int, optional
         Population size for GA (default: 100).
     generations : int, optional
@@ -69,8 +69,8 @@ class ExperimentConfig:
         If False, use adaptive min_size based on image size (default: True).
     quadtree_trim : bool, optional
         Trim mixed leaf rectangles using GDM (default: True).
-    morphological_coverage : float, optional
-        Stop morphological decomposition once this fraction of foreground
+    largest_rect_coverage : float, optional
+        Stop largest-rect decomposition once this fraction of foreground
         pixels is covered (default: 1.0 — full coverage).
 
     """
@@ -103,8 +103,8 @@ class ExperimentConfig:
     quadtree_full_decomposition: bool = True
     quadtree_trim: bool = True
 
-    # Morphological parameters
-    morphological_coverage: float = 0.95
+    # Largest-rect parameters
+    largest_rect_coverage: float = 0.95
 
     def get_mutation_combo_code(self) -> str:
         """Get mutation combination code (e.g., 'GML', 'G', 'NONE').

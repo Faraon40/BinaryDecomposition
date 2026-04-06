@@ -63,13 +63,13 @@
 - **Status**: Implemented and benchmarked; used as GA initialization and guided mutation
 - **Reference**: Spiliotis & Mertzios (1998), Suk et al. (2012)
 
-#### Morphological Decomposition ✅ NEW
+#### Largest-Rect Decomposition ✅
 - **Algorithm**: Greedy largest-rectangle-first decomposition
-- **Features**: At each step, finds and places the largest axis-aligned rectangle fitting in uncovered foreground pixels
-- **Implementation**: `src/algorithms/morphological.py`
-- **Experiment script**: `experiments/scripts/run_morphological.py`
+- **Features**: At each step, finds and places the largest axis-aligned rectangle fitting in uncovered foreground pixels (histogram-based)
+- **Implementation**: `src/algorithms/largest_rect.py`
+- **Experiment script**: `experiments/scripts/run_largest_rect.py`
 - **Status**: Implemented and benchmarked on research dataset
-- **GA hybrid**: Morphological+GDM hybrid with coverage threshold added to GA pipeline
+- **GA hybrid**: Largest-Rect+GDM hybrid with coverage threshold added to GA pipeline
 
 #### Infrastructure
 - **Experiment framework**: Config system, runner, metrics, CSV logging
@@ -137,11 +137,11 @@
   - Implementation: `src/algorithms/gdm.py`
   - Experiment script: `experiments/scripts/run_gdm.py`
 
-- [x] **Morphological Decomposition** ✅ (2026-03-24)
-  - Largest-rectangle-first greedy decomposition
-  - Morphological+GDM hybrid variant added to GA pipeline
-  - Implementation: `src/algorithms/morphological.py`
-  - Experiment script: `experiments/scripts/run_morphological.py`
+- [x] **Largest-Rect Decomposition** ✅ (2026-03-24)
+  - Largest-rectangle-first greedy decomposition (histogram-based)
+  - Largest-Rect+GDM hybrid variant added to GA pipeline
+  - Implementation: `src/algorithms/largest_rect.py`
+  - Experiment script: `experiments/scripts/run_largest_rect.py`
 
 **Notes**: DM and GDM correspond to "Delta Method" and "Generalized Delta Method" from thesis — previously incorrectly called "RLE".
 
@@ -189,7 +189,7 @@
 - `src/algorithms/quadtree.py` - Quadtree implementation ✅
 - `src/algorithms/dm.py` - Delta Method ✅
 - `src/algorithms/gdm.py` - Generalized Delta Method ✅
-- `src/algorithms/morphological.py` - Morphological (largest-rect-first) ✅
+- `src/algorithms/largest_rect.py` - Largest-Rect (greedy largest-rectangle-first) ✅
 - `src/solvers/ilp_solver_cbc.py` - ILP with CBC ✅
 - `src/solvers/ilp_solver_gurobi.py` - ILP with Gurobi ✅
 - `src/algorithms/graph_based.py` - Graph-Based ✅
@@ -198,7 +198,7 @@
 - `experiments/scripts/run_ga.py` ✅
 - `experiments/scripts/run_gdm.py` ✅
 - `experiments/scripts/run_dm.py` ✅
-- `experiments/scripts/run_morphological.py` ✅
+- `experiments/scripts/run_largest_rect.py` ✅
 - `experiments/scripts/run_quadtree.py` ✅
 - `experiments/scripts/run_graph_based.py` ✅
 - `experiments/scripts/run_ilp_cbc.py` ✅

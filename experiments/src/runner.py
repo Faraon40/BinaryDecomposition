@@ -72,7 +72,7 @@ def run_single_experiment(
 
     elif config.algorithm in [
         "ga_dm", "ga_gdm", "ga_random", "ga_qtd",
-        "ga_morph", "ga_mixed",
+        "ga_lrf", "ga_mixed",
     ]:
         # Map algorithm name to GA init method
         _init_map = {
@@ -80,7 +80,7 @@ def run_single_experiment(
             "ga_gdm": "gdm",
             "ga_random": "random",
             "ga_qtd": "quadtree",
-            "ga_morph": "morphological",
+            "ga_lrf": "largest_rect",
             "ga_mixed": "mixed",
         }
         init_method = _init_map[config.algorithm]
@@ -128,11 +128,11 @@ def run_single_experiment(
         generation_history = []
         generations_used = None
 
-    elif config.algorithm == "morphological":
-        from src.algorithms.morphological import run_morphological
-        solution = run_morphological(
+    elif config.algorithm == "largest_rect":
+        from src.algorithms.largest_rect import run_largest_rect
+        solution = run_largest_rect(
             img,
-            coverage_threshold=config.morphological_coverage,
+            coverage_threshold=config.largest_rect_coverage,
             verbose=False,
         )
         generation_history = []
@@ -142,8 +142,8 @@ def run_single_experiment(
         raise ValueError(
             f"Invalid algorithm: {config.algorithm}. "
             f"Must be 'ga_dm', 'ga_gdm', 'ga_random', 'ga_qtd', "
-            f"'ga_morph', 'ga_mixed', 'quadtree', "
-            f"'graph_based', 'dm', 'gdm', or 'morphological'."
+            f"'ga_lrf', 'ga_mixed', 'quadtree', "
+            f"'graph_based', 'dm', 'gdm', or 'largest_rect'."
         )
 
     execution_time = time.time() - start_time
