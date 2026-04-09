@@ -6,6 +6,8 @@ results, including rectangle overlays and concave vertex visualization.
 
 from typing import List, Optional
 
+import random
+
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -66,6 +68,9 @@ def draw_solution(
     plt.figure(figsize=(10, 10))
     plt.imshow(img, cmap="gray", origin="upper", extent=[0, width, height, 0])
 
+    palette = COLOR_PALETTE[:]
+    random.shuffle(palette)
+
     rects = (
         rectangles.rectangles
         if hasattr(rectangles, "rectangles")
@@ -74,7 +79,7 @@ def draw_solution(
 
     for idx, rect in enumerate(rects):
         x, y, w, h = map(int, rect)
-        color = COLOR_PALETTE[idx % len(COLOR_PALETTE)]
+        color = palette[idx % len(palette)]
         plt.gca().add_patch(
             plt.Rectangle(
                 (x, y), w, h,
