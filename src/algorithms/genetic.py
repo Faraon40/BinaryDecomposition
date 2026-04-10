@@ -465,6 +465,54 @@ def subset_greedy_crossover(
     return Chromosome(rects)
 
 
+def subset_greedy_crossover_relaxed(
+    p1: Chromosome,
+    p2: Chromosome,
+    img: np.ndarray,
+    integral: np.ndarray,
+) -> Chromosome:
+    """Subset Crossover with Relaxed Overlap Tolerance and Repair.
+
+    Variant of subset_greedy_crossover that skips overlap filtering
+    during gene merging, allowing conflicting rectangles from both
+    parents into the candidate pool. Overlaps are resolved afterwards
+    by repair_overlaps, which trims or discards conflicting rectangles
+    in order-dependent (random) fashion.
+
+    This produces noisier, more exploratory offspring compared to the
+    strict greedy variant, because the repair outcome depends on the
+    shuffled candidate order rather than deterministic dominance of P1.
+
+    Args:
+        p1: First parent chromosome.
+        p2: Second parent chromosome.
+        img: Binary image.
+        integral: Integral image.
+
+    Returns:
+        New child chromosome.
+
+    """
+    if not p1.rectangles or not p2.rectangles:
+        return Chromosome(p1.rectangles or p2.rectangles)
+
+    # Select random subset from Parent 1
+    subset_size = random.randint(1, len(p1.rectangles))
+    candidates = random.sample(p1.rectangles, subset_size)
+
+    # Add all valid rectangles from Parent 2 without overlap check
+    for r in p2.rectangles:
+        if is_valid_rectangle_integral(integral, r):
+            candidates.append(r)
+
+    # Shuffle so repair order is random (not biased toward P1)
+    random.shuffle(candidates)
+
+    rects = repair_overlaps(candidates, img, integral)
+
+    return Chromosome(rects)
+
+
 def single_point_crossover(
     p1: Chromosome,
     p2: Chromosome,
@@ -1347,8 +1395,9 @@ def run_ga(
             by fitness, which promotes more exploratory mutations.
         crossover_method: Crossover method to use (default: "subset_greedy").
             Options: "subset_greedy" (Subset Crossover with Greedy
-            Non-overlapping Extension), "single_point", "two_point",
-            "uniform".
+            Non-overlapping Extension), "subset_greedy_relaxed" (same but
+            allows overlaps then repairs - more exploratory), "single_point",
+            "two_point", "uniform".
 
     Returns:
         Tuple of (best_chromosome, generation_history).
@@ -1371,6 +1420,7 @@ def run_ga(
     # Map crossover method name to function
     crossover_methods = {
         "subset_greedy": subset_greedy_crossover,
+        "subset_greedy_relaxed": subset_greedy_crossover_relaxed,
         "single_point": single_point_crossover,
         "two_point": two_point_crossover,
         "uniform": uniform_crossover,
@@ -1379,7 +1429,8 @@ def run_ga(
     if crossover_method not in crossover_methods:
         raise ValueError(
             f"Unknown crossover_method: {crossover_method}. "
-            f"Use 'subset_greedy', 'single_point', 'two_point', or 'uniform'."
+            f"Use 'subset_greedy', 'subset_greedy_relaxed', "
+            f"'single_point', 'two_point', or 'uniform'."
         )
 
     crossover_fn = crossover_methods[crossover_method]
@@ -1668,8 +1719,8 @@ def main():
     ])
 
     # Load the .npy file
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-13_binary.npy")
-    img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
 
@@ -1691,9 +1742,9 @@ def main():
         pop_size=20,
         generations=500,
         patience=20,
-        seed=None,
-        init_method="gdm",
-        crossover_method="subset_greedy",
+        seed=1,
+        init_method="largest_rect",
+        crossover_method="subset_greedy_relaxed",
         mutation_delete=0.2,
         mutation_split=0.2,
         mutation_geometry=0.3,
