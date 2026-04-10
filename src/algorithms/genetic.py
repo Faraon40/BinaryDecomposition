@@ -65,8 +65,8 @@ def fitness(
     chrom: Chromosome,
     img: np.ndarray,
     penalty_extra: float = 2.0,
-    penalty_overlap: float = 1.1,
-    penalty_count: float = 5.0,
+    penalty_overlap: float = 1.5,
+    penalty_count: float = 10.0,
 ) -> float:
     """Calculate fitness of a chromosome using a two-phase hierarchical scoring.
 
