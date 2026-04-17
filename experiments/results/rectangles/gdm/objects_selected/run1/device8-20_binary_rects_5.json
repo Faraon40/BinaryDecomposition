@@ -1,0 +1,47 @@
+{
+  "image_name": "device8-20_binary.npy",
+  "rectangle_count": 5,
+  "rectangles": [
+    [
+      63,
+      109,
+      444,
+      1
+    ],
+    [
+      63,
+      110,
+      445,
+      26
+    ],
+    [
+      62,
+      136,
+      446,
+      85
+    ],
+    [
+      63,
+      221,
+      445,
+      2
+    ],
+    [
+      226,
+      223,
+      121,
+      273
+    ]
+  ],
+  "config": {
+    "algorithm": "gdm"
+  },
+  "metrics": {
+    "rectangles": 5,
+    "rectangle_count": 5,
+    "final_fitness": null,
+    "execution_time": 0.03,
+    "execution_time_sec": 0.03,
+    "generations_used": null
+  }
+}

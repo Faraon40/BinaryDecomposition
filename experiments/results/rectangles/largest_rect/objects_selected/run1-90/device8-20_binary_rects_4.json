@@ -1,0 +1,42 @@
+{
+  "image_name": "device8-20_binary.npy",
+  "rectangle_count": 4,
+  "rectangles": [
+    [
+      63,
+      109,
+      444,
+      114
+    ],
+    [
+      226,
+      223,
+      121,
+      273
+    ],
+    [
+      62,
+      136,
+      1,
+      85
+    ],
+    [
+      507,
+      110,
+      1,
+      113
+    ]
+  ],
+  "config": {
+    "algorithm": "largest_rect",
+    "largest_rect_coverage": 0.9
+  },
+  "metrics": {
+    "rectangles": 4,
+    "rectangle_count": 4,
+    "final_fitness": null,
+    "execution_time": 0.17,
+    "execution_time_sec": 0.17,
+    "generations_used": null
+  }
+}
