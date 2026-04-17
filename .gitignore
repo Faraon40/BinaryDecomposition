@@ -182,7 +182,7 @@ cython_debug/
 .cursorindexingignore
 
 /data/datasets/leafs/
-/data/datasets/leafs_binary/npy/
+/data/datasets/leafs_unique_color/npy/
 /data/datasets/objects_binary/npy/
 /data/datasets/objects_gifs/
 /data/datasets/objects/

@@ -458,19 +458,19 @@ if __name__ == "__main__":
     ])
 
     # Load test image
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-14_binary.npy")
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Ginkgo_biloba_4_binary.npy")
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
 
     img = img_loaded
     img = (img > 0).astype(int)
 
     # Show original image first
     print("Original image (without decomposition):")
-    draw_solution(img, [])
+    draw_solution(img, [], show=True)
 
     # Run quadtree decomposition
     rects, _ = run_quadtree(img, full_decomposition=True, trim=True, verbose=True)
 
     print("\nDecomposed image:")
-    draw_solution(img, rects)
+    draw_solution(img, rects, show=True)
