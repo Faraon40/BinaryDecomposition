@@ -120,14 +120,14 @@ def run_experiments(
     image_dir_name: str,
     max_images: int = None,
     run_id: str = "run1",
-    coverage: float = 1.0,
+    coverage: float = 0.9,
 ):
     """Run largest-rectangle decomposition experiments on images.
 
     Parameters
     ----------
     image_dir_name : str
-        Directory name under data/datasets/ (e.g., "leafs_binary",
+        Directory name under data/datasets/ (e.g., "leafs_unique_color",
         "research_leafs_binary", "objects_binary").
     max_images : int, optional
         Maximum number of images to process. If None, processes all

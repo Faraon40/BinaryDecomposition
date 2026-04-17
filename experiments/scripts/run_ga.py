@@ -163,7 +163,7 @@ def run_experiments(
     Parameters
     ----------
     image_dir_name : str
-        Directory name under data/datasets/ (e.g., "leafs_binary",
+        Directory name under data/datasets/ (e.g., "leafs_unique_color",
         "research_leafs_binary", "objects_binary").
     seed : int, optional
         Random seed for reproducibility (default: None).
