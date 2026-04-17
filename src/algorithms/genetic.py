@@ -343,15 +343,19 @@ def init_population_random(
     img: np.ndarray,
     integral: np.ndarray,
     pop_size: int,
-    max_attempts: int = 1000,
+    max_attempts: int = 100,
+    coverage_threshold: float = 0.8,
 ) -> List[Chromosome]:
-    """Initialize rectangles with random rectangles.
+    """Initialize population with random valid rectangles.
 
        Args:
            img: Binary image.
            integral: Integral image.
            pop_size: Population size.
-           max_attempts: Max attempts per individual.
+           max_attempts: Max attempts per individual before handing off
+               to repair_coverage.
+           coverage_threshold: Stop random phase when this fraction of
+               1-pixels is covered; remainder is filled deterministically.
 
        Returns:
            List of initialized chromosomes.
@@ -360,48 +364,37 @@ def init_population_random(
     height, width = img.shape
     population = []
 
-    # Precompute all pixels with value 1
     ones = [tuple(p) for p in np.argwhere(img == 1)]
+    total_ones = len(ones)
 
     for _ in range(pop_size):
 
         rects = []
-
-        # Local copy of uncovered pixels
         uncovered = set(ones)
-
         attempts = 0
 
         while uncovered and attempts < max_attempts:
 
-            # Random uncovered pixel
-            y0, x0 = random.choice(tuple(uncovered))
+            covered_frac = (total_ones - len(uncovered)) / total_ones
+            if covered_frac >= coverage_threshold:
+                break
 
-            # Random rectangle size
+            y0, x0 = random.choice(tuple(uncovered))
             max_w = width - x0
             max_h = height - y0
-
             w = random.randint(1, max_w)
             h = random.randint(1, max_h)
-
             rect = (x0, y0, w, h)
 
             if is_valid_rectangle_integral(integral, rect):
-
                 rects.append(rect)
-
-                # Remove covered pixels from uncovered set
                 for y in range(y0, y0 + h):
                     for x in range(x0, x0 + w):
-                        if (y, x) in uncovered:
-                            uncovered.remove((y, x))
+                        uncovered.discard((y, x))
 
             attempts += 1
 
-        # Repair remaining uncovered pixels (full coverage during init)
-        rects = repair_overlaps(rects, img, integral)
-        rects = repair_coverage(rects, img, integral)
-
+        rects = repair_coverage(rects, img, integral, p_coverage=1.0)
         population.append(Chromosome(rects))
 
     return population
@@ -1401,7 +1394,7 @@ def run_ga(
 
     Returns:
         Tuple of (best_chromosome, generation_history).
-        generation_history: List of best rectangle counts per generation.
+        generation_history: List of (rect_count, fitness) tuples per generation.
 
     """
     start_time = time.time()
@@ -1463,7 +1456,7 @@ def run_ga(
 
             population.sort(key=lambda c: c.fitness, reverse=True)
             best = population[0]
-            ev_history.append(len(best.rectangles))
+            ev_history.append((len(best.rectangles), best.fitness))
 
             if verbose:
                 print(
@@ -1582,7 +1575,11 @@ def run_ga(
                 f"or 'mixed'."
             )
         if verbose:
-            print(f"Initial population: {len(population[0].rectangles)} rectangles")
+            _rc = [len(c.rectangles) for c in population]
+            print(
+                f"Initial population: "
+                f"min={min(_rc)} max={max(_rc)} avg={sum(_rc)/len(_rc):.1f} rectangles"
+            )
         inject_fn = lambda n: init_population_dm(img, integral, n)
         best_chrom, generation_history = _evolve(population, inject_fn)
 
@@ -1719,9 +1716,9 @@ def main():
     ])
 
     # Load the .npy file
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-20_binary.npy")
@@ -1741,10 +1738,10 @@ def main():
         img,
         pop_size=20,
         generations=500,
-        patience=20,
-        seed=1,
-        init_method="largest_rect",
-        crossover_method="subset_greedy_relaxed",
+        patience=5,
+        seed=None,
+        init_method="random",
+        crossover_method="subset_greedy",
         mutation_delete=0.2,
         mutation_split=0.2,
         mutation_geometry=0.3,
