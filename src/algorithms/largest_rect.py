@@ -10,7 +10,6 @@ The algorithm is also used as a GA initialization strategy
 (``init_population_largest_rect``).
 """
 
-import os
 import random
 import time
 from typing import List, Optional, Tuple
@@ -108,7 +107,6 @@ def largest_rect_in_histogram(
 def largest_rect_in_image(
     img: np.ndarray,
     covered: np.ndarray,
-    rng: Optional[random.Random] = None,
 ) -> Optional[Rectangle]:
     """Find the largest rectangle of uncovered foreground pixels.
 
@@ -120,10 +118,6 @@ def largest_rect_in_image(
     Args:
         img: Binary image (2-D array of 0/1 values).
         covered: Boolean/uint8 mask of already-covered pixels.
-        rng: Optional :class:`random.Random` instance.  When provided,
-            a small random perturbation ``[0, 2)`` is added to each
-            positive histogram bar before the histogram scan to break
-            ties diversely without collecting all ties explicitly.
 
     Returns:
         Rectangle ``(x, y, width, height)`` of the largest uncovered
@@ -143,40 +137,21 @@ def largest_rect_in_image(
             else:
                 heights[col] = 0
 
-        if rng is not None:
-            scan_heights = [
-                h + rng.random() * 2 if h > 0 else 0
-                for h in heights
-            ]
-        else:
-            scan_heights = heights
-
-        bx, bw, bh_scan = largest_rect_in_histogram(scan_heights)
+        bx, bw, bh = largest_rect_in_histogram(heights)
 
         if bw == 0:
             continue
 
-        # Recover integer height from the perturbed histogram
-        bh = int(bh_scan) if rng is None else min(
-            int(bh_scan), heights[bx]
-        )
-        # Re-derive height from unperturbed histogram for correctness
-        if rng is not None:
-            # Actual height is the minimum unperturbed bar in [bx, bx+bw)
-            bh = min(heights[bx: bx + bw])
-
         area = bw * bh
         if area > best_area:
             best_area = area
-            y = row - bh + 1
-            best_rect = (bx, y, bw, bh)
+            best_rect = (bx, row - bh + 1, bw, bh)
 
     return best_rect
 
 
 def largest_rect_decomposition(
     img: np.ndarray,
-    rng: Optional[random.Random] = None,
     coverage_threshold: float = 0.95,
 ) -> List[Rectangle]:
     """Decompose a binary image using greedy largest-rectangle-first strategy.
@@ -189,10 +164,8 @@ def largest_rect_decomposition(
 
     Args:
         img: Binary image (2-D array of 0/1 values).
-        rng: Optional :class:`random.Random` instance for stochastic
-            tie-breaking.  Pass ``None`` for the deterministic version.
         coverage_threshold: Stop once this fraction of foreground pixels
-            is covered (default: 1.0 — full coverage).
+            is covered (default: 0.95).
 
     Returns:
         List of non-overlapping rectangles covering foreground pixels
@@ -210,7 +183,7 @@ def largest_rect_decomposition(
         covered_count = int(covered[img == 1].sum())
         if covered_count >= total * coverage_threshold:
             break
-        rect = largest_rect_in_image(img, covered, rng=rng)
+        rect = largest_rect_in_image(img, covered)
         if rect is None:
             break
         x, y, w, h = rect
@@ -249,16 +222,14 @@ def run_largest_rect(
 
     t0 = time.time()
     rects = largest_rect_decomposition(
-        img, rng=None, coverage_threshold=coverage_threshold
+        img, coverage_threshold=coverage_threshold
     )
 
     if coverage_threshold < 1.0:
-        # Build covered mask from greedy rectangles
         covered = np.zeros_like(img, dtype=np.uint8)
         for x, y, w, h in rects:
             covered[y:y + h, x:x + w] = 1
 
-        # Residual: foreground pixels not yet covered
         residual = ((img == 1) & (covered == 0)).astype(np.uint8)
 
         if residual.any():
@@ -280,32 +251,28 @@ def init_population_largest_rect(
     integral: np.ndarray,
     pop_size: int,
 ) -> List[Chromosome]:
-    """Initialize GA population using stochastic largest-rectangle decomposition.
+    """Initialize GA population using largest-rectangle decomposition.
 
-    Each member of the population is produced by a fresh
-    :class:`random.Random` instance seeded from ``os.urandom``, so
-    every individual is independently randomised.
+    Decomposition is run once deterministically.  Each individual
+    receives a shuffled copy of the resulting rectangles, so the
+    population is diverse with respect to rectangle order, which
+    affects crossover and overlap-repair outcomes.
 
     Args:
         img: Binary image.
-        integral: Precomputed integral image (unused here, kept for
-            API consistency with other init functions).
+        integral: Precomputed integral image (unused, kept for API
+            consistency with other init functions).
         pop_size: Number of chromosomes to generate.
 
     Returns:
         List of initialized Chromosome objects.
 
     """
-    from src.algorithms.genetic import repair
+    rects = largest_rect_decomposition(img, coverage_threshold=0.95)
 
     population: List[Chromosome] = []
-    integral = build_integral(img)
-    rng = random.Random()
-    seed_bytes = os.urandom(8)
-    rng.seed(int.from_bytes(seed_bytes, "big"))
-    rects = largest_rect_decomposition(
-        img, rng=rng, coverage_threshold=0.95
-    )
     for _ in range(pop_size):
-        population.append(Chromosome(rects))
+        shuffled = rects[:]
+        random.shuffle(shuffled)
+        population.append(Chromosome(shuffled))
     return population
