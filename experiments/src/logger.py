@@ -9,7 +9,9 @@ import csv
 from pathlib import Path
 from typing import Dict, List, Set
 
-_GA_ALGORITHMS = {"ga_dm", "ga_gdm", "ga_random", "ga_qtd", "ga_morph"}
+_GA_ALGORITHMS = {
+    "ga_dm", "ga_gdm", "ga_random", "ga_qtd", "ga_lrf", "ga_mixed",
+}
 
 
 class CSVLogger:
@@ -94,6 +96,7 @@ class CSVLogger:
                     'image_name',
                     'generation',
                     'best_rectangle_count',
+                    'fitness',
                 ])
 
     def log_result(
@@ -141,11 +144,16 @@ class CSVLogger:
         if generation_history:
             with open(self.generations_csv, 'a', newline='') as f:
                 writer = csv.writer(f)
-                for gen, rect_count in enumerate(generation_history):
+                for gen, entry in enumerate(generation_history):
+                    if isinstance(entry, tuple):
+                        rect_count, fit_val = entry
+                    else:
+                        rect_count, fit_val = entry, None
                     writer.writerow([
                         image_name,
                         gen,
                         rect_count,
+                        fit_val,
                     ])
 
     def get_processed_images(self) -> Set[str]:
