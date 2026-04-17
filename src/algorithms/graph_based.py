@@ -1,4 +1,4 @@
-"""Graph-based (FER) algorithm for binary image rectangle decomposition."""
+"""Graph-based (GBD) algorithm for binary image rectangle decomposition."""
 import networkx as nx
 import numpy as np
 from collections import defaultdict, deque
@@ -1336,7 +1336,8 @@ def main():
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Sorbus_aria_1_binary.npy")
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Vitis_vinifera_3_binary.npy")
     # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-3_binary.npy")
+    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-3_binary.npy")
+    img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-14_binary.npy")
 
     # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Ginkgo_biloba_4_binary.npy")
 
