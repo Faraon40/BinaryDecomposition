@@ -16,7 +16,7 @@ import random
 from experiments.scripts.run_ga import run_experiments
 
 # Best init method from EXP-2 (update after EXP-2 results are analyzed)
-BEST_INIT_ALGO = "ga_gdm"
+BEST_INIT_ALGO = "ga_dm"
 
 CROSSOVER_METHODS: list[str] = [
     "subset_greedy",
@@ -28,9 +28,9 @@ CROSSOVER_METHODS: list[str] = [
 
 POP_SIZE = 20
 GENERATIONS = 100
-PATIENCE = 15
+PATIENCE = 8
 
-SEEDS = random.sample(range(10**8), 3)
+SEEDS = random.sample(range(10**8), 2)
 
 DATASETS: list[tuple[str, int | None]] = [
     ("analysis/objects_unique", 10),

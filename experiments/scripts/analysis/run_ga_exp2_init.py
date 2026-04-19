@@ -29,7 +29,7 @@ INIT_METHODS: dict[str, str] = {
 POP_SIZE = 20
 GENERATIONS = 150
 PATIENCE = 6
-CROSSOVER = "subset_greedy"
+CROSSOVER = "subset_greedy_relaxed"
 
 # 3 seeds for statistical reliability
 SEEDS = random.sample(range(10**8), 3)

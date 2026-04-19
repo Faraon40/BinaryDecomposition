@@ -1,0 +1,11 @@
+image_name,seed,pop_size,rectangle_count,execution_time_sec,final_fitness,generations_used
+Actinidia_arguta.npy,512496,8,720,28.05,433749.0,10
+Amygdalus_communis.npy,512496,8,285,6.3,116696.0,9
+Caragana_arborescens.npy,512496,8,148,1.61,35139.0,19
+Carya_ovata.npy,512496,8,910,83.35,1141562.0,10
+Celtis_occidentalis.npy,512496,8,634,29.24,401157.0,19
+Clematis_vitalba.npy,512496,8,1104,24.78,480488.0,10
+Cornus_alba.npy,512496,8,1047,52.86,1242816.0,15
+Cotoneaster_horizontalis.npy,512496,8,121,3.74,20254.0,15
+Euonymus_verrucosa.npy,512496,8,394,7.63,173909.0,11
+Ginkgo_biloba.npy,512496,8,960,56.34,388814.0,56

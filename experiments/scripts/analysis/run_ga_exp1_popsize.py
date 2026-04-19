@@ -26,7 +26,7 @@ GENERATIONS = 100
 SEEDS = random.sample(range(10**8), 3)
 
 DATASETS: list[tuple[str, int | None]] = [
-    ("analysis/objects_unique", 10),
+    # ("analysis/objects_unique", 10),
     ("analysis/leafs_subset", 10),
 ]
 
@@ -42,11 +42,11 @@ MUTATION_DEFAULTS = dict(
 )
 
 # ── A) pop_size sweep ─────────────────────────────────────────────────
-POP_SIZES = [3, 5, 8, 10, 15]
+POP_SIZES = [3, 5, 8, 10, 15, 20, 30, 50, 100]
 FIXED_PATIENCE_FOR_POP = 8
 
 # ── B) patience sweep ─────────────────────────────────────────────────
-PATIENCE_VALUES = [3, 5, 8, 12]
+PATIENCE_VALUES = [3, 5, 8, 12, 15]
 FIXED_POP_SIZE_FOR_PATIENCE = 10
 
 
@@ -83,7 +83,7 @@ def main() -> None:
                     algorithm=ALGO,
                     crossover_method=CROSSOVER,
                     max_images=max_images,
-                    run_id=f"exp4_popsize/{pop_size}",
+                    run_id=f"exp1_popsize/{pop_size}",
                     **MUTATION_DEFAULTS,
                 )
 
@@ -109,7 +109,7 @@ def main() -> None:
                     algorithm=ALGO,
                     crossover_method=CROSSOVER,
                     max_images=max_images,
-                    run_id=f"exp4_patience/{patience}",
+                    run_id=f"exp1_patience/{patience}",
                     **MUTATION_DEFAULTS,
                 )
 
