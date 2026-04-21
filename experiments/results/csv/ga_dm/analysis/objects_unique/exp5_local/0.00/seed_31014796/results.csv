@@ -1,0 +1,6 @@
+image_name,seed,pop_size,rectangle_count,execution_time_sec,final_fitness,generations_used
+Bone-10_binary.npy,31014796,20,381,11.09,27570.0,17
+Comma-10_binary.npy,31014796,20,166,15.02,67109.0,51
+Glas-10_binary.npy,31014796,20,210,12.68,49595.0,20
+HCircle-10_binary.npy,31014796,20,127,7.14,47774.0,26
+Heart-10_binary.npy,31014796,20,412,10.66,99829.0,16

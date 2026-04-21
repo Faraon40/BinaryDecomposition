@@ -1,0 +1,6 @@
+image_name,seed,pop_size,rectangle_count,execution_time_sec,final_fitness,generations_used
+Actinidia_arguta.npy,90426487,20,694,86.0,434009.0,33
+Amygdalus_communis.npy,90426487,20,285,20.69,116696.0,7
+Caragana_arborescens.npy,90426487,20,146,7.23,35159.0,15
+Carya_ovata.npy,90426487,20,889,305.02,1141772.0,23
+Celtis_occidentalis.npy,90426487,20,611,73.3,401387.0,26
