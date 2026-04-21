@@ -131,6 +131,9 @@ direction: str = "random",
 def run_gdm(img: np.ndarray, verbose: bool = False) -> List[Rectangle]:
     """Run Generalized Delta Method decomposition on a binary image.
 
+    Runs both row-wise and column-wise decomposition and returns the
+    result with fewer rectangles.
+
     Args:
         img: Binary image (2-D NumPy array of 0/1 values).
         verbose: If True, print rectangle count and elapsed time.
@@ -140,12 +143,15 @@ def run_gdm(img: np.ndarray, verbose: bool = False) -> List[Rectangle]:
 
     """
     t0 = time.time()
-    rects = gdm_decomposition(img)
+    rects_row = gdm_decomposition(img, direction="row")
+    rects_col = gdm_decomposition(img, direction="col")
+    rects = rects_row if len(rects_row) <= len(rects_col) else rects_col
     if verbose:
         elapsed = time.time() - t0
         print(
             f"Generalized Delta Method decomposition: {len(rects)} rectangles "
             f"in {elapsed:.4f}s"
+            f" (row={len(rects_row)}, col={len(rects_col)})"
         )
     return rects
 

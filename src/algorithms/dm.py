@@ -135,7 +135,9 @@ def run_dm(img: np.ndarray, verbose: bool = False) -> List[Rectangle]:
     """
     t0 = time.time()
     integral = build_integral(img)
-    rects = dm_decomposition(img, integral)
+    rects_row = dm_decomposition(img, direction="row")
+    rects_col = dm_decomposition(img, direction="col")
+    rects = rects_row if len(rects_row) <= len(rects_col) else rects_col
     if verbose:
         elapsed = time.time() - t0
         print(
