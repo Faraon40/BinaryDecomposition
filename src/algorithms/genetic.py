@@ -1428,13 +1428,11 @@ def run_ga(
 
     crossover_fn = crossover_methods[crossover_method]
 
-    def _evolve(population, inject_fn, label=""):
+    def _evolve(population, label=""):
         """Run the GA evolution loop on the given population.
 
         Args:
             population: Initial list of Chromosome objects.
-            inject_fn: Callable(n) returning n fresh Chromosome objects
-                used for diversity injection on stagnation.
             label: Optional prefix for verbose output (e.g. "[row] ").
 
         Returns:
@@ -1479,17 +1477,6 @@ def run_ga(
                     )
                 break
 
-            # Diversity injection on stagnation
-            if ev_stagnant > 0 and ev_stagnant % (patience // 2) == 0:
-                n_inject = max(1, pop_size // 3)
-                injected = inject_fn(n_inject)
-                population = population[: pop_size - n_inject] + injected
-                if verbose:
-                    print(
-                        f"{label}  [inject] {n_inject} fresh chromosomes "
-                        f"at gen {g}"
-                    )
-
             new_pop = population[:elite_size]
             while len(new_pop) < pop_size:
                 top_candidates = population[
@@ -1530,15 +1517,9 @@ def run_ga(
                 pop = init_population_dm(
                     img, integral, pop_size, direction=direction
                 )
-                inject_fn = lambda n, d=direction: init_population_gdm(
-                    img, integral, n, direction=d
-                )
             else:
                 pop = init_population_gdm(
                     img, integral, pop_size, direction=direction
-                )
-                inject_fn = lambda n, d=direction: init_population_gdm(
-                    img, integral, n, direction=d
                 )
             label = f"[{direction}] " if verbose else ""
             if verbose:
@@ -1546,7 +1527,7 @@ def run_ga(
                     f"{label}Initial population: "
                     f"{len(pop[0].rectangles)} rectangles"
                 )
-            best, history = _evolve(pop, inject_fn, label=label)
+            best, history = _evolve(pop, label=label)
             if best_overall is None or best.fitness > best_overall.fitness:
                 best_overall = best
                 hist_overall = history
@@ -1580,8 +1561,7 @@ def run_ga(
                 f"Initial population: "
                 f"min={min(_rc)} max={max(_rc)} avg={sum(_rc)/len(_rc):.1f} rectangles"
             )
-        inject_fn = lambda n: init_population_dm(img, integral, n)
-        best_chrom, generation_history = _evolve(population, inject_fn)
+        best_chrom, generation_history = _evolve(population)
 
     # Post-processing: guarantee full coverage.
     # Mutations with p_repair < 1.0 can leave missing pixels — fill them.
@@ -1737,11 +1717,11 @@ def main():
     best, history = run_ga(
         img,
         pop_size=20,
-        generations=500,
+        generations=100,
         patience=5,
         seed=None,
-        init_method="random",
-        crossover_method="subset_greedy",
+        init_method="dm",
+        crossover_method="subset_greedy_relaxed",
         mutation_delete=0.2,
         mutation_split=0.2,
         mutation_geometry=0.3,
