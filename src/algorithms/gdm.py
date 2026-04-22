@@ -30,7 +30,7 @@ from src.utils.types import Chromosome, Rectangle
 
 def gdm_decomposition(
     img: np.ndarray,
-direction: str = "random",
+    direction: str = "random",
 ) -> List[Rectangle]:
     """Decompose a binary image using the Generalized Delta Method.
 

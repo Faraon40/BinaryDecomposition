@@ -12298,8 +12298,8 @@
     "rectangles": 2048,
     "rectangle_count": 2048,
     "final_fitness": null,
-    "execution_time": 0.4,
-    "execution_time_sec": 0.4,
+    "execution_time": 0.84,
+    "execution_time_sec": 0.84,
     "generations_used": null
   }
 }

@@ -3370,8 +3370,8 @@
     "rectangles": 560,
     "rectangle_count": 560,
     "final_fitness": null,
-    "execution_time": 0.08,
-    "execution_time_sec": 0.08,
+    "execution_time": 0.19,
+    "execution_time_sec": 0.19,
     "generations_used": null
   }
 }

@@ -6034,8 +6034,8 @@
     "rectangles": 1004,
     "rectangle_count": 1004,
     "final_fitness": null,
-    "execution_time": 0.02,
-    "execution_time_sec": 0.02,
+    "execution_time": 0.05,
+    "execution_time_sec": 0.05,
     "generations_used": null
   }
 }
