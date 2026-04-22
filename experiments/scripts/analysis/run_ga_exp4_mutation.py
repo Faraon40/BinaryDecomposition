@@ -5,10 +5,10 @@ Dve cielené otázky:
   B) Potvrdiť že p_merge >= 0.10 je dôležité? (p_local fixné = 0.50)
 
 Init: ga_gdm. Ostatné mutácie fixné.
-Aktualizuj BEST_POP_SIZE po analýze EXP-1.
+Aktualizuj BEST_POP_SIZE po analýze EXP-2.
 
 Prerequisites:
-  Run EXP-1 (run_ga_exp1_popsize) first and update BEST_POP_SIZE below.
+  Run EXP-2 (run_ga_exp2_popsize) first and update BEST_POP_SIZE below.
 
 Usage:
   python -m experiments.scripts.analysis.run_ga_exp4_mutation
@@ -18,27 +18,27 @@ import random
 
 from experiments.scripts.run_ga import run_experiments
 
-ALGO = "ga_gdm"
-CROSSOVER = "subset_greedy"
+ALGO = "ga_dm"
+CROSSOVER = "subset_greedy_relaxed"
 GENERATIONS = 100
-PATIENCE = 15
+PATIENCE = 6
 
-# Aktualizuj po EXP-1
+
 BEST_POP_SIZE = 20
 
 SEEDS = random.sample(range(10**8), 3)
 
 DATASETS: list[tuple[str, int | None]] = [
-    ("analysis/objects_unique", 10),
-    ("analysis/leafs_subset", 10),
+    ("analysis/objects_unique", 5),
+    ("analysis/leafs_subset", 5),
 ]
 
 # A) Vplyv p_local — p_merge fixné
 P_LOCAL_VALUES = [0.0, 0.25, 0.5, 0.75]
-FIXED_P_MERGE_FOR_LOCAL = 0.10
+FIXED_P_MERGE_FOR_LOCAL = 0.20
 
 # B) Vplyv p_merge — p_local fixné
-P_MERGE_VALUES = [0.0, 0.05, 0.10, 0.20]
+P_MERGE_VALUES = [0.05, 0.10, 0.20]
 FIXED_P_LOCAL_FOR_MERGE = 0.50
 
 BASE_MUTATIONS = dict(
@@ -96,7 +96,7 @@ def main() -> None:
         for p_merge in P_MERGE_VALUES:
             for seed in SEEDS:
                 run_idx += 1
-                run_id = f"exp5_merge/{p_merge:.2f}"
+                run_id = f"exp5_merge_local/{p_merge:.2f}"
                 print(
                     f"\n{'='*60}\n"
                     f"RUN {run_idx}/{total_runs} [4B]: "

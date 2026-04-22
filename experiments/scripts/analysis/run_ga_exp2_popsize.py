@@ -1,6 +1,5 @@
-"""EXP-1 (DM): Vplyv pop_size a patience na kvalitu a rýchlosť GA s DM init.
+"""EXP-2 (DM): Vplyv pop_size a patience na kvalitu a rýchlosť GA s DM init.
 
-Analogický experiment k run_ga_exp1_popsize.py, ale s DM inicializáciou.
 Cieľ: porovnať či DM init (väčšia diverzita populácie) reaguje inak na
 pop_size a patience ako GDM init.
 
@@ -10,24 +9,32 @@ Dva samostatné sweepy:
 
 Init metóda: dm (ga_dm).
 
-Usage:
-  python -m experiments.scripts.analysis.run_ga_exp1_dm_popsize
+Usage (celý experiment):
+  python -m experiments.scripts.analysis.run_ga_exp2_dm_popsize
+
+Usage (4 paralelné procesy):
+  python -m experiments.scripts.analysis.run_ga_exp2_popsize --sweep popsize --dataset objects
+  python -m experiments.scripts.analysis.run_ga_exp2_popsize --sweep popsize --dataset leafs
+  python -m experiments.scripts.analysis.run_ga_exp2_popsize --sweep patience --dataset objects
+  python -m experiments.scripts.analysis.run_ga_exp2_popsize --sweep patience --dataset leafs
 """
 
+
+import argparse
 import random
 
 from experiments.scripts.run_ga import run_experiments
 
 ALGO = "ga_dm"
-CROSSOVER = "subset_greedy"
+CROSSOVER = "subset_greedy_relaxed"
 GENERATIONS = 100
 
-SEEDS = random.sample(range(10**8), 3)
+SEEDS = random.sample(range(10**8), 4)
 
-DATASETS: list[tuple[str, int | None]] = [
-    ("analysis/objects_unique", 10),
-    ("analysis/leafs_subset", 10),
-]
+DATASETS: dict[str, tuple[str, int | None]] = {
+    "objects": ("analysis/objects_unique", 10),
+    "leafs": ("analysis/leafs_subset", 10),
+}
 
 MUTATION_DEFAULTS = dict(
     p_delete=0.2,
@@ -42,33 +49,25 @@ MUTATION_DEFAULTS = dict(
 
 # ── A) pop_size sweep ─────────────────────────────────────────────────
 POP_SIZES = [3, 5, 8, 10, 15, 20, 30, 50, 100]
-FIXED_PATIENCE_FOR_POP = 8
+FIXED_PATIENCE_FOR_POP = 10
 
 # ── B) patience sweep ─────────────────────────────────────────────────
-PATIENCE_VALUES = [3, 5, 8, 12, 15]
-FIXED_POP_SIZE_FOR_PATIENCE = 10
+PATIENCE_VALUES = [3, 5, 8, 12, 15, 20, 25]
+FIXED_POP_SIZE_FOR_PATIENCE = 20
 
 
-def main() -> None:
-    """Run pop_size and patience sweeps with DM init."""
-    runs_a = len(POP_SIZES) * len(SEEDS) * len(DATASETS)
-    runs_b = len(PATIENCE_VALUES) * len(SEEDS) * len(DATASETS)
-    total_runs = runs_a + runs_b
+def run_popsize_sweep(datasets: list[tuple[str, int | None]]) -> None:
+    """Run pop_size sweep for the given datasets."""
+    total = len(POP_SIZES) * len(SEEDS) * len(datasets)
     run_idx = 0
-
-    print(f"Seeds: {SEEDS}")
-    print(f"EXP-1A (DM): pop_size sweep  ({runs_a} runs)")
-    print(f"EXP-1B (DM): patience sweep  ({runs_b} runs)")
-    print(f"Total:        {total_runs} runs\n")
-
-    # ── A) pop_size sweep ─────────────────────────────────────────────
-    for dataset_name, max_images in DATASETS:
+    print(f"EXP-2A (DM): pop_size sweep — {total} runs\n")
+    for dataset_name, max_images in datasets:
         for pop_size in POP_SIZES:
             for seed in SEEDS:
                 run_idx += 1
                 print(
                     f"\n{'='*60}\n"
-                    f"RUN {run_idx}/{total_runs} [1A-DM]: "
+                    f"RUN {run_idx}/{total} [2A-DM]: "
                     f"pop_size={pop_size}, patience={FIXED_PATIENCE_FOR_POP}, "
                     f"seed={seed}, dataset={dataset_name}\n"
                     f"{'='*60}"
@@ -82,18 +81,23 @@ def main() -> None:
                     algorithm=ALGO,
                     crossover_method=CROSSOVER,
                     max_images=max_images,
-                    run_id=f"exp1_popsize/{pop_size}",
+                    run_id=f"exp2_popsize/{pop_size}",
                     **MUTATION_DEFAULTS,
                 )
 
-    # ── B) patience sweep ─────────────────────────────────────────────
-    for dataset_name, max_images in DATASETS:
+
+def run_patience_sweep(datasets: list[tuple[str, int | None]]) -> None:
+    """Run patience sweep for the given datasets."""
+    total = len(PATIENCE_VALUES) * len(SEEDS) * len(datasets)
+    run_idx = 0
+    print(f"EXP-2B (DM): patience sweep — {total} runs\n")
+    for dataset_name, max_images in datasets:
         for patience in PATIENCE_VALUES:
             for seed in SEEDS:
                 run_idx += 1
                 print(
                     f"\n{'='*60}\n"
-                    f"RUN {run_idx}/{total_runs} [1B-DM]: "
+                    f"RUN {run_idx}/{total} [2B-DM]: "
                     f"pop_size={FIXED_POP_SIZE_FOR_PATIENCE}, "
                     f"patience={patience}, "
                     f"seed={seed}, dataset={dataset_name}\n"
@@ -108,9 +112,37 @@ def main() -> None:
                     algorithm=ALGO,
                     crossover_method=CROSSOVER,
                     max_images=max_images,
-                    run_id=f"exp1_patience/{patience}",
+                    run_id=f"exp2_patience/{patience}",
                     **MUTATION_DEFAULTS,
                 )
+
+
+def main() -> None:
+    """Run pop_size and patience sweeps with DM init."""
+    parser = argparse.ArgumentParser()
+    parser.add_argument(
+        "--sweep",
+        choices=["popsize", "patience"],
+        help="Which sweep to run (default: both)",
+    )
+    parser.add_argument(
+        "--dataset",
+        choices=list(DATASETS.keys()),
+        help="Dataset to process: objects | leafs (default: all)",
+    )
+    args = parser.parse_args()
+
+    datasets = [DATASETS[args.dataset]] if args.dataset else list(DATASETS.values())
+    sweeps = [args.sweep] if args.sweep else ["popsize", "patience"]
+
+    print(f"Seeds: {SEEDS}")
+    print(f"Datasets: {[d for d, _ in datasets]}")
+    print(f"Sweeps: {sweeps}\n")
+
+    if "popsize" in sweeps:
+        run_popsize_sweep(datasets)
+    if "patience" in sweeps:
+        run_patience_sweep(datasets)
 
 
 if __name__ == "__main__":

@@ -4,8 +4,8 @@ Runs GA with each of the 5 crossover variants across multiple seeds.
 Results saved under ``exp3_crossover/<method>/`` run_ids.
 
 Prerequisites:
-  Run EXP-2 (run_ga_exp2_init) first to determine the best init method.
-  Update BEST_INIT_ALGO below after analyzing EXP-2 results.
+  Run EXP-1 (run_ga_exp1_init) first to determine the best init method.
+  Update BEST_INIT_ALGO below after analyzing EXP-1 results.
 
 Usage:
   python -m experiments.scripts.analysis.run_ga_exp3_crossover

@@ -1,15 +1,12 @@
-"""EXP-2: Compare all GA initialization methods + convergence curves.
+"""EXP-1: Compare all GA initialization methods + convergence curves.
 
 Runs GA with each initialization method across multiple seeds.
-Results saved under ``exp2_init/<method>/`` run_ids for dashboard analysis.
+Results saved under ``exp1_init/<method>/`` run_ids for dashboard analysis.
 Per-generation history (generations.csv) is logged automatically,
 providing convergence curves with 3 seeds (replaces convergence_analysis).
 
-Prerequisites:
-  Run EXP-1 (run_ga_exp1_popsize) first to determine optimal pop_size.
-
 Usage:
-  python -m experiments.scripts.analysis.run_ga_exp2_init
+  python -m experiments.scripts.analysis.run_ga_exp1_init
 """
 
 import random
@@ -28,7 +25,7 @@ INIT_METHODS: dict[str, str] = {
 # Fixed GA hyperparameters for fair comparison
 POP_SIZE = 20
 GENERATIONS = 150
-PATIENCE = 6
+PATIENCE = 8
 CROSSOVER = "subset_greedy_relaxed"
 
 # 3 seeds for statistical reliability
@@ -63,7 +60,7 @@ def main() -> None:
         for method_name, algo in INIT_METHODS.items():
             for seed in SEEDS:
                 run_idx += 1
-                run_id = f"exp2_init/{method_name}"
+                run_id = f"exp1_init/{method_name}"
                 print(
                     f"\n{'='*60}\n"
                     f"RUN {run_idx}/{total_runs}: "
