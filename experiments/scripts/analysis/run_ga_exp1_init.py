@@ -10,6 +10,7 @@ Usage:
 """
 
 import random
+from concurrent.futures import ProcessPoolExecutor, as_completed
 
 from experiments.scripts.run_ga import run_experiments
 
@@ -23,63 +24,67 @@ INIT_METHODS: dict[str, str] = {
 }
 
 # Fixed GA hyperparameters for fair comparison
-POP_SIZE = 20
+POP_SIZE = 15
 GENERATIONS = 150
-PATIENCE = 8
+PATIENCE = 12
 CROSSOVER = "subset_greedy_relaxed"
 
-# 3 seeds for statistical reliability
-SEEDS = random.sample(range(10**8), 3)
+N_SEEDS = 5
+SEEDS = random.sample(range(10**8), N_SEEDS)
 
-# Datasets and image limits
+# Datasets — quartile-stratified subsets (20 imgs each, 5 per size quartile)
 DATASETS: list[tuple[str, int | None]] = [
-    ("analysis/objects_unique", 10),
-    ("analysis/leafs_subset", 10),
+    ("analysis/objects_quartile", None),
+    # ("analysis/leafs_quartile", None),
 ]
 
 # Shared default mutation probabilities
 MUTATION_DEFAULTS = dict(
     p_delete=0.2,
     p_split=0.2,
-    p_geometry=0.3,
-    p_shift=0.05,
+    p_geometry=0.2,
+    p_shift=0.1,
     p_local=0.5,
     p_largest=0.2,
+    p_merge=0.2,
     p_repair=0.5,
-    p_merge=0.1,
 )
 
 
-def main() -> None:
-    """Run all init method comparisons."""
-    total_runs = len(INIT_METHODS) * len(SEEDS) * len(DATASETS)
-    run_idx = 0
-    print(f"Seeds: {SEEDS}")
-
+def _run_seed(seed: int) -> None:
+    """Run all methods and datasets for one seed (worker entrypoint)."""
     for dataset_name, max_images in DATASETS:
         for method_name, algo in INIT_METHODS.items():
-            for seed in SEEDS:
-                run_idx += 1
-                run_id = f"exp1_init/{method_name}"
-                print(
-                    f"\n{'='*60}\n"
-                    f"RUN {run_idx}/{total_runs}: "
-                    f"init={method_name}, seed={seed}, "
-                    f"dataset={dataset_name}\n"
-                    f"{'='*60}"
-                )
-                run_experiments(
-                    image_dir_name=dataset_name,
-                    seed=seed,
-                    pop_size=POP_SIZE,
-                    generations=GENERATIONS,
-                    patience=PATIENCE,
-                    algorithm=algo,
-                    crossover_method=CROSSOVER,
-                    max_images=max_images,
-                    run_id=run_id,
-                    **MUTATION_DEFAULTS,
-                )
+            run_id = f"exp1_init_run2/{method_name}"
+            print(f"[seed={seed}] {method_name} | {dataset_name}")
+            run_experiments(
+                image_dir_name=dataset_name,
+                seed=seed,
+                pop_size=POP_SIZE,
+                generations=GENERATIONS,
+                patience=PATIENCE,
+                algorithm=algo,
+                crossover_method=CROSSOVER,
+                max_images=max_images,
+                run_id=run_id,
+                **MUTATION_DEFAULTS,
+            )
+
+
+def main() -> None:
+    """Run all init method comparisons — one process per seed."""
+    print(f"Seeds: {SEEDS}")
+    print(f"Workers: {N_SEEDS} (one per seed)")
+
+    with ProcessPoolExecutor(max_workers=N_SEEDS) as executor:
+        futures = {executor.submit(_run_seed, seed): seed for seed in SEEDS}
+        for future in as_completed(futures):
+            seed = futures[future]
+            exc = future.exception()
+            if exc:
+                print(f"[seed={seed}] FAILED: {exc}")
+            else:
+                print(f"[seed={seed}] DONE")
 
 
 if __name__ == "__main__":
