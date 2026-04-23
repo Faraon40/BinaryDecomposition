@@ -268,8 +268,9 @@ def _load_preset(name: str) -> dict:
         If tomllib/tomli is not available for custom .toml parsing.
 
     """
-    if name in _BUILTIN_PRESETS:
-        return dict(_BUILTIN_PRESETS[name])
+    key = name[:-5] if name.endswith(".toml") else name
+    if key in _BUILTIN_PRESETS:
+        return dict(_BUILTIN_PRESETS[key])
 
     path = Path(name)
     if not path.exists():

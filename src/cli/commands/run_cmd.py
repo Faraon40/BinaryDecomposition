@@ -33,7 +33,7 @@ def handle_run(args):
         sys.exit(1)
 
     invert = getattr(args, "invert", True)
-    max_images = getattr(args, "max_images", None)
+    max_images = getattr(args, "limit", None)
 
     try:
         specs = resolve_input(args.input, invert=invert,

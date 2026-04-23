@@ -116,7 +116,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Show per-image algorithm output.",
     )
     run_p.add_argument(
-        "--max-images",
+        "--limit",
         type=int,
         metavar="N",
         default=None,
