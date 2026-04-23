@@ -20,16 +20,20 @@ from src.algorithms.dm import run_dm
 from experiments.src.metrics import calculate_metrics
 
 
-def run_single_experiment(
-    image_path: str,
-    config
+def run_single_experiment_from_array(
+    img: np.ndarray,
+    config,
 ) -> Tuple[object, Dict, List[int]]:
-    """Run a single experiment on one image.
+    """Run a single experiment on a pre-loaded image array.
+
+    Same interface as run_single_experiment but accepts an
+    already-loaded numpy array instead of a file path. Useful
+    when the image has been binarized in memory (e.g. from PNG).
 
     Parameters
     ----------
-    image_path : str
-        Path to the binary image file (.npy).
+    img : np.ndarray
+        Binary image array. Values are normalized to 0/1 int.
     config : ExperimentConfig
         Experiment configuration.
 
@@ -40,25 +44,15 @@ def run_single_experiment(
     metrics : dict
         Dictionary of metrics (from calculate_metrics).
     generation_history : list of int
-        Rectangle counts per generation (empty for quadtree).
+        Rectangle counts per generation (empty for most algos).
 
     Raises
     ------
     ValueError
         If algorithm name is invalid.
-    FileNotFoundError
-        If image file does not exist.
 
     """
-    # Load image
-    img_path = Path(image_path)
-    if not img_path.exists():
-        raise FileNotFoundError(f"Image not found: {image_path}")
-
-    img = np.load(img_path)
-    img = (img > 0).astype(int)  # Ensure 0s and 1s
-
-    # Run algorithm based on config
+    img = (img > 0).astype(int)
     start_time = time.time()
 
     if config.algorithm == "quadtree":
@@ -66,7 +60,7 @@ def run_single_experiment(
             img,
             full_decomposition=config.quadtree_full_decomposition,
             trim=config.quadtree_trim,
-            verbose=False
+            verbose=False,
         )
         generations_used = None
 
@@ -74,7 +68,6 @@ def run_single_experiment(
         "ga_dm", "ga_gdm", "ga_random", "ga_qtd",
         "ga_lrf", "ga_mixed",
     ]:
-        # Map algorithm name to GA init method
         _init_map = {
             "ga_dm": "dm",
             "ga_gdm": "gdm",
@@ -112,8 +105,7 @@ def run_single_experiment(
 
     elif config.algorithm == "graph_based":
         solution, generation_history = run_graph_based(
-            img,
-            verbose=False
+            img, verbose=False,
         )
         generations_used = None
 
@@ -141,18 +133,50 @@ def run_single_experiment(
     else:
         raise ValueError(
             f"Invalid algorithm: {config.algorithm}. "
-            f"Must be 'ga_dm', 'ga_gdm', 'ga_random', 'ga_qtd', "
-            f"'ga_lrf', 'ga_mixed', 'quadtree', "
-            f"'graph_based', 'dm', 'gdm', or 'largest_rect'."
+            f"Must be one of: ga_dm, ga_gdm, ga_random, ga_qtd, "
+            f"ga_lrf, ga_mixed, quadtree, graph_based, "
+            f"dm, gdm, largest_rect."
         )
 
     execution_time = time.time() - start_time
-
-    # Calculate metrics
     metrics = calculate_metrics(
-        solution,
-        execution_time,
-        generations_used
+        solution, execution_time, generations_used,
     )
-
     return solution, metrics, generation_history
+
+
+def run_single_experiment(
+    image_path: str,
+    config,
+) -> Tuple[object, Dict, List[int]]:
+    """Run a single experiment on one image.
+
+    Parameters
+    ----------
+    image_path : str
+        Path to the binary image file (.npy).
+    config : ExperimentConfig
+        Experiment configuration.
+
+    Returns
+    -------
+    solution : Chromosome or list of Rectangle
+        The resulting solution.
+    metrics : dict
+        Dictionary of metrics (from calculate_metrics).
+    generation_history : list of int
+        Rectangle counts per generation (empty for quadtree).
+
+    Raises
+    ------
+    ValueError
+        If algorithm name is invalid.
+    FileNotFoundError
+        If image file does not exist.
+
+    """
+    img_path = Path(image_path)
+    if not img_path.exists():
+        raise FileNotFoundError(f"Image not found: {image_path}")
+    img = np.load(img_path)
+    return run_single_experiment_from_array(img, config)
