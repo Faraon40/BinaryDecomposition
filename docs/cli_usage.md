@@ -104,7 +104,7 @@ Spustí vybraný algoritmus na jednom obrázku alebo celom priečinku.
 | `--no-viz` | Nevytvárať vizualizáciu PNG |
 | `--no-csv` | Nelogovať výsledky do CSV |
 | `--verbose` | Zobrazovať výstup algoritmu |
-| `--max-images N` | Spracovať maximálne N obrázkov (pre testovanie) |
+| `--limit N` | Spracovať maximálne N obrázkov (pre testovanie) |
 | `--dataset-name` | Vlastný názov datasetu v výstupných cestách |
 | `--invert` | Tmavý objekt na svetlom pozadí (default pre PNG) |
 | `--no-invert` | Svetlý objekt na tmavom pozadí |
