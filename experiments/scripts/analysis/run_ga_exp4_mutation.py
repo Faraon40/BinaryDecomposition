@@ -7,7 +7,7 @@ Dve cielené otázky:
 Seeds bežia paralelne (jeden proces na seed).
 
 Prerequisites:
-  Run EXP-2 first and update BEST_POP_SIZE below.
+  Run EXP-1 first and update BEST_POP_SIZE below.
 
 Usage:
   python -m experiments.scripts.analysis.run_ga_exp4_mutation
@@ -20,10 +20,10 @@ from experiments.scripts.run_ga import run_experiments
 
 ALGO = "ga_dm"
 CROSSOVER = "subset_greedy_relaxed"
+POP_SIZE = 15
 GENERATIONS = 150
 PATIENCE = 12
 
-BEST_POP_SIZE = 15
 
 N_SEEDS = 5
 SEEDS = random.sample(range(10**8), N_SEEDS)
@@ -38,7 +38,7 @@ P_LOCAL_VALUES = [0.0, 0.25, 0.5, 0.75]
 FIXED_P_MERGE_FOR_LOCAL = 0.20
 
 # B) p_merge sweep — p_local fixné
-P_MERGE_VALUES = [0.05, 0.10, 0.20]
+P_MERGE_VALUES = [0.05, 0.10, 0.20, 0.30, 0.50]
 FIXED_P_LOCAL_FOR_MERGE = 0.50
 
 BASE_MUTATIONS = dict(
@@ -59,13 +59,13 @@ def _run_seed(seed: int) -> None:
             run_experiments(
                 image_dir_name=dataset_name,
                 seed=seed,
-                pop_size=BEST_POP_SIZE,
+                pop_size=POP_SIZE,
                 generations=GENERATIONS,
                 patience=PATIENCE,
                 algorithm=ALGO,
                 crossover_method=CROSSOVER,
                 max_images=max_images,
-                run_id=f"exp5_local/{p_local:.2f}",
+                run_id=f"exp4_local/{p_local:.2f}",
                 p_local=p_local,
                 p_merge=FIXED_P_MERGE_FOR_LOCAL,
                 **BASE_MUTATIONS,
@@ -77,13 +77,13 @@ def _run_seed(seed: int) -> None:
             run_experiments(
                 image_dir_name=dataset_name,
                 seed=seed,
-                pop_size=BEST_POP_SIZE,
+                pop_size=POP_SIZE,
                 generations=GENERATIONS,
                 patience=PATIENCE,
                 algorithm=ALGO,
                 crossover_method=CROSSOVER,
                 max_images=max_images,
-                run_id=f"exp5_merge/{p_merge:.2f}",
+                run_id=f"exp4_merge/{p_merge:.2f}",
                 p_local=FIXED_P_LOCAL_FOR_MERGE,
                 p_merge=p_merge,
                 **BASE_MUTATIONS,

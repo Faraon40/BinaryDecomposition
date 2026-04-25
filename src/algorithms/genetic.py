@@ -1326,25 +1326,25 @@ def mutation(
 
 def run_ga(
     img: np.ndarray,
-    pop_size=20,
+    pop_size=15,
     generations=100,
     elite_size=3,
     penalty_extra=2.0,
     penalty_overlap=1.5,
     penalty_count=10.0,
-    patience=15,
+    patience=12,
     seed=None,
-    init_method="gdm",
+    init_method="dm",
+    crossover_method="subset_greedy",
     verbose=False,
     mutation_delete=0.2,
     mutation_split=0.2,
-    mutation_geometry=0.3,
-    mutation_shift=0.05,
+    mutation_geometry=0.2,
+    mutation_shift=0.1,
     mutation_local=0.5,
     mutation_largest=0.2,
+    mutation_merge=0.2,
     repair_coverage_prob=0.5,
-    mutation_merge=0.1,
-    crossover_method="subset_greedy",
 ):
     """Run the Genetic Algorithm for binary image decomposition.
 
@@ -1540,15 +1540,6 @@ def run_ga(
             population = init_population_quadtree(img, integral, pop_size)
         elif init_method == "largest_rect":
             population = init_population_largest_rect(img, integral, pop_size)
-        # elif init_method == "mixed":
-        #     n_dm = pop_size // 3
-        #     n_lrf = pop_size // 3
-        #     n_rand = pop_size - n_dm - n_lrf
-        #     population = (
-        #         init_population_dm(img, integral, n_dm)
-        #         + init_population_largest_rect(img, integral, n_lrf)
-        #         + init_population_random(img, integral, n_rand)
-        #     )
         else:
             raise ValueError(
                 f"Unknown init_method: {init_method}. "
@@ -1716,19 +1707,19 @@ def main():
 
     best, history = run_ga(
         img,
-        pop_size=20,
+        pop_size=15,
         generations=100,
-        patience=5,
+        patience=12,
         seed=None,
         init_method="dm",
         crossover_method="subset_greedy_relaxed",
         mutation_delete=0.2,
         mutation_split=0.2,
-        mutation_geometry=0.3,
+        mutation_geometry=0.2,
         mutation_local=0.5,
-        mutation_shift=0.05,
+        mutation_shift=0.1,
         mutation_largest=0.2,
-        mutation_merge=0.1,
+        mutation_merge=0.2,
         repair_coverage_prob=0.5,
         verbose=True,
     )

@@ -21,7 +21,7 @@ from experiments.scripts.run_ga import run_experiments
 
 ALGO = "ga_dm"
 CROSSOVER = "subset_greedy_relaxed"
-GENERATIONS = 100
+GENERATIONS = 150
 
 N_SEEDS = 5
 SEEDS = random.sample(range(10**8), N_SEEDS)
@@ -44,11 +44,11 @@ MUTATION_DEFAULTS = dict(
 
 # ── A) pop_size sweep ─────────────────────────────────────────────────
 POP_SIZES = [3, 5, 8, 10, 15, 20, 30, 50, 100]
-FIXED_PATIENCE_FOR_POP = 10
+FIXED_PATIENCE_FOR_POP = 12
 
 # ── B) patience sweep ─────────────────────────────────────────────────
 PATIENCE_VALUES = [3, 5, 8, 12, 15, 20, 25]
-FIXED_POP_SIZE_FOR_PATIENCE = 20
+FIXED_POP_SIZE_FOR_PATIENCE = 15
 
 
 def _run_seed(

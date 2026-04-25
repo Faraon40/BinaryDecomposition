@@ -152,7 +152,7 @@ def largest_rect_in_image(
 
 def largest_rect_decomposition(
     img: np.ndarray,
-    coverage_threshold: float = 0.95,
+    coverage_threshold: float = 0.90,
 ) -> List[Rectangle]:
     """Decompose a binary image using greedy largest-rectangle-first strategy.
 
@@ -195,7 +195,7 @@ def largest_rect_decomposition(
 
 def run_largest_rect(
     img: np.ndarray,
-    coverage_threshold: float = 0.95,
+    coverage_threshold: float = 0.90,
     verbose: bool = False,
 ) -> List[Rectangle]:
     """Run largest-rectangle-first decomposition, completing residual with GDM.
@@ -268,7 +268,7 @@ def init_population_largest_rect(
         List of initialized Chromosome objects.
 
     """
-    rects = largest_rect_decomposition(img, coverage_threshold=0.95)
+    rects = largest_rect_decomposition(img)
 
     population: List[Chromosome] = []
     for _ in range(pop_size):

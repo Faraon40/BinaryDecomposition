@@ -34,8 +34,8 @@ SEEDS = random.sample(range(10**8), N_SEEDS)
 
 # Datasets — quartile-stratified subsets (20 imgs each, 5 per size quartile)
 DATASETS: list[tuple[str, int | None]] = [
-    ("analysis/objects_quartile", None),
-    # ("analysis/leafs_quartile", None),
+    # ("analysis/objects_quartile", None),
+    ("analysis/leafs_quartile", None),
 ]
 
 # Shared default mutation probabilities

@@ -1,15 +1,5 @@
 """EXP-3: Compare all GA crossover methods.
-
-Runs GA with each of the 5 crossover variants across multiple seeds.
-Results saved under ``exp3_crossover/<method>/`` run_ids.
-
-Seeds bežia paralelne (jeden proces na seed).
-
-Prerequisites:
-  Run EXP-1 (run_ga_exp1_init) first to determine the best init method.
-
-Usage:
-  python -m experiments.scripts.analysis.run_ga_exp3_crossover
+...
 """
 
 import random
@@ -20,8 +10,8 @@ from experiments.scripts.run_ga import run_experiments
 BEST_INIT_ALGO = "ga_dm"
 
 CROSSOVER_METHODS: list[str] = [
-    "subset_greedy",
-    "subset_greedy_relaxed",
+    # "subset_greedy",
+    # "subset_greedy_relaxed",
     "single_point",
     "two_point",
     "uniform",
@@ -33,9 +23,11 @@ PATIENCE = 12
 
 N_SEEDS = 5
 SEEDS = random.sample(range(10**8), N_SEEDS)
+# Zafixujeme prvý seed pre uniformné kríženie, aby sme ho vedeli identifikovať
+FIRST_SEED = SEEDS[0]
 
 DATASETS: list[tuple[str, int | None]] = [
-    ("analysis/objects_quartile", None),
+    # ("analysis/objects_quartile", None),
     ("analysis/leafs_quartile", None),
 ]
 
@@ -55,6 +47,12 @@ def _run_seed(seed: int) -> None:
     """Run all crossover methods and datasets for one seed (worker entrypoint)."""
     for dataset_name, max_images in DATASETS:
         for crossover in CROSSOVER_METHODS:
+
+            # TEMPORÁLNA ÚPRAVA: Uniformné kríženie beží iba pre prvý seed
+            if crossover == "uniform" and seed != FIRST_SEED:
+                # print(f"[seed={seed}] SKIPPING crossover={crossover} (too slow, only 1 seed allowed)")
+                continue
+
             print(f"[seed={seed}] crossover={crossover} | {dataset_name}")
             run_experiments(
                 image_dir_name=dataset_name,
@@ -74,6 +72,7 @@ def main() -> None:
     """Run all crossover method comparisons — one process per seed."""
     print(f"Seeds: {SEEDS}")
     print(f"Workers: {N_SEEDS}")
+    print(f"Note: 'uniform' crossover will only run for seed {FIRST_SEED} (temporal restriction)")
 
     with ProcessPoolExecutor(max_workers=N_SEEDS) as executor:
         futures = {executor.submit(_run_seed, seed): seed for seed in SEEDS}

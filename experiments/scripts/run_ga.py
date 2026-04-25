@@ -370,17 +370,23 @@ def run_experiments(
 
 def main():
     """Main entry point - configure experiments here."""
-    # TEST MODE: Quick test on 5 images
+    # Hyperparametre z experimentov:
+    #   pop_size=20    (EXP-1: ďalší rast nepomáha)
+    #   patience=6     (p95 konvergencie = gen 1, p99 = gen 21)
+    #   crossover=subset_greedy_relaxed  (EXP-3: najlepší pomer kvalita/čas)
+    #   algorithm=ga_dm  (DM init = reálna evolúcia)
+
+    # PRODUCTION — leafs_selected
     run_experiments(
-        image_dir_name="objects_binary",
-        max_images=5,
-        seed=1,
-        pop_size=30,
+        image_dir_name="leafs_selected",
+        max_images=None,
+        seed=None,
+        pop_size=6,
         generations=100,
-        patience=25,
-        algorithm="ga_gdm",
-        crossover_method="subset_greedy",
-        run_id="run2",
+        patience=8,
+        algorithm="ga_dm",
+        crossover_method="subset_greedy_relaxed",
+        run_id="run1-pop6",
         p_delete=0.2,
         p_split=0.2,
         p_geometry=0.3,
@@ -391,21 +397,17 @@ def main():
         p_merge=0.1,
     )
 
-    # Algorithms: "ga_dm", "ga_gdm", "ga_random", "ga_qtd", "ga_morph"
-    # Crossover methods: "subset_greedy" (default, best - Subset Crossover
-    #                    with Greedy Non-overlapping Extension),
-    #                    "single_point", "two_point", "uniform"
-
-    # PRODUCTION MODE: Uncomment to run on all images
+    # PRODUCTION — objects_selected
     # run_experiments(
-    #     image_dir_name="leafs_binary_fix",
+    #     image_dir_name="objects_selected",
     #     max_images=None,
     #     seed=None,
-    #     pop_size=20,
+    #     pop_size=6,
     #     generations=100,
-    #     patience=25,
-    #     algorithm="ga_gdm",
-    #     crossover_method="subset_greedy",
+    #     patience=8,
+    #     algorithm="ga_dm",
+    #     crossover_method="subset_greedy_relaxed",
+    #     run_id="run1-pop6",
     #     p_delete=0.2,
     #     p_split=0.2,
     #     p_geometry=0.3,
