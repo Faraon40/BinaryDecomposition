@@ -10,8 +10,8 @@ from experiments.scripts.run_ga import run_experiments
 BEST_INIT_ALGO = "ga_dm"
 
 CROSSOVER_METHODS: list[str] = [
-    # "subset_greedy",
-    # "subset_greedy_relaxed",
+    "subset_greedy",
+    "subset_greedy_relaxed",
     "single_point",
     "two_point",
     "uniform",
@@ -27,7 +27,7 @@ SEEDS = random.sample(range(10**8), N_SEEDS)
 FIRST_SEED = SEEDS[0]
 
 DATASETS: list[tuple[str, int | None]] = [
-    # ("analysis/objects_quartile", None),
+    ("analysis/objects_quartile", None),
     ("analysis/leafs_quartile", None),
 ]
 

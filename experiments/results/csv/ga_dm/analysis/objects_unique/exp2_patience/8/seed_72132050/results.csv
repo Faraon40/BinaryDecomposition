@@ -1,0 +1,11 @@
+image_name,seed,pop_size,rectangle_count,execution_time_sec,final_fitness,generations_used
+Bone-10_binary.npy,72132050,20,381,19.27,27570.0,28
+Comma-10_binary.npy,72132050,20,184,8.28,66929.0,23
+Glas-10_binary.npy,72132050,20,190,12.48,49795.0,38
+HCircle-10_binary.npy,72132050,20,127,11.4,47774.0,43
+Heart-10_binary.npy,72132050,20,412,16.63,99829.0,26
+Misk-10_binary.npy,72132050,20,376,19.34,88651.0,21
+apple-10_binary.npy,72132050,20,131,9.37,26707.0,50
+bat-10_binary.npy,72132050,20,389,31.09,50359.0,27
+beetle-10_binary.npy,72132050,20,367,17.33,15000.0,44
+bell-10_binary.npy,72132050,20,211,17.79,77565.0,45

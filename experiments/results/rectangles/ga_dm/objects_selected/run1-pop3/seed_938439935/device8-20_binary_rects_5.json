@@ -1,0 +1,62 @@
+{
+  "image_name": "device8-20_binary.npy",
+  "rectangle_count": 5,
+  "config": {
+    "algorithm": "ga_dm",
+    "seed": 938439935,
+    "pop_size": 3,
+    "generations": 100,
+    "elite_size": 3,
+    "patience": 8,
+    "penalty": 2,
+    "crossover_method": "subset_greedy_relaxed",
+    "p_geometry": 0.3,
+    "p_merge": 0.1,
+    "p_local": 0.5,
+    "p_largest": 0.2,
+    "p_delete": 0.2,
+    "p_split": 0.2,
+    "p_shift": 0.05,
+    "p_repair": 0.5
+  },
+  "metrics": {
+    "rectangles": 5,
+    "rectangle_count": 5,
+    "final_fitness": 83797.0,
+    "execution_time": 0.24,
+    "execution_time_sec": 0.24,
+    "generations_used": 14
+  },
+  "rectangles": [
+    [
+      63,
+      221,
+      445,
+      2
+    ],
+    [
+      62,
+      136,
+      446,
+      85
+    ],
+    [
+      226,
+      223,
+      121,
+      273
+    ],
+    [
+      63,
+      110,
+      445,
+      26
+    ],
+    [
+      63,
+      109,
+      444,
+      1
+    ]
+  ]
+}

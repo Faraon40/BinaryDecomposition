@@ -1,0 +1,8 @@
+image_name,seed,pop_size,rectangle_count,execution_time_sec,final_fitness,generations_used
+Berberis_thunbergii.npy,59178873,100,91,32.19,12551.0,14
+Berberis_vulgaris.npy,59178873,100,203,49.22,45323.0,17
+Betula_papyrifera.npy,59178873,100,1048,746.87,633276.0,48
+Betula_pendula.npy,59178873,100,345,110.51,86704.0,25
+Clematis_vitalba.npy,59178873,100,1037,725.86,481158.0,33
+Fallopia_aubertii.npy,59178873,100,343,116.07,117957.0,22
+Frangula_alnus.npy,59178873,100,426,161.12,172838.0,18

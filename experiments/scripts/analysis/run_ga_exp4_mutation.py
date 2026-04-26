@@ -34,11 +34,11 @@ DATASETS: list[tuple[str, int | None]] = [
 ]
 
 # A) p_local sweep — p_merge fixné
-P_LOCAL_VALUES = [0.0, 0.25, 0.5, 0.75]
+P_LOCAL_VALUES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 FIXED_P_MERGE_FOR_LOCAL = 0.20
 
 # B) p_merge sweep — p_local fixné
-P_MERGE_VALUES = [0.05, 0.10, 0.20, 0.30, 0.50]
+P_MERGE_VALUES = [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]
 FIXED_P_LOCAL_FOR_MERGE = 0.50
 
 BASE_MUTATIONS = dict(
