@@ -155,9 +155,9 @@ GA algoritmy majú 3-vrstvový systém parametrov:
 
 | Preset | pop_size | generations | patience | Použitie |
 |--------|----------|-------------|----------|----------|
-| `default` | 30 | 100 | 5 | Štandardný beh |
-| `fast` | 10 | 30 | 3 | Rýchle testovanie |
-| `research` | 50 | 200 | 10 | Najlepšie výsledky |
+| `default` | 15 | 150 | 12 | Konfigurácia s najlepším pomerom čas/výkon — nájdená experimentmi |
+| `fast` | 10 | 30 | 3 | Rýchle testovanie — znížená populácia, skoré zastavenie |
+| `research` | 50 | 200 | 20 | Vynútená evolúcia — veľká populácia a vysoký stagnačný limit pre maximálnu kvalitu riešenia |
 
 ```bash
 # Použitie presetu
@@ -216,19 +216,19 @@ cat src/cli/presets/research.toml
 
 ```toml
 # moj_preset.toml
-pop_size = 40
+pop_size = 15
+patience = 12
 generations = 150
 elite_size = 3
 penalty = 2.0
-patience = 8
-crossover_method = "subset_greedy"
+crossover_method = "subset_greedy_relaxed"
+p_delete = 0.30
+p_split = 0.30
 p_geometry = 0.30
-p_merge = 0.10
+p_shift = 0.1
 p_local = 0.50
 p_largest = 0.20
-p_delete = 0.20
-p_split = 0.20
-p_shift = 0.05
+p_merge = 0.20
 p_repair = 0.50
 ```
 
