@@ -351,7 +351,6 @@ def quadtree_decomposition(
 
 def init_population_quadtree(
     img: np.ndarray,
-    integral: np.ndarray,
     pop_size: int,
     min_size_range: Tuple[int, int] = (2, 8),
 ) -> List[Chromosome]:
@@ -434,43 +433,3 @@ def run_quadtree(
 
     return rectangles, []
 
-
-if __name__ == "__main__":
-    """Test quadtree decomposition."""
-    from src.utils.utils import draw_solution
-
-    print("=" * 60)
-    print("Quadtree Decomposition Test")
-    print("=" * 60)
-
-    img_cactus = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ])
-
-    # Load test image
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-14_binary.npy")
-    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Ginkgo_biloba_4_binary.npy")
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/camel-1_binary.npy")
-
-    img = img_loaded
-    img = (img > 0).astype(int)
-
-    # Show original image first
-    print("Original image (without decomposition):")
-    draw_solution(img, [], show=True)
-
-    # Run quadtree decomposition
-    rects, _ = run_quadtree(img, full_decomposition=True, trim=True, verbose=True)
-
-    print("\nDecomposed image:")
-    draw_solution(img, rects, show=True)

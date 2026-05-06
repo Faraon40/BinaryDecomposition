@@ -248,7 +248,6 @@ def run_largest_rect(
 
 def init_population_largest_rect(
     img: np.ndarray,
-    integral: np.ndarray,
     pop_size: int,
 ) -> List[Chromosome]:
     """Initialize GA population using largest-rectangle decomposition.

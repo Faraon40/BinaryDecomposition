@@ -4,7 +4,6 @@ import math
 import random
 import time
 from typing import List
-from scipy import ndimage
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -421,7 +420,6 @@ def is_overlap(r1: Rectangle, r2: Rectangle) -> bool:
 def subset_greedy_crossover(
     p1: Chromosome,
     p2: Chromosome,
-    img: np.ndarray,
     integral: np.ndarray,
 ) -> Chromosome:
     """Subset Crossover with Greedy Non-overlapping Extension.
@@ -453,7 +451,6 @@ def subset_greedy_crossover(
         if not any(is_overlap(r, r2) for r2 in rects):
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
-    # rects = repair(rects, img, integral)
 
     return Chromosome(rects)
 
@@ -509,7 +506,6 @@ def subset_greedy_crossover_relaxed(
 def single_point_crossover(
     p1: Chromosome,
     p2: Chromosome,
-    img: np.ndarray,
     integral: np.ndarray,
 ) -> Chromosome:
     """Single-point crossover - split parents at random point and merge.
@@ -540,15 +536,12 @@ def single_point_crossover(
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
 
-    # Repair to ensure complete coverage
-    # rects = repair(rects, img, integral)
     return Chromosome(rects)
 
 
 def two_point_crossover(
     p1: Chromosome,
     p2: Chromosome,
-    img: np.ndarray,
     integral: np.ndarray,
 ) -> Chromosome:
     """Two-point crossover - take middle section from one parent, ends from other.
@@ -590,15 +583,12 @@ def two_point_crossover(
             if is_valid_rectangle_integral(integral, r):
                 rects.append(r)
 
-    # Repair to ensure complete coverage
-    # rects = repair(rects, img, integral)
     return Chromosome(rects)
 
 
 def uniform_crossover(
     p1: Chromosome,
     p2: Chromosome,
-    img: np.ndarray,
     integral: np.ndarray,
     p: float = 0.5,
 ) -> Chromosome:
@@ -633,9 +623,6 @@ def uniform_crossover(
             if not any(is_overlap(r, r2) for r2 in rects):
                 if is_valid_rectangle_integral(integral, r):
                     rects.append(r)
-
-    # Repair to ensure complete coverage
-    # rects = repair(rects, img, integral)
 
     return Chromosome(rects)
 
@@ -685,7 +672,6 @@ def mutate_geometry(
     # accept only valid rectangles
     if is_valid_rectangle_integral(integral, new_rect):
         rects[idx] = new_rect
-    # rects = repair(rects, img, integral)
     return rects
 
 
@@ -989,7 +975,6 @@ def mutate_local_repartition_v2(
             new_rects.append(rect)
             combined_covered[y0: y0 + h, x0: x0 + w] = 1
     rects = remaining + new_rects
-    # rects = repair(rects, img, integral)
     return rects
 
 
@@ -1133,7 +1118,6 @@ def mutate_largest_rect(
 
 def mutate_split(
     rects: List[Rectangle],
-    integral: np.ndarray,
     p_split: float = 0.05,
 ) -> List[Rectangle]:
     """Split one randomly selected rectangle into two along a random axis.
@@ -1190,7 +1174,6 @@ def mutate_split(
 
 def mutate_shift(
     rects: List[Rectangle],
-    img: np.ndarray,
     integral: np.ndarray,
     p_shift: float = 0.05,
     max_step: int = 5,
@@ -1311,9 +1294,9 @@ def mutation(
         return chrom
 
     rects = mutate_delete(rects, p_delete)
-    rects = mutate_split(rects, integral, p_split)
+    rects = mutate_split(rects, p_split)
     rects = mutate_geometry(rects, img, integral, max_step, p_geo)
-    rects = mutate_shift(rects, img, integral, p_shift, max_step)
+    rects = mutate_shift(rects, integral, p_shift, max_step)
     rects = mutate_local_repartition_gdm(rects, img, integral, p_local)
     rects = mutate_largest_rect(rects, img, integral, p_largest)
     rects = mutate_merge_v2(rects, integral, p_merge)
@@ -1328,14 +1311,14 @@ def run_ga(
     img: np.ndarray,
     pop_size=15,
     generations=100,
+    patience=12,
     elite_size=3,
     penalty_extra=2.0,
     penalty_overlap=1.5,
     penalty_count=10.0,
-    patience=12,
     seed=None,
     init_method="dm",
-    crossover_method="subset_greedy",
+    crossover_method="subset_greedy_relaxed",
     verbose=False,
     mutation_delete=0.2,
     mutation_split=0.2,
@@ -1537,9 +1520,9 @@ def run_ga(
         if init_method == "random":
             population = init_population_random(img, integral, pop_size)
         elif init_method == "quadtree":
-            population = init_population_quadtree(img, integral, pop_size)
+            population = init_population_quadtree(img, pop_size)
         elif init_method == "largest_rect":
-            population = init_population_largest_rect(img, integral, pop_size)
+            population = init_population_largest_rect(img, pop_size)
         else:
             raise ValueError(
                 f"Unknown init_method: {init_method}. "
@@ -1576,156 +1559,3 @@ def run_ga(
         )
 
     return best_chrom, generation_history
-
-
-def main():
-    """Run GA demo on sample binary image."""
-
-    img = np.array([
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-            [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
-            [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
-            [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-            [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
-            [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
-            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-            [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        ])
-
-    img_bugged_1 = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 0, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 0, 1, 1, 0, 1, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0, 1, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
-        [0, 1, 1, 0, 1, 1, 1, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
-        [0, 0, 0, 0, 1, 1, 0, 1, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ])
-
-    img_bugged_2 = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
-        [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ])
-
-    img_large = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0],
-        [0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ])
-
-    img_bugged_5 = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 1, 0],
-        [0, 0, 0, 0, 1, 1, 1, 1, 1, 0],
-        [0, 0, 0, 1, 1, 1, 1, 1, 1, 0],
-        [0, 0, 0, 1, 1, 1, 1, 1, 0, 0],
-        [0, 0, 0, 1, 1, 1, 0, 0, 0, 0],
-        [0, 0, 0, 1, 1, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ])
-
-    img_holes_1 = np.array([
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-        [0, 0, 0, 0, 0, 1, 1, 1, 0, 0],
-        [0, 1, 1, 1, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 0, 1, 1, 1, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 0, 0, 1, 0],
-        [0, 1, 1, 1, 1, 0, 0, 0, 1, 0],
-        [0, 1, 0, 1, 1, 1, 0, 1, 1, 0],
-        [0, 1, 0, 1, 1, 0, 1, 1, 1, 0],
-        [0, 1, 0, 0, 0, 0, 0, 1, 1, 0],
-        [0, 1, 1, 1, 1, 1, 1, 0, 0, 0],
-        [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
-    ])
-
-    # Load the .npy file
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/crown-6_binary.npy")
-    # img_loaded = np.load("../../data/datasets/research_leafs_binary/npy/Acer_ginnala_1_binary.npy")
-    img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-5_binary.npy")
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/butterfly-4_binary.npy")
-
-    # img_loaded = np.load("../../data/datasets/objects_binary/npy/hat-20_binary.npy")
-
-    img = img_loaded
-    img = (img > 0).astype(int)
-
-    # Display the image
-    plt.imshow(img, cmap="gray")
-    plt.title("Loaded Binary Image")
-    plt.axis("off")
-    plt.show()
-
-    print(img.shape)
-
-    best, history = run_ga(
-        img,
-        pop_size=15,
-        generations=100,
-        patience=12,
-        seed=None,
-        init_method="dm",
-        crossover_method="subset_greedy_relaxed",
-        mutation_delete=0.2,
-        mutation_split=0.2,
-        mutation_geometry=0.2,
-        mutation_local=0.5,
-        mutation_shift=0.1,
-        mutation_largest=0.2,
-        mutation_merge=0.2,
-        repair_coverage_prob=0.5,
-        verbose=True,
-    )
-
-    draw_solution(img, best.rectangles, show=True)
-
-
-if __name__ == "__main__":
-    main()
