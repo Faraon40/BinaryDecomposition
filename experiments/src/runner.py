@@ -85,21 +85,21 @@ def run_single_experiment_from_array(
             img,
             pop_size=config.pop_size,
             generations=config.generations,
+            patience=config.patience,
             elite_size=config.elite_size,
             penalty_extra=config.penalty,
-            patience=config.patience,
             seed=config.seed,
             init_method=init_method,
+            crossover_method=config.crossover_method,
             verbose=False,
-            mutation_geometry=config.p_geometry,
-            mutation_merge=config.p_merge,
-            mutation_local=config.p_local,
-            mutation_largest=config.p_largest,
             mutation_delete=config.p_delete,
             mutation_split=config.p_split,
+            mutation_geometry=config.p_geometry,
             mutation_shift=config.p_shift,
-            repair_coverage_prob=config.p_repair,
-            crossover_method=config.crossover_method,
+            mutation_local=config.p_local,
+            mutation_largest=config.p_largest,
+            mutation_merge=config.p_merge,
+            repair_coverage_prob=config.p_repair
         )
         generations_used = len(generation_history)
 
