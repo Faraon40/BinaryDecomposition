@@ -232,7 +232,7 @@ def run_experiments(
             )
 
             print(f"  Rectangles: {rect_count}")
-            print(f"  Time: {metrics['execution_time_sec']:.1f}s")
+            print(f"  Time: {metrics['execution_time_sec']:.5f}s")
 
             rect_path = save_solution_rectangles(
                 img_path.name,
@@ -274,7 +274,7 @@ def run_experiments(
     print("\n" + "=" * 70)
     print("EXPERIMENTS COMPLETE!")
     print("=" * 70)
-    print(f"Total time: {total_elapsed/60:.1f} minutes")
+    print(f"Total time: {total_elapsed/60:.5f} minutes")
     print(f"Results saved to: {logger.results_csv}")
     print(f"Rectangles saved to: {rect_dir / 'largest_rect'}")
     print(f"Visualizations saved to: {viz_dir / 'largest_rect'}")
@@ -283,27 +283,12 @@ def run_experiments(
 def main():
     """Main entry point - configure experiments here."""
     run_experiments(
-        image_dir_name="leafs_binary_fix",
+        image_dir_name="objects_unique",
         max_images=None,
         run_id="run1",
         coverage=0.90,
     )
 
-    # Different coverage - saves separately as run2:
-    # run_experiments(
-    #     image_dir_name="objects_binary",
-    #     max_images=1,
-    #     run_id="run2",
-    #     coverage=0.95,
-    # )
-
-    # PRODUCTION MODE: Uncomment to run on all images
-    # run_experiments(
-    #     image_dir_name="research_leafs_binary",
-    #     max_images=None,
-    #     run_id="run1",
-    #     coverage=1.0,
-    # )
 
 
 if __name__ == "__main__":

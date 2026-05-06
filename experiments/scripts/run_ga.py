@@ -316,7 +316,7 @@ def run_experiments(
             # Print summary
             print(f"  ✓ Rectangles: {rect_count}")
             print(f"  ✓ Fitness: {metrics.get('final_fitness', 'N/A'):.4f}")
-            print(f"  ✓ Time: {metrics['execution_time_sec']:.1f}s")
+            print(f"  ✓ Time: {metrics['execution_time_sec']:.5f}s")
             print(f"  ✓ Generations: {metrics['generations_used']}")
 
             # Save rectangles to JSON
@@ -361,7 +361,7 @@ def run_experiments(
     print("\n" + "=" * 70)
     print("EXPERIMENTS COMPLETE!")
     print("=" * 70)
-    print(f"Total time: {total_elapsed/60:.1f} minutes")
+    print(f"Total time: {total_elapsed/60:.5f} minutes")
     print(f"Results saved to: {logger.results_csv}")
     print(f"Generations saved to: {logger.generations_csv}")
     print(f"Rectangles saved to: {rect_dir}")
@@ -370,53 +370,26 @@ def run_experiments(
 
 def main():
     """Main entry point - configure experiments here."""
-    # Hyperparametre z experimentov:
-    #   pop_size=20    (EXP-1: ďalší rast nepomáha)
-    #   patience=6     (p95 konvergencie = gen 1, p99 = gen 21)
-    #   crossover=subset_greedy_relaxed  (EXP-3: najlepší pomer kvalita/čas)
-    #   algorithm=ga_dm  (DM init = reálna evolúcia)
 
-    # PRODUCTION — leafs_selected
     run_experiments(
-        image_dir_name="leafs_selected",
+        image_dir_name="objects_unique",
         max_images=None,
         seed=None,
-        pop_size=6,
-        generations=100,
-        patience=8,
-        algorithm="ga_dm",
+        pop_size=15,
+        generations=150,
+        patience=12,
+        algorithm="ga_gdm",
         crossover_method="subset_greedy_relaxed",
-        run_id="run1-pop6",
+        run_id="run1",
         p_delete=0.2,
         p_split=0.2,
         p_geometry=0.3,
-        p_shift=0.05,
-        p_local=0.5,
+        p_shift=0.1,
+        p_local=0.6,
         p_largest=0.2,
         p_repair=0.5,
-        p_merge=0.1,
+        p_merge=0.5,
     )
-
-    # PRODUCTION — objects_selected
-    # run_experiments(
-    #     image_dir_name="objects_selected",
-    #     max_images=None,
-    #     seed=None,
-    #     pop_size=6,
-    #     generations=100,
-    #     patience=8,
-    #     algorithm="ga_dm",
-    #     crossover_method="subset_greedy_relaxed",
-    #     run_id="run1-pop6",
-    #     p_delete=0.2,
-    #     p_split=0.2,
-    #     p_geometry=0.3,
-    #     p_shift=0.05,
-    #     p_local=0.5,
-    #     p_largest=0.2,
-    #     p_repair=0.5,
-    #     p_merge=0.1,
-    # )
 
 
 if __name__ == "__main__":

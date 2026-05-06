@@ -233,7 +233,7 @@ def run_experiments(
             )
 
             print(f"  ✓ Rectangles: {rect_count}")
-            print(f"  ✓ Time: {metrics['execution_time_sec']:.1f}s")
+            print(f"  ✓ Time: {metrics['execution_time_sec']:.5f}s")
 
             rect_path = save_solution_rectangles(
                 img_path.name,
@@ -273,7 +273,7 @@ def run_experiments(
     print("\n" + "=" * 70)
     print("EXPERIMENTS COMPLETE!")
     print("=" * 70)
-    print(f"Total time: {total_elapsed/60:.1f} minutes")
+    print(f"Total time: {total_elapsed/60:.5f} minutes")
     print(f"Results saved to: {logger.results_csv}")
     print(f"Rectangles saved to: {rect_dir / 'quadtree'}")
     print(f"Visualizations saved to: {viz_dir / 'quadtree'}")
@@ -282,26 +282,12 @@ def run_experiments(
 def main():
     """Main entry point - configure experiments here."""
     run_experiments(
-        image_dir_name="leafs_binary_fix",
+        image_dir_name="objects_unique",
         full_decomposition=False,
         max_images=None,
-        run_id="run2",
+        run_id="run1",
     )
 
-    # To compare with a different configuration without overwriting run1:
-    # run_experiments(
-    #     image_dir_name="leafs_binary_fix",
-    #     full_decomposition=True,
-    #     max_images=5,
-    #     run_id="run2",
-    # )
-
-    # PRODUCTION MODE: Uncomment to run on all images
-    # run_experiments(
-    #     image_dir_name="research_leafs_binary",
-    #     max_images=None,
-    #     run_id="run1",
-    # )
 
 
 if __name__ == "__main__":
