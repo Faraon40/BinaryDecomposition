@@ -89,25 +89,41 @@ Binarize your own images first:
 decomp preprocess --input data/datasets/leafs_unique_color/png/ --output results/preprocessed/
 ```
 
-See [`docs/cli_usage.md`](docs/cli_usage.md) for the full CLI reference including all GA hyperparameters, presets, and output format details.
+See [`DECOMP_MANUAL.md`](DECOMP_MANUAL.md) for the full CLI reference including all GA hyperparameters, presets, and output format details.
 
 ## Example Commands
+
+List all available algorithms:
 
 ```bash
 decomp list
 ```
 
+Run GDM on a single `.npy` image:
+
 ```bash
 decomp run --algo gdm --input data/datasets/objects_unique/npy/apple-10_binary.npy --output results/
 ```
+
+Run GDM on a single `.png` image (auto-binarized):
+
+```bash
+decomp run --algo gdm --input data/datasets/leafs_unique_color/png/Acer_campestre.png --output results/
+```
+
+Run GDM on an entire folder, limit to 5 images:
 
 ```bash
 decomp run --algo gdm --input data/datasets/objects_unique/npy/ --output results/ --limit 5
 ```
 
+Run Quadtree on an entire folder, limit to 5 images:
+
 ```bash
 decomp run --algo quadtree --input data/datasets/objects_unique/npy/ --output results/ --limit 5
 ```
+
+Run GA (GDM-initialized) with research preset on 10 images:
 
 ```bash
 decomp run --algo ga_gdm --ga-preset research --input data/datasets/objects_unique/npy/ --output results/ --limit 10
@@ -164,6 +180,8 @@ Images are stored as `.npy` arrays (values 0/1). Each dataset includes `manifest
 - Object datasets (`objects_*`) — Ralph, R. *MPEG-7 Shape Dataset*. 2000. https://dabi.temple.edu/external/shape/MPEG7/dataset.html
 
 ## Reproducing Experiments
+
+> **Note:** Each script has the dataset path hardcoded in its `main()` function. To use a different dataset, edit the path directly in the script before running.
 
 Full benchmark runs:
 
