@@ -2,5 +2,11 @@
 
 from src.cli.dispatcher import dispatch
 
-if __name__ == "__main__":
+
+def main():
+    """Entry point for the decomp console script."""
     dispatch()
+
+
+if __name__ == "__main__":
+    main()

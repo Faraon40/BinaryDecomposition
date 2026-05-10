@@ -6,9 +6,9 @@
 
 Master's thesis project implementing and comparing algorithms for **minimal rectangle decomposition of binary images** — covering all foreground pixels with the minimum number of non-overlapping axis-aligned rectangles.
 
-## Problem
+## Problem Description
 
-Given a binary image (a 2D array of 0s and 1s), find the smallest set of non-overlapping rectangles that exactly covers all 1-pixels. This is an NP-hard combinatorial optimization problem with applications in document analysis, PCB layout, and image compression.
+Given a binary image (a 2D array of 0s and 1s), find the smallest set of non-overlapping rectangles that exactly covers all 1-pixels. This is a combinatorial optimization problem with applications in document analysis, PCB layout, and image compression.
 
 ## Algorithms
 
@@ -27,38 +27,89 @@ All algorithms use **integral images** for O(1) rectangle-sum queries. The GA su
 
 ```bash
 git clone https://github.com/Faraon40/BinaryDecomposition.git
+```
+
+```bash
 cd BinaryDecomposition
+```
+
+```bash
 python -m venv .venv
+```
+
+**Linux / macOS**
+```bash
 source .venv/bin/activate
+```
+
+**Windows**
+```bash
+.venv\Scripts\activate
+```
+
+```bash
 pip install -r requirements.txt
+```
+
+```bash
+pip install -e .
 ```
 
 ## Quick Start
 
+Activate the environment:
+
 ```bash
 source .venv/bin/activate
+```
 
-# List available algorithms
-python -m src.cli list
+List available algorithms:
 
-# Run GDM on a folder of images
-python -m src.cli run --algo gdm \
-  --input data/datasets/leafs_selected/npy/ \
-  --output results/
+```bash
+decomp list
+```
 
-# Run GA (GDM-initialized) with fast preset on a single image
-python -m src.cli run --algo ga_gdm \
-  --ga-preset fast \
-  --input data/datasets/leafs_selected/npy/Betula_pendula.npy \
-  --output results/
+Run GDM on a folder of images:
 
-# Binarize your own images first
-python -m src.cli preprocess \
-  --input ~/my_images/ \
-  --output data/datasets/my_dataset/
+```bash
+decomp run --algo gdm --input data/datasets/objects_unique/npy/ --output results/ --limit 5
+```
+
+Run the GA (GDM-initialized) with fast preset on a single image:
+
+```bash
+decomp run --algo ga_gdm --ga-preset fast --input data/datasets/objects_unique/npy/apple-10_binary.npy --output results/
+```
+
+Binarize your own images first:
+
+```bash
+decomp preprocess --input data/datasets/leafs_unique_color/png/ --output results/preprocessed/
 ```
 
 See [`docs/cli_usage.md`](docs/cli_usage.md) for the full CLI reference including all GA hyperparameters, presets, and output format details.
+
+## Example Commands
+
+```bash
+decomp list
+```
+
+```bash
+decomp run --algo gdm --input data/datasets/objects_unique/npy/apple-10_binary.npy --output results/
+```
+
+```bash
+decomp run --algo gdm --input data/datasets/objects_unique/npy/ --output results/ --limit 5
+```
+
+```bash
+decomp run --algo quadtree --input data/datasets/objects_unique/npy/ --output results/ --limit 5
+```
+
+```bash
+decomp run --algo ga_gdm --ga-preset research --input data/datasets/objects_unique/npy/ --output results/ --limit 10
+```
 
 ## GA Presets
 
@@ -69,8 +120,7 @@ See [`docs/cli_usage.md`](docs/cli_usage.md) for the full CLI reference includin
 | `research` | 50 | 200 | 20 | Maximum quality |
 
 ```bash
-python -m src.cli run --algo ga_gdm --ga-preset research \
-  --input data/datasets/leafs_selected/npy/ --output results/
+decomp run --algo ga_gdm --ga-preset research --input data/datasets/objects_unique/npy/ --output results/ --limit 5
 ```
 
 ## Project Structure
@@ -113,15 +163,31 @@ Images are stored as `.npy` arrays (values 0/1). Each dataset includes `manifest
 
 ## Reproducing Experiments
 
-```bash
-# Full benchmark runs
-python -m experiments.scripts.run_gdm
-python -m experiments.scripts.run_ga
-python -m experiments.scripts.run_graph_based
+Full benchmark runs:
 
-# Hyperparameter analysis
+```bash
+python -m experiments.scripts.run_gdm
+```
+
+```bash
+python -m experiments.scripts.run_ga
+```
+
+```bash
+python -m experiments.scripts.run_graph_based
+```
+
+Hyperparameter analysis:
+
+```bash
 python -m experiments.scripts.analysis.run_ga_init_comparison
+```
+
+```bash
 python -m experiments.scripts.analysis.run_ga_crossover_comparison
+```
+
+```bash
 python -m experiments.scripts.analysis.run_ga_mutation_analysis
 ```
 

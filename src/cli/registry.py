@@ -14,7 +14,7 @@ ALGORITHM_REGISTRY = {
         "group": "deterministic",
         "speed": "fast",
         "example": (
-            "python -m src.cli run --algo dm "
+            "decomp run --algo dm "
             "--input img.npy --output out/"
         ),
     },
@@ -27,7 +27,7 @@ ALGORITHM_REGISTRY = {
         "group": "deterministic",
         "speed": "fast",
         "example": (
-            "python -m src.cli run --algo gdm "
+            "decomp run --algo gdm "
             "--input img.npy --output out/"
         ),
     },
@@ -40,7 +40,7 @@ ALGORITHM_REGISTRY = {
         "group": "deterministic",
         "speed": "fast",
         "example": (
-            "python -m src.cli run --algo quadtree "
+            "decomp run --algo quadtree "
             "--input img.npy --output out/"
         ),
     },
@@ -53,7 +53,7 @@ ALGORITHM_REGISTRY = {
         "group": "deterministic",
         "speed": "fast",
         "example": (
-            "python -m src.cli run --algo largest_rect "
+            "decomp run --algo largest_rect "
             "--coverage-threshold 0.95 --input img.npy --output out/"
         ),
     },
@@ -66,7 +66,7 @@ ALGORITHM_REGISTRY = {
         "group": "deterministic",
         "speed": "very slow",
         "example": (
-            "python -m src.cli run --algo graph_based "
+            "decomp run --algo graph_based "
             "--input img.npy --output out/"
         ),
     },
@@ -78,7 +78,7 @@ ALGORITHM_REGISTRY = {
         "group": "genetic",
         "speed": "slow",
         "example": (
-            "python -m src.cli run --algo ga_dm "
+            "decomp run --algo ga_dm "
             "--ga-preset fast --input img.npy --output out/"
         ),
     },
@@ -91,7 +91,7 @@ ALGORITHM_REGISTRY = {
         "group": "genetic",
         "speed": "slow",
         "example": (
-            "python -m src.cli run --algo ga_gdm "
+            "decomp run --algo ga_gdm "
             "--ga-preset research --input leafs/ --output out/"
         ),
     },
@@ -103,7 +103,7 @@ ALGORITHM_REGISTRY = {
         "group": "genetic",
         "speed": "slow",
         "example": (
-            "python -m src.cli run --algo ga_random "
+            "decomp run --algo ga_random "
             "--ga-preset default --input img.npy --output out/"
         ),
     },
@@ -115,7 +115,7 @@ ALGORITHM_REGISTRY = {
         "group": "genetic",
         "speed": "slow",
         "example": (
-            "python -m src.cli run --algo ga_qtd "
+            "decomp run --algo ga_qtd "
             "--input img.npy --output out/"
         ),
     },
@@ -127,7 +127,7 @@ ALGORITHM_REGISTRY = {
         "group": "genetic",
         "speed": "slow",
         "example": (
-            "python -m src.cli run --algo ga_lrf "
+            "decomp run --algo ga_lrf "
             "--input img.npy --output out/"
         ),
     },

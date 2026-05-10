@@ -1,3 +1,19 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bdecomp"
+version = "1.0.0"
+requires-python = ">=3.12"
+
+[project.scripts]
+decomp = "src.cli.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["src*", "experiments*"]
+
 # ruff configuration for PEP 8 and PEP 257
 [tool.ruff]
 # According to PEP 8

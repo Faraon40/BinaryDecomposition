@@ -30,11 +30,11 @@ def handle_list(args):
     print()
     print("Run an algorithm:")
     print(
-        "  python -m src.cli run --algo <key> "
+        "  decomp run --algo <key> "
         "--input <path> --output <dir>"
     )
     print("Show algorithm details:")
-    print("  python -m src.cli help <algo>")
+    print("  decomp help <algo>")
     print()
 
 
@@ -49,7 +49,7 @@ def handle_help(args):
     if algo not in ALGORITHM_REGISTRY:
         print(f"Unknown algorithm: '{algo}'")
         print(
-            "Run 'python -m src.cli list' to see available algorithms."
+            "Run 'decomp list' to see available algorithms."
         )
         return
 
@@ -69,7 +69,7 @@ def handle_help(args):
     print("  --no-viz                Skip visualization PNG")
     print("  --no-csv                Skip CSV logging")
     print("  --verbose               Show algorithm output")
-    print("  --max-images N          Limit batch to N images")
+    print("  --limit N               Limit batch to N images")
     print(
         "  --dataset-name <name>   Override dataset label in output paths"
     )

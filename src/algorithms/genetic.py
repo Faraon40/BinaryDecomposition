@@ -1396,7 +1396,7 @@ def run_ga(
     # Map crossover method name to function
     crossover_methods = {
         "subset_greedy": subset_greedy_crossover,
-        "subset_greedy_relaxed": subset_greedy_crossover_relaxed,
+        "subset_greedy_relaxed": lambda p1, p2, integral_img: subset_greedy_crossover_relaxed(p1, p2, img, integral_img),
         "single_point": single_point_crossover,
         "two_point": two_point_crossover,
         "uniform": uniform_crossover,
@@ -1466,7 +1466,7 @@ def run_ga(
                     : max(2, len(population) * 5 // 10)
                 ]
                 p1, p2 = random.sample(top_candidates, 2)
-                child = crossover_fn(p1, p2, img, integral)
+                child = crossover_fn(p1, p2, integral)
                 child = mutation(
                     child,
                     img,
