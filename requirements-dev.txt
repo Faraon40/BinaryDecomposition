@@ -1,0 +1,10 @@
+# Full development environment — includes CLI + notebooks + preprocessing
+-r requirements.txt
+
+# Experiment analysis & notebooks
+pandas>=2.0
+adjustText>=1.0
+jupyter>=1.0
+
+# SVG preprocessing (src/preprocess/svg_to_png_converter.py)
+CairoSVG>=2.7

@@ -1,17 +1,11 @@
-# Core runtime — CLI, algorithms, preprocessing
+# Core runtime — CLI and algorithms
 numpy>=2.0
 scipy>=1.10
 matplotlib>=3.7
 networkx>=3.0
 Pillow>=10.0
 opencv-python>=4.8
-CairoSVG>=2.7
 PuLP>=2.8
-
-# Experiment analysis & notebooks
-pandas>=2.0
-adjustText>=1.0
-jupyter>=1.0
 
 # Optional: Gurobi ILP backend (requires commercial licence)
 # gurobipy>=10.0

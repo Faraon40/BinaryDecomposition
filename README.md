@@ -55,6 +55,8 @@ pip install -r requirements.txt
 pip install -e .
 ```
 
+> For experiment notebooks and SVG preprocessing, use `pip install -r requirements-dev.txt` instead.
+
 ## Quick Start
 
 Activate the environment:
