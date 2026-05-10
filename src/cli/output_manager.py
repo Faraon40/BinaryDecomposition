@@ -131,7 +131,7 @@ class OutputManager:
             "algorithm": self.algo,
             "rectangle_count": rect_count,
             "execution_time_sec": metrics.get("execution_time_sec"),
-            "rectangles": [list(r) for r in rects],
+            "rectangles": [[int(v) for v in r] for r in rects],
         }
         out = self._rects_dir / f"{stem}_rects_{rect_count}.json"
         with open(out, "w") as f:

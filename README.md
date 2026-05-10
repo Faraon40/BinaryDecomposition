@@ -23,6 +23,11 @@ Given a binary image (a 2D array of 0s and 1s), find the smallest set of non-ove
 
 All algorithms use **integral images** for O(1) rectangle-sum queries. The GA supports 7 mutation operators (geometry, merge, local, delete, split, shift, largest-rect) and 4 crossover methods (`subset_greedy` recommended).
 
+## Prerequisites
+
+- Python 3.12 or higher — [python.org/downloads](https://www.python.org/downloads/)
+- Git — [git-scm.com](https://git-scm.com/)
+
 ## Installation
 
 ```bash
