@@ -163,7 +163,6 @@ experiments/
   src/              # Shared experiment infrastructure (config, runner, logger)
 
 data/datasets/      # Benchmark datasets (.npy arrays + manifest.csv)
-docs/               # CLI usage guide
 ```
 
 ## Datasets
